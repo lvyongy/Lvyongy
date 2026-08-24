@@ -1,0 +1,3081 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>新拟态 · 简洁/壁纸模式</title>
+    <style>
+        /* ===== 全局重置 & 变量 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --text: #222;
+            --shadow-light: #ffffff;
+            --shadow-dark: #c8ccd0;
+            --input-bg: #e8eaed;
+            --link-bg: #e8eaed;
+            --link-shadow-light: #ffffff;
+            --link-shadow-dark: #b8bcc0;
+            --rope-color: #333;
+            --handle-bg: #f0f2f5;
+            --handle-border: #b0b4b8;
+            --modal-bg: rgba(255, 255, 255, 0.9);
+            --switch-bg: #e8eaed;
+            --switch-shadow: #b8bcc0;
+            --glass-opacity: 0.7;
+            --bg-day: #f0f2f5;
+            --bg-night: #1a1c1e;
+            --text-day: #222;
+            --text-night: #eaeaea;
+            --shadow-dark-day: #c8ccd0;
+            --shadow-light-day: #ffffff;
+            --shadow-dark-night: #0a0c0e;
+            --shadow-light-night: #2a2c2e;
+            --wallpaper-text: #fff;
+            --wallpaper-text-secondary: rgba(255, 255, 255, 0.7);
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background 1.0s ease, color 1.0s ease;
+            background: var(--bg-day);
+            color: var(--text-day);
+        }
+        body.night-mode {
+            background: var(--bg-night);
+            color: var(--text-night);
+        }
+        body.night-mode .simple-mode .clock #time,
+        body.night-mode .simple-mode .clock #date {
+            color: var(--text-night);
+        }
+        body.night-mode .simple-mode .search-box {
+            background: #2a2c2e;
+            box-shadow: inset 6px 6px 12px #0a0c0e, inset -6px -6px 12px #3a3c3e;
+        }
+        body.night-mode .simple-mode .search-box input {
+            color: #eaeaea;
+        }
+        body.night-mode .simple-mode .search-btn,
+        body.night-mode .simple-mode .link-item,
+        body.night-mode .simple-mode .add-link-btn {
+            background: #2a2c2e;
+            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
+            color: #eaeaea;
+        }
+        body.night-mode .simple-mode .search-btn:active,
+        body.night-mode .simple-mode .link-item.pressed,
+        body.night-mode .simple-mode .add-link-btn.pressed {
+            box-shadow: inset 6px 6px 12px #0a0c0e, inset -6px -6px 12px #3a3c3e;
+        }
+        body.night-mode .simple-mode .link-item:hover,
+        body.night-mode .simple-mode .add-link-btn:hover {
+            box-shadow: 8px 8px 16px #0a0c0e, -8px -8px 16px #3a3c3e;
+        }
+        body.night-mode #modeSwitch {
+            background: rgba(42, 44, 46, 0.85);
+            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
+        }
+        body.night-mode #modeSwitch span {
+            color: #eaeaea;
+        }
+        body.night-mode #modeSwitch .toggle-track {
+            background: #2a2c2e;
+            box-shadow: inset 3px 3px 6px #0a0c0e, inset -3px -3px 6px #3a3c3e;
+        }
+        body.night-mode #modeSwitch .toggle-thumb {
+            background: #3a3c3e;
+            box-shadow: 3px 3px 6px #0a0c0e, -3px -3px 6px #4a4c4e;
+        }
+
+        /* ===== 壁纸容器 ===== */
+        .wallpaper-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            overflow: hidden;
+            display: none;
+            background: #000;
+        }
+        body.wallpaper-mode .wallpaper-container {
+            display: block;
+        }
+        .wallpaper-container video,
+        .wallpaper-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 1.6s ease-in-out;
+            will-change: opacity;
+        }
+        .wallpaper-container video.active,
+        .wallpaper-container img.active {
+            opacity: 1;
+        }
+
+        /* ===== 简洁模式拉绳 ===== */
+        #rope-container {
+            position: fixed;
+            top: 0;
+            right: 30px;
+            z-index: 10;
+            width: 60px;
+            height: 100vh;
+            pointer-events: none;
+        }
+        body.wallpaper-mode #rope-container {
+            display: none;
+        }
+        .rope-mount {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: #888;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 -2px 6px rgba(0, 0, 0, 0.2);
+            border: 2px solid #666;
+            z-index: 2;
+            transition: background 0.6s, border-color 0.6s;
+        }
+        body.night-mode .rope-mount {
+            background: #444;
+            border-color: #333;
+        }
+        .rope-mount::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        #rope-line {
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 60px;
+            background: var(--rope-color);
+            border-radius: 2px;
+            transition: height 0.15s ease-out, background 0.6s ease;
+            z-index: 1;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+        }
+        body.night-mode #rope-line {
+            background: #aaa;
+        }
+        #rope-line::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(to bottom,
+                    transparent,
+                    transparent 4px,
+                    rgba(128, 128, 128, 0.1) 4px,
+                    rgba(128, 128, 128, 0.1) 5px);
+            border-radius: 2px;
+        }
+        #rope-handle {
+            position: absolute;
+            top: 72px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 34px;
+            height: 34px;
+            background: var(--handle-bg);
+            border-radius: 50%;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), inset 0 -4px 10px rgba(0, 0, 0, 0.05), inset 0 4px 10px rgba(255, 255, 255, 0.3);
+            cursor: grab;
+            pointer-events: auto;
+            z-index: 3;
+            border: 2px solid var(--handle-border);
+            transition: background 0.6s, border-color 0.6s, box-shadow 0.2s, top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        body.night-mode #rope-handle {
+            background: #2a2c2e;
+            border-color: #444;
+        }
+        #rope-handle:active {
+            cursor: grabbing;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 -2px 6px rgba(0, 0, 0, 0.1);
+        }
+        #rope-handle svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .icon-sun {
+            display: inline-block;
+            color: #000;
+        }
+        body.night-mode .icon-sun {
+            display: none;
+        }
+        .icon-moon {
+            display: none;
+            color: #fff;
+        }
+        body.night-mode .icon-moon {
+            display: inline-block;
+        }
+
+        /* ===== 左上角模式切换 ===== */
+        #modeSwitch {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--switch-bg);
+            padding: 6px 10px 6px 14px;
+            border-radius: 40px;
+            box-shadow: 6px 6px 12px var(--switch-shadow), -6px -6px 12px var(--shadow-light);
+            backdrop-filter: blur(4px);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        body.wallpaper-mode #modeSwitch {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        }
+        body.wallpaper-mode.night-mode #modeSwitch {
+            background: rgba(0, 0, 0, 0.20);
+            border-color: rgba(255, 255, 255, 0.02);
+        }
+        #modeSwitch span {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text);
+            letter-spacing: 0.5px;
+        }
+        body.wallpaper-mode #modeSwitch span {
+            color: var(--text);
+        }
+        body.wallpaper-mode.night-mode #modeSwitch span {
+            color: var(--text-night);
+        }
+        #modeSwitch .toggle-track {
+            width: 44px;
+            height: 24px;
+            border-radius: 20px;
+            background: var(--input-bg);
+            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+            position: relative;
+            transition: background 0.3s;
+        }
+        body.wallpaper-mode #modeSwitch .toggle-track {
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.05), inset -2px -2px 6px rgba(255, 255, 255, 0.05);
+        }
+        #modeSwitch .toggle-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--link-bg);
+            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        body.wallpaper-mode #modeSwitch .toggle-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05), -2px -2px 8px rgba(255, 255, 255, 0.05);
+        }
+        #modeSwitch.active .toggle-thumb {
+            transform: translateX(20px);
+        }
+        #modeSwitch.active .toggle-track {
+            background: #c0c8d0;
+        }
+        body.night-mode #modeSwitch.active .toggle-track {
+            background: #3a3c3e;
+        }
+        body.wallpaper-mode #modeSwitch.active .toggle-track {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* ===== 简洁模式 ===== */
+        .simple-mode {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 640px;
+            padding: 20px 24px 30px;
+            gap: 14px;
+            pointer-events: none;
+            margin-top: 6vh;
+        }
+        body.wallpaper-mode .simple-mode {
+            display: none;
+        }
+        .simple-mode>* {
+            pointer-events: auto;
+        }
+        .simple-mode .clock {
+            text-align: center;
+            width: 100%;
+        }
+        .simple-mode #time {
+            font-size: 4rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
+            color: var(--text-day);
+        }
+        body.night-mode .simple-mode #time {
+            color: var(--text-night);
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        .simple-mode #date {
+            font-size: 1rem;
+            letter-spacing: 2px;
+            opacity: 0.5;
+            margin-top: 2px;
+            color: var(--text-day);
+        }
+        body.night-mode .simple-mode #date {
+            color: var(--text-night);
+            opacity: 0.6;
+        }
+
+        .quote-area {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: opacity 0.4s ease;
+            min-height: 56px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .quote-area .quote-text {
+            font-size: 1.3rem;
+            font-family: '华文行楷', 'STXingkai', 'KaiTi', '楷体', serif;
+            letter-spacing: 2px;
+            line-height: 1.7;
+            color: var(--text-day);
+            opacity: 0.75;
+            transition: opacity 0.5s ease;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.04);
+        }
+        body.night-mode .quote-area .quote-text {
+            color: var(--text-night);
+            opacity: 0.7;
+            text-shadow: 1px 1px 8px rgba(0, 0, 0, 0.4);
+        }
+        .quote-area .quote-text.fade {
+            opacity: 0;
+        }
+        .quote-area .quote-author {
+            font-size: 0.85rem;
+            opacity: 0.4;
+            margin-top: 4px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            letter-spacing: 1px;
+        }
+        body.night-mode .quote-area .quote-author {
+            opacity: 0.35;
+        }
+
+        .simple-mode .search-wrapper {
+            display: flex !important;
+            width: 100%;
+            max-width: 420px;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.4s ease;
+            overflow: hidden;
+            padding: 0 6px;
+        }
+        .simple-mode .search-wrapper.hidden {
+            width: 0;
+            margin: 0;
+            padding: 0;
+            opacity: 0;
+            pointer-events: none;
+            flex: 0 0 0;
+        }
+        .simple-mode .search-box {
+            flex: 1;
+            height: 48px;
+            border-radius: 50px;
+            background: var(--input-bg);
+            box-shadow: inset 6px 6px 12px var(--shadow-dark-day), inset -6px -6px 12px var(--shadow-light-day);
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            transition: background 0.4s, box-shadow 0.3s;
+        }
+        body.night-mode .simple-mode .search-box {
+            background: #2a2c2e;
+            box-shadow: inset 6px 6px 12px #0a0c0e, inset -6px -6px 12px #3a3c3e;
+        }
+        .simple-mode .search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            color: var(--text-day);
+            user-select: text;
+            -webkit-user-select: text;
+            autocomplete: off;
+            autocorrect: off;
+            autocapitalize: off;
+            spellcheck: false;
+        }
+        body.night-mode .simple-mode .search-box input {
+            color: var(--text-night);
+        }
+        .simple-mode .search-box input::placeholder {
+            color: transparent;
+        }
+        .simple-mode .search-btn {
+            background: var(--link-bg);
+            border: none;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            box-shadow: none;
+            cursor: pointer;
+            color: var(--text-day);
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        body.night-mode .simple-mode .search-btn {
+            background: #2a2c2e;
+            color: var(--text-night);
+        }
+        .simple-mode .search-btn:active {
+            transform: scale(0.96);
+        }
+        .simple-mode .search-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .simple-mode .search-btn-mobile {
+            display: none;
+            background: var(--link-bg);
+            border: none;
+            min-width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            box-shadow: 6px 6px 12px var(--link-shadow-dark), -6px -6px 12px var(--link-shadow-light);
+            cursor: pointer;
+            color: var(--text-day);
+            transition: all 0.15s ease;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+        }
+        body.night-mode .simple-mode .search-btn-mobile {
+            background: #2a2c2e;
+            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
+            color: var(--text-night);
+        }
+        .simple-mode .search-btn-mobile:active {
+            box-shadow: inset 6px 6px 12px var(--link-shadow-dark), inset -6px -6px 12px var(--link-shadow-light);
+            transform: scale(0.96);
+        }
+        .simple-mode .search-btn-mobile svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .simple-mode .links-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+            max-width: 540px;
+            margin-top: 4px;
+            min-height: 44px;
+            align-items: center;
+        }
+        .simple-mode .link-item,
+        .simple-mode .add-link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 56px;
+            height: 44px;
+            padding: 0 12px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-day);
+            text-decoration: none;
+            cursor: pointer;
+            transition: box-shadow 0.25s ease, background 0.25s ease, transform 0.1s;
+            background: var(--link-bg);
+            box-shadow: 6px 6px 12px var(--link-shadow-dark), -6px -6px 12px var(--link-shadow-light);
+            border: none;
+            font-family: inherit;
+            text-align: center;
+            word-break: break-word;
+        }
+        body.night-mode .simple-mode .link-item,
+        body.night-mode .simple-mode .add-link-btn {
+            background: #2a2c2e;
+            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
+            color: var(--text-night);
+        }
+        .simple-mode .link-item.pressed,
+        .simple-mode .add-link-btn.pressed {
+            box-shadow: inset 6px 6px 12px var(--link-shadow-dark), inset -6px -6px 12px var(--link-shadow-light);
+            transform: scale(0.96);
+        }
+        .simple-mode .link-item:hover,
+        .simple-mode .add-link-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 8px 8px 16px var(--link-shadow-dark), -8px -8px 16px var(--link-shadow-light);
+        }
+        .simple-mode .add-link-btn {
+            min-width: 44px;
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        /* ===== 壁纸模式 - 可拖动元素 ===== */
+        .draggable-item {
+            position: fixed;
+            display: none;
+            z-index: 3;
+            cursor: grab;
+            touch-action: none;
+            transition: none;
+            pointer-events: auto;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+        }
+
+        /* 时间 - 毛玻璃文字 */
+        #wallpaperTimeDisplay {
+            padding: 4px 16px;
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            text-align: center;
+            border: none;
+            box-shadow: none;
+        }
+        #wallpaperTimeDisplay .wp-time {
+            font-size: 4.8rem;
+            font-weight: 600;
+            letter-spacing: 6px;
+            line-height: 1.1;
+            color: var(--wallpaper-text);
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
+        }
+        #wallpaperTimeDisplay .wp-date {
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            opacity: 0.6;
+            margin-top: 2px;
+            color: var(--wallpaper-text-secondary);
+            text-shadow: 0 1px 12px rgba(0, 0, 0, 0.10);
+        }
+
+        /* 名言 - 无毛玻璃，右下 */
+        #wallpaperQuoteDisplay {
+            padding: 0;
+            background: transparent;
+            backdrop-filter: none;
+            border: none;
+            box-shadow: none;
+            max-width: 420px;
+            cursor: pointer;
+        }
+        #wallpaperQuoteDisplay .wq-text {
+            font-size: 1.2rem;
+            font-family: '华文行楷', 'STXingkai', 'KaiTi', '楷体', serif;
+            letter-spacing: 2px;
+            line-height: 1.6;
+            color: var(--wallpaper-text);
+            text-shadow: 0 1px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0.8;
+        }
+        #wallpaperQuoteDisplay .wq-author {
+            font-size: 0.8rem;
+            opacity: 0.4;
+            margin-top: 2px;
+            text-align: right;
+            color: var(--wallpaper-text-secondary);
+            letter-spacing: 1px;
+        }
+        #wallpaperQuoteDisplay .wq-text.fade {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        #wallpaperQuoteDisplay.locked {
+            opacity: 0.6;
+        }
+
+        /* ===== 壁纸模式 - 毛玻璃搜索框 (移除 !important 以便 JS 控制显示/隐藏) ===== */
+        .glass-search-wrapper {
+            display: flex;
+            /* 移除 !important，由 JS 控制 display */
+            align-items: center;
+            gap: 10px;
+            width: 90%;
+            max-width: 360px;
+            padding: 0 4px 0 18px;
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 50px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            transition: opacity 0.4s ease, background 0.3s;
+            height: 52px;
+        }
+        body.night-mode .glass-search-wrapper {
+            background: rgba(0, 0, 0, 0.18);
+            border-color: rgba(255, 255, 255, 0.03);
+        }
+        .glass-search-box {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+        .glass-search-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 0.95rem;
+            color: var(--wallpaper-text);
+            user-select: text;
+            -webkit-user-select: text;
+            padding: 0;
+            font-family: inherit;
+        }
+        .glass-search-input::placeholder {
+            color: var(--wallpaper-text-secondary);
+            opacity: 0.4;
+        }
+        .glass-search-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            cursor: pointer;
+            color: var(--wallpaper-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s, color 0.6s ease;
+            flex-shrink: 0;
+        }
+        body.night-mode .glass-search-btn {
+            background: rgba(0, 0, 0, 0.12);
+            color: var(--wallpaper-text);
+        }
+        .glass-search-btn:active {
+            transform: scale(0.92);
+        }
+        .glass-search-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* 旧搜索框隐藏（已被替换） */
+        .glass-search-old {
+            display: none !important;
+        }
+
+        /* ===== 壁纸模式 - 链接 (左侧竖直) ===== */
+        .glass-links {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 24px;
+            width: auto;
+            padding: 0;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .glass-links .glass-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--wallpaper-text);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s, color 0.6s ease;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+            font-family: inherit;
+            text-align: center;
+            word-break: break-word;
+            width: fit-content;
+            min-width: 40px;
+            height: auto;
+        }
+        body.night-mode .glass-links .glass-link {
+            color: var(--wallpaper-text);
+            background: rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.02);
+        }
+        .glass-links .glass-link:hover {
+            transform: scale(1.04);
+            background: rgba(255, 255, 255, 0.18);
+        }
+        .glass-links .glass-link:active {
+            transform: scale(0.95);
+        }
+        .glass-links .glass-add {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: var(--wallpaper-text);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s, color 0.6s ease;
+            width: fit-content;
+            min-width: 40px;
+            height: auto;
+        }
+        body.night-mode .glass-links .glass-add {
+            color: var(--wallpaper-text);
+            background: rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.02);
+        }
+        .glass-links .glass-add:hover {
+            transform: scale(1.04);
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        /* ===== 壁纸模式设置 (右上角) ===== */
+        #wallpaperSettings {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 15;
+            display: none;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+        body.wallpaper-mode #wallpaperSettings {
+            display: flex;
+        }
+        .settings-toggle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            font-size: 1.3rem;
+            color: var(--wallpaper-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s, color 0.6s ease;
+        }
+        body.night-mode .settings-toggle {
+            color: var(--wallpaper-text);
+            background: rgba(0, 0, 0, 0.12);
+        }
+        .settings-toggle:hover {
+            transform: rotate(60deg) scale(1.05);
+        }
+
+        .settings-panel {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 18px;
+            padding: 16px 18px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            min-width: 160px;
+            max-width: 25vw;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            transition: color 0.6s ease;
+        }
+        body.night-mode .settings-panel {
+            background: rgba(0, 0, 0, 0.20);
+            border-color: rgba(255, 255, 255, 0.02);
+        }
+        .settings-panel.open {
+            display: flex;
+        }
+        .settings-panel .setting-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .settings-panel .setting-row label {
+            font-size: 0.7rem;
+            opacity: 0.5;
+            letter-spacing: 0.5px;
+            color: var(--wallpaper-text);
+            transition: color 0.6s ease;
+        }
+        .settings-panel .setting-row .type-btns {
+            display: flex;
+            gap: 4px;
+        }
+        .settings-panel .setting-row .type-btn {
+            flex: 1;
+            padding: 5px 0;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--wallpaper-text);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s, color 0.6s ease;
+            font-family: inherit;
+        }
+        body.night-mode .settings-panel .setting-row .type-btn {
+            color: var(--wallpaper-text);
+            background: rgba(0, 0, 0, 0.04);
+        }
+        .settings-panel .setting-row .type-btn.active {
+            background: rgba(255, 255, 255, 0.14);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        body.night-mode .settings-panel .setting-row .type-btn.active {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* 壁纸预览网格 - 每行最多4个 */
+        .settings-panel .setting-row .wallpaper-preview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 2px;
+            max-height: 180px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+        .settings-panel .setting-row .wallpaper-preview::-webkit-scrollbar {
+            width: 4px;
+        }
+        .settings-panel .setting-row .wallpaper-preview::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .settings-panel .setting-row .wallpaper-preview::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        .settings-panel .setting-row .wp-preview-item {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.06);
+            position: relative;
+        }
+        .settings-panel .setting-row .wp-preview-item img,
+        .settings-panel .setting-row .wp-preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .settings-panel .setting-row .wp-preview-item .wp-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            font-size: 0.45rem;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            text-align: center;
+            padding: 1px 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .settings-panel .setting-row .wp-preview-item:hover .wp-label {
+            opacity: 1;
+        }
+        .settings-panel .setting-row .wp-preview-item.active {
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
+            transform: scale(1.04);
+        }
+        body.night-mode .settings-panel .setting-row .wp-preview-item.active {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .settings-panel .setting-row .wp-preview-item .check-mark {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 14px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: #222;
+        }
+        .settings-panel .setting-row .wp-preview-item.active .check-mark {
+            display: flex;
+        }
+
+        .settings-panel .setting-row input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(128, 128, 128, 0.15);
+            outline: none;
+        }
+        .settings-panel .setting-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--link-bg);
+            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.08), -3px -3px 8px rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+        body.night-mode .settings-panel .setting-row input[type="range"]::-webkit-slider-thumb {
+            background: #3a3c3e;
+        }
+        .settings-panel .setting-row input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--link-bg);
+            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.08), -3px -3px 8px rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            border: none;
+        }
+        .settings-panel .setting-row .range-value {
+            font-size: 0.75rem;
+            opacity: 0.4;
+            text-align: right;
+            color: var(--wallpaper-text);
+            transition: color 0.6s ease;
+        }
+
+        /* ===== 音乐播放器 - 封面与卡片一体 ===== */
+        #musicPlayer {
+            position: fixed;
+            z-index: 100;
+            width: 270px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 24px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+            overflow: hidden;
+            cursor: grab;
+            touch-action: none;
+            transition: opacity 0.3s ease;
+        }
+        #musicPlayer.active {
+            display: flex;
+        }
+        #musicPlayer:active {
+            cursor: grabbing;
+        }
+        .player-cover {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 24px 24px 0 0;
+            overflow: hidden;
+            box-shadow: none;
+            background: transparent;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .player-cover:hover {
+            transform: scale(1.02);
+        }
+        .player-cover:active {
+            transform: scale(0.96);
+        }
+        .player-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            filter: brightness(0.9) contrast(1.1);
+        }
+        .player-joystick {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin: 16px auto 20px;
+        }
+        .player-joystick .around {
+            width: 160px;
+            height: 160px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background-image: linear-gradient(0deg, #d0d4d8, #f0f2f5);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+        body.night-mode .player-joystick .around {
+            background-image: linear-gradient(0deg, #2a2c2e, #3a3c3e);
+        }
+        .player-joystick .handle {
+            width: 124px;
+            height: 124px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: #c5d1da;
+            box-shadow:
+                0 0 10px rgba(0, 0, 0, 0.30),
+                0 10px 10px rgba(0, 0, 0, 0.10),
+                inset 0 0 16px rgba(0, 0, 0, 0.70),
+                inset 0 0 24px rgba(0, 0, 0, 0.50),
+                inset 0 0 48px rgba(0, 0, 0, 0.06);
+            perspective: 300px;
+            transition: all 0.15s;
+        }
+        body.night-mode .player-joystick .handle {
+            background: #3a3c3e;
+            box-shadow:
+                0 0 10px rgba(0, 0, 0, 0.40),
+                0 10px 10px rgba(0, 0, 0, 0.20),
+                inset 0 0 16px rgba(0, 0, 0, 0.70),
+                inset 0 0 24px rgba(0, 0, 0, 0.50),
+                inset 0 0 48px rgba(0, 0, 0, 0.12);
+        }
+        .player-joystick .button-wrapper {
+            width: 82px;
+            height: 82px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background-image: linear-gradient(0deg, #86969c, #eff1f1);
+            box-shadow:
+                0 9px 14px rgba(0, 0, 0, 0.30),
+                0 19px 8px -2px rgba(0, 0, 0, 0.10),
+                0 33px 8px rgba(0, 0, 0, 0.20),
+                0 -12px 10px rgba(255, 255, 255, 0.30),
+                inset 0 3px 3px rgba(255, 255, 255, 0.40),
+                inset 0 -3px 3px rgba(89, 91, 92, 0.40);
+            transition: 0.25s ease-out;
+        }
+        body.night-mode .player-joystick .button-wrapper {
+            background-image: linear-gradient(0deg, #4a4c4e, #5a5c5e);
+            box-shadow:
+                0 9px 14px rgba(0, 0, 0, 0.40),
+                0 19px 8px -2px rgba(0, 0, 0, 0.20),
+                0 33px 8px rgba(0, 0, 0, 0.30),
+                0 -12px 10px rgba(255, 255, 255, 0.02),
+                inset 0 3px 3px rgba(255, 255, 255, 0.04),
+                inset 0 -3px 3px rgba(0, 0, 0, 0.30);
+        }
+        .player-joystick .inside {
+            position: relative;
+            width: 66px;
+            height: 66px;
+            border-radius: 50%;
+            background-image: linear-gradient(180deg, #adb9bf, #d4dbdd);
+            box-shadow:
+                inset 0 3px 6px rgba(152, 160, 163, 0.20),
+                inset 0 -3px 6px rgba(238, 244, 246, 0.20);
+        }
+        body.night-mode .player-joystick .inside {
+            background-image: linear-gradient(180deg, #4a5055, #5a6065);
+            box-shadow:
+                inset 0 3px 6px rgba(0, 0, 0, 0.20),
+                inset 0 -3px 6px rgba(100, 110, 120, 0.10);
+        }
+        .player-joystick .dot {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #e7ecef;
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.18), inset 0 -2px 2px rgba(0, 0, 0, 0.10);
+        }
+        body.night-mode .player-joystick .dot {
+            background: #8a9095;
+        }
+        .player-joystick .dot:nth-child(1) {
+            left: 50%;
+            top: 10%;
+        }
+        .player-joystick .dot:nth-child(2) {
+            left: 90%;
+            top: 50%;
+        }
+        .player-joystick .dot:nth-child(3) {
+            left: 50%;
+            top: 90%;
+        }
+        .player-joystick .dot:nth-child(4) {
+            left: 10%;
+            top: 50%;
+        }
+
+        .player-joystick .touch {
+            position: absolute;
+            display: flex;
+            flex-wrap: wrap;
+            z-index: 9;
+            width: 160px;
+            height: 160px;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        .player-joystick .touch>div {
+            pointer-events: auto;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background 0.1s;
+            position: absolute;
+            width: 56px;
+            height: 56px;
+        }
+        .player-joystick .touch .t1 {
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .player-joystick .touch .t2 {
+            right: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .player-joystick .touch .t3 {
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .player-joystick .touch .t4 {
+            left: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .player-joystick .touch>div:hover {
+            background: rgba(128, 128, 128, 0.08);
+        }
+        .player-joystick .touch>div:active {
+            background: rgba(128, 128, 128, 0.18);
+        }
+
+        .player-joystick .button-wrapper.dir-up {
+            transform-style: preserve-3d;
+            transform: translate(0, -8px) rotateX(12deg);
+            box-shadow: 0 7px 14px rgba(0, 0, 0, 0.30), 0 14px 8px -5px rgba(0, 0, 0, 0.18), 0 24px 8px rgba(0, 0, 0, 0.22),
+                0 -6px 10px rgba(255, 255, 255, 0.30), inset 0 3px 3px rgba(255, 255, 255, 0.40),
+                inset 0 -3px 3px rgba(89, 91, 92, 0.40) !important;
+        }
+        .player-joystick .button-wrapper.dir-right {
+            transform-style: preserve-3d;
+            transform: translate(8px, 0) rotateY(12deg);
+            box-shadow: 2px 9px 14px rgba(0, 0, 0, 0.28), 2px 19px 8px -2px rgba(0, 0, 0, 0.10),
+                2px 30px 8px rgba(0, 0, 0, 0.18), -6px -14px 10px rgba(255, 255, 255, 0.30),
+                inset 0 3px 3px rgba(255, 255, 255, 0.40), inset 0 -3px 3px rgba(89, 91, 92, 0.40) !important;
+        }
+        .player-joystick .button-wrapper.dir-down {
+            transform-style: preserve-3d;
+            transform: translate(0, 8px) rotateX(-12deg);
+            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.40), 0 19px 8px -2px rgba(0, 0, 0, 0.20), 0 34px 8px rgba(0, 0, 0, 0.28),
+                0 -14px 10px rgba(255, 255, 255, 0.45), inset 0 3px 3px rgba(255, 255, 255, 0.40),
+                inset 0 -3px 3px rgba(89, 91, 92, 0.40) !important;
+        }
+        .player-joystick .button-wrapper.dir-left {
+            transform-style: preserve-3d;
+            transform: translate(-8px, 0) rotateY(-12deg);
+            box-shadow: -2px 9px 14px rgba(0, 0, 0, 0.28), -2px 19px 8px -2px rgba(0, 0, 0, 0.10),
+                -2px 30px 8px rgba(0, 0, 0, 0.18), 6px -14px 10px rgba(255, 255, 255, 0.30),
+                inset 0 3px 3px rgba(255, 255, 255, 0.40), inset 0 -3px 3px rgba(89, 91, 92, 0.40) !important;
+        }
+
+        /* ===== 模态框 ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.25s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .modal-box {
+            background: var(--modal-bg);
+            border-radius: 28px;
+            padding: 24px 28px;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-day);
+        }
+        body.night-mode .modal-box {
+            background: rgba(30, 30, 30, 0.90);
+            color: var(--text-night);
+        }
+        .modal-box h3 {
+            margin-bottom: 16px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+        .modal-box label {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            opacity: 0.6;
+        }
+        .modal-box input {
+            width: 100%;
+            padding: 8px 14px;
+            border-radius: 12px;
+            border: none;
+            background: var(--input-bg);
+            box-shadow: inset 3px 3px 6px var(--shadow-dark-day), inset -3px -3px 6px var(--shadow-light-day);
+            color: var(--text-day);
+            font-size: 0.95rem;
+            margin-top: 4px;
+            outline: none;
+            transition: box-shadow 0.2s;
+        }
+        body.night-mode .modal-box input {
+            background: #2a2c2e;
+            box-shadow: inset 3px 3px 6px #0a0c0e, inset -3px -3px 6px #3a3c3e;
+            color: var(--text-night);
+        }
+        .modal-box input:focus {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark-day), inset -4px -4px 8px var(--shadow-light-day);
+        }
+        body.night-mode .modal-box input:focus {
+            box-shadow: inset 4px 4px 8px #0a0c0e, inset -4px -4px 8px #3a3c3e;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        .modal-actions button {
+            padding: 6px 18px;
+            border-radius: 40px;
+            border: none;
+            background: var(--link-bg);
+            box-shadow: 4px 4px 8px var(--shadow-dark-day), -4px -4px 8px var(--shadow-light-day);
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: var(--text-day);
+            transition: all 0.2s;
+        }
+        body.night-mode .modal-actions button {
+            background: #2a2c2e;
+            box-shadow: 4px 4px 8px #0a0c0e, -4px -4px 8px #3a3c3e;
+            color: var(--text-night);
+        }
+        .modal-actions button:hover {
+            transform: scale(1.04);
+        }
+        .modal-actions button:active {
+            transform: scale(0.96);
+            box-shadow: inset 3px 3px 6px var(--shadow-dark-day), inset -3px -3px 6px var(--shadow-light-day);
+        }
+        body.night-mode .modal-actions button:active {
+            box-shadow: inset 3px 3px 6px #0a0c0e, inset -3px -3px 6px #3a3c3e;
+        }
+        .modal-actions .btn-danger {
+            color: #999;
+        }
+        .modal-actions .btn-primary {
+            color: #555;
+        }
+        body.night-mode .modal-actions .btn-danger {
+            color: #aaa;
+        }
+        body.night-mode .modal-actions .btn-primary {
+            color: #ccc;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 600px) {
+            .simple-mode #time {
+                font-size: 3rem;
+            }
+            .simple-mode .search-box {
+                height: 42px;
+            }
+            .simple-mode .search-btn {
+                width: 40px;
+                height: 40px;
+            }
+            .simple-mode .link-item,
+            .simple-mode .add-link-btn {
+                min-width: 44px;
+                height: 38px;
+                padding: 0 8px;
+                font-size: 0.75rem;
+            }
+            .quote-area .quote-text {
+                font-size: 1rem;
+            }
+            .glass-search-wrapper {
+                max-width: 92%;
+                padding: 0 4px 0 12px;
+                height: 46px;
+            }
+            .glass-search-input {
+                font-size: 0.85rem;
+            }
+            .glass-search-btn {
+                width: 36px;
+                height: 36px;
+            }
+            .glass-search-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+            .glass-links {
+                gap: 12px;
+            }
+            .glass-links .glass-link {
+                font-size: 0.75rem;
+                padding: 4px 10px;
+            }
+            .glass-links .glass-add {
+                font-size: 1rem;
+                padding: 4px 10px;
+            }
+            #musicPlayer {
+                width: 230px;
+            }
+            .player-cover {
+                border-radius: 20px 20px 0 0;
+            }
+            .player-joystick {
+                width: 140px;
+                height: 140px;
+            }
+            .player-joystick .around {
+                width: 140px;
+                height: 140px;
+            }
+            .player-joystick .handle {
+                width: 108px;
+                height: 108px;
+            }
+            .player-joystick .button-wrapper {
+                width: 72px;
+                height: 72px;
+            }
+            .player-joystick .inside {
+                width: 58px;
+                height: 58px;
+            }
+            .player-joystick .touch {
+                width: 140px;
+                height: 140px;
+            }
+            .player-joystick .touch>div {
+                width: 48px;
+                height: 48px;
+            }
+            #wallpaperSettings {
+                top: 14px;
+                right: 14px;
+            }
+            .settings-toggle {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
+            }
+            .settings-panel {
+                min-width: 140px;
+                padding: 12px 14px;
+            }
+            .settings-panel .setting-row .wp-preview-item {
+                aspect-ratio: 4/3;
+            }
+            #modeSwitch {
+                top: 14px;
+                left: 14px;
+                padding: 4px 8px 4px 12px;
+            }
+            #modeSwitch span {
+                font-size: 0.7rem;
+            }
+            #wallpaperTimeDisplay .wp-time {
+                font-size: 3.4rem;
+            }
+            #wallpaperTimeDisplay .wp-date {
+                font-size: 1rem;
+            }
+            #wallpaperQuoteDisplay {
+                max-width: 300px;
+            }
+            #wallpaperQuoteDisplay .wq-text {
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 400px) {
+            .simple-mode #time {
+                font-size: 2.4rem;
+            }
+            .simple-mode .search-box {
+                height: 36px;
+                padding: 0 10px;
+            }
+            .simple-mode .search-btn {
+                width: 34px;
+                height: 34px;
+            }
+            .simple-mode .search-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+            .simple-mode .link-item,
+            .simple-mode .add-link-btn {
+                min-width: 38px;
+                height: 32px;
+                padding: 0 6px;
+                font-size: 0.65rem;
+            }
+            .quote-area .quote-text {
+                font-size: 0.85rem;
+            }
+            .player-cover {
+                border-radius: 16px 16px 0 0;
+            }
+            .player-joystick {
+                width: 120px;
+                height: 120px;
+            }
+            .player-joystick .around {
+                width: 120px;
+                height: 120px;
+            }
+            .player-joystick .handle {
+                width: 92px;
+                height: 92px;
+            }
+            .player-joystick .button-wrapper {
+                width: 62px;
+                height: 62px;
+            }
+            .player-joystick .inside {
+                width: 50px;
+                height: 50px;
+            }
+            .player-joystick .touch {
+                width: 120px;
+                height: 120px;
+            }
+            .player-joystick .touch>div {
+                width: 40px;
+                height: 40px;
+            }
+            #musicPlayer {
+                width: 200px;
+            }
+            .glass-links .glass-link {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+            }
+            .glass-links .glass-add {
+                font-size: 0.9rem;
+                padding: 3px 8px;
+            }
+            .glass-search-wrapper {
+                height: 40px;
+                padding: 0 4px 0 10px;
+            }
+            .glass-search-input {
+                font-size: 0.8rem;
+            }
+            .glass-search-btn {
+                width: 32px;
+                height: 32px;
+            }
+            .glass-search-btn svg {
+                width: 16px;
+                height: 16px;
+            }
+            .settings-panel .setting-row .wp-preview-item {
+                aspect-ratio: 4/3;
+            }
+            #wallpaperTimeDisplay .wp-time {
+                font-size: 2.6rem;
+            }
+            #wallpaperTimeDisplay .wp-date {
+                font-size: 0.8rem;
+            }
+            #wallpaperQuoteDisplay .wq-text {
+                font-size: 0.85rem;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== 壁纸模式 - 文字颜色自适应 ===== */
+        body.wallpaper-mode[data-brightness="dark"] {
+            --wallpaper-text: #ffffff;
+            --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
+        }
+        body.wallpaper-mode[data-brightness="light"] {
+            --wallpaper-text: #1a1a1a;
+            --wallpaper-text-secondary: rgba(26, 26, 26, 0.65);
+        }
+        body.wallpaper-mode {
+            --wallpaper-text: #ffffff;
+            --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-toggle {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-wrapper {
+            background: rgba(255, 255, 255, 0.20);
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-input {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-input::placeholder {
+            color: rgba(26, 26, 26, 0.4);
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-btn {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-links .glass-link {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-links .glass-add {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row label {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row .type-btn {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row .range-value {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #modeSwitch span {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-time {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-date {
+            color: rgba(26, 26, 26, 0.6);
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperQuoteDisplay .wq-text {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperQuoteDisplay .wq-author {
+            color: rgba(26, 26, 26, 0.4);
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-wrapper {
+            background: rgba(255, 255, 255, 0.20);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-btn {
+            background: rgba(255, 255, 255, 0.20);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== 壁纸容器 ===== -->
+    <div class="wallpaper-container" id="wallpaperContainer">
+        <video id="wallpaperVideo" muted playsinline preload="auto" loop></video>
+        <img id="wallpaperImg" src="" alt="壁纸" />
+    </div>
+
+    <!-- ===== 拉绳 (简洁模式) ===== -->
+    <div id="rope-container">
+        <div class="rope-mount"></div>
+        <div id="rope-line"></div>
+        <div id="rope-handle">
+            <span class="icon-sun">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </span>
+            <span class="icon-moon">
+                <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </span>
+        </div>
+    </div>
+
+    <!-- ===== 左上角模式切换 ===== -->
+    <div id="modeSwitch">
+        <span id="modeLabel">简洁</span>
+        <div class="toggle-track">
+            <div class="toggle-thumb"></div>
+        </div>
+    </div>
+
+    <!-- ===== 简洁模式 ===== -->
+    <div class="simple-mode" id="simpleMode">
+        <div class="clock">
+            <div id="time">00:00</div>
+            <div id="date">加载中...</div>
+        </div>
+
+        <div class="quote-area" id="quoteArea">
+            <div class="quote-text" id="quoteText">学而不思则罔，思而不学则殆。</div>
+            <div class="quote-author" id="quoteAuthor">— 孔子</div>
+        </div>
+
+        <div class="search-wrapper" id="searchWrapper">
+            <div class="search-box">
+                <input type="text" id="searchInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </div>
+            <button class="search-btn" id="searchBtn">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </button>
+        </div>
+
+        <div class="links-grid" id="linksGrid"></div>
+    </div>
+
+    <!-- ===== 壁纸模式 - 可拖动元素 ===== -->
+    <!-- 时间 (中顶部) -->
+    <div class="draggable-item" id="wallpaperTimeDisplay" data-draggable>
+        <div class="wp-time" id="wpTime">00:00</div>
+        <div class="wp-date" id="wpDate">加载中...</div>
+    </div>
+
+    <!-- 名言 (右下) -->
+    <div class="draggable-item" id="wallpaperQuoteDisplay" data-draggable>
+        <div class="wq-text" id="wqText">学而不思则罔，思而不学则殆。</div>
+        <div class="wq-author" id="wqAuthor">— 孔子</div>
+    </div>
+
+    <!-- ===== 壁纸模式 - 毛玻璃搜索框 (壁纸模式专属，简洁模式隐藏) ===== -->
+    <div class="draggable-item glass-search-wrapper" id="glassSearch" data-draggable>
+        <div class="glass-search-box">
+            <input type="text" class="glass-search-input" id="glassSearchInput" placeholder="搜索..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        </div>
+        <button class="glass-search-btn" id="glassSearchBtn">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+    </div>
+
+    <!-- 链接 (左侧竖直) -->
+    <div class="draggable-item glass-links" id="glassLinks" data-draggable></div>
+
+    <!-- ===== 壁纸模式设置 ===== -->
+    <div id="wallpaperSettings">
+        <button class="settings-toggle" id="settingsToggle">⚙</button>
+        <div class="settings-panel" id="settingsPanel">
+            <div class="setting-row">
+                <label>壁纸类型</label>
+                <div class="type-btns">
+                    <button class="type-btn active" data-type="static">静态</button>
+                    <button class="type-btn" data-type="dynamic">动态</button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <label>选择壁纸</label>
+                <div class="wallpaper-preview" id="wallpaperPreview"></div>
+            </div>
+            <div class="setting-row">
+                <label>播放器透明度</label>
+                <input type="range" id="glassOpacityRange" min="0.1" max="1" step="0.05" value="0.7" />
+                <div class="range-value" id="glassOpacityValue">70%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 音乐播放器 ===== -->
+    <div id="musicPlayer">
+        <div class="player-cover" id="playerCover">
+            <img id="playerCoverImg" src="" alt="封面" />
+        </div>
+        <div class="player-joystick">
+            <div class="around">
+                <div class="handle">
+                    <div class="button-wrapper" id="playerJoystickBtn">
+                        <div class="inside">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="touch">
+                <div class="t1" data-dir="up"></div>
+                <div class="t2" data-dir="right"></div>
+                <div class="t3" data-dir="down"></div>
+                <div class="t4" data-dir="left"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 模态框 (编辑链接) ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <h3 id="modalTitle">编辑链接</h3>
+            <label>显示文字</label>
+            <input type="text" id="modalText" placeholder="例如：百度" />
+            <label>链接地址</label>
+            <input type="text" id="modalUrl" placeholder="https://..." />
+            <div class="modal-actions">
+                <button class="btn-danger" id="modalDelete" style="display:none;">删除</button>
+                <button id="modalCancel">取消</button>
+                <button class="btn-primary" id="modalSave">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ================================================================
+            // 0. 预置链接 (14个用户提供的链接)
+            // ================================================================
+            const DEFAULT_LINKS = [
+                { text: '我的简历', url: 'https://lvyyjianli.netlify.app/' },
+                { text: '中国色', url: 'https://zhongguose.com/' },
+                { text: '在线音乐', url: 'https://www.qqmp3.vip/' },
+                { text: '小霸王', url: 'https://www.yikm.net/' },
+                { text: '乡间郎中', url: 'https://www.xjlz365.com/' },
+                { text: 'A站', url: 'https://www.acfun.cn/' },
+                { text: '八门全开', url: 'https://kms.cx/' },
+                { text: 'MC', url: 'https://mcjs.link/' },
+                { text: 'CS', url: 'https://webcs.xyz/' },
+                { text: '装机儿', url: 'https://zhuangit.ababtools.com/' },
+                { text: '天阶功法', url: 'https://www.shidianguji.com/' },
+                { text: '世界名画', url: 'https://www.nbfox.com/' },
+                { text: '焚决', url: 'https://fmhy.net/' },
+                { text: '人造灵根', url: 'https://codernav.com/' },
+                { text: '全球电台', url: 'https://radiocast.co/' }
+            ];
+
+            let links = [...DEFAULT_LINKS];
+
+            // ================================================================
+            // 1. 壁纸系统 (静态10张，动态2张)
+            // ================================================================
+            const wallpapers = {
+                dynamic: [
+                    { id: 'd1', name: '晨曦', file: 'dynamic_01.mp4' },
+                    { id: 'd2', name: '星夜', file: 'dynamic_02.mp4' },
+                ],
+                static: [
+                    { id: 's1', name: '极光', file: 'static_01.png' },
+                    { id: 's2', name: '森林', file: 'static_02.png' },
+                    { id: 's3', name: '海洋', file: 'static_03.png' },
+                    { id: 's4', name: '山峦', file: 'static_04.png' },
+                    { id: 's5', name: '星空', file: 'static_05.png' },
+                    { id: 's6', name: '城市', file: 'static_06.png' },
+                    { id: 's7', name: '花园', file: 'static_07.png' },
+                    { id: 's8', name: '晨曦', file: 'static_08.png' },
+                    { id: 's9', name: '晚霞', file: 'static_09.png' },
+                    { id: 's10', name: '夜空', file: 'static_10.png' },
+                ]
+            };
+
+            const videoEl = document.getElementById('wallpaperVideo');
+            const imgEl = document.getElementById('wallpaperImg');
+            let currentWallpaperType = 'static';
+            let currentWallpaperId = 's1';
+            let isWallpaperTransitioning = false;
+
+            // ---------- 亮度检测 ----------
+            function detectBrightnessFromImage(img) {
+                return new Promise((resolve) => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const w = 64,
+                        h = 64;
+                    canvas.width = w;
+                    canvas.height = h;
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const data = ctx.getImageData(0, 0, w, h).data;
+                    let sum = 0,
+                        count = 0;
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i],
+                            g = data[i + 1],
+                            b = data[i + 2];
+                        const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+                        sum += luma;
+                        count++;
+                    }
+                    const avg = sum / count;
+                    resolve(avg < 128 ? 'dark' : 'light');
+                });
+            }
+
+            function detectBrightnessFromVideo(video) {
+                return new Promise((resolve) => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const w = 64,
+                        h = 64;
+                    canvas.width = w;
+                    canvas.height = h;
+                    ctx.drawImage(video, 0, 0, w, h);
+                    const data = ctx.getImageData(0, 0, w, h).data;
+                    let sum = 0,
+                        count = 0;
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i],
+                            g = data[i + 1],
+                            b = data[i + 2];
+                        const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+                        sum += luma;
+                        count++;
+                    }
+                    const avg = sum / count;
+                    resolve(avg < 128 ? 'dark' : 'light');
+                });
+            }
+
+            function applyBrightnessClass(brightness) {
+                const body = document.body;
+                if (brightness === 'dark') {
+                    body.setAttribute('data-brightness', 'dark');
+                } else if (brightness === 'light') {
+                    body.setAttribute('data-brightness', 'light');
+                } else {
+                    body.removeAttribute('data-brightness');
+                }
+            }
+
+            // ---------- 应用壁纸 ----------
+            function applyWallpaper(type, id) {
+                if (isWallpaperTransitioning) return;
+                const list = wallpapers[type];
+                if (!list) return;
+                const item = list.find(w => w.id === id);
+                if (!item) return;
+                isWallpaperTransitioning = true;
+                currentWallpaperType = type;
+                currentWallpaperId = id;
+
+                videoEl.classList.remove('active');
+                imgEl.classList.remove('active');
+                applyBrightnessClass('dark');
+
+                setTimeout(() => {
+                    if (type === 'dynamic') {
+                        const src = 'videos/' + item.file;
+                        const source = videoEl.querySelector('source');
+                        if (source) {
+                            source.setAttribute('src', src);
+                        } else {
+                            const newSource = document.createElement('source');
+                            newSource.setAttribute('src', src);
+                            newSource.setAttribute('type', 'video/mp4');
+                            videoEl.appendChild(newSource);
+                        }
+                        videoEl.load();
+                        videoEl.loop = true;
+                        videoEl.play().catch(() => {});
+                        requestAnimationFrame(() => {
+                            setTimeout(() => {
+                                videoEl.classList.add('active');
+                                setTimeout(() => {
+                                    try {
+                                        detectBrightnessFromVideo(videoEl).then(brightness => {
+                                            applyBrightnessClass(brightness);
+                                        }).catch(() => {});
+                                    } catch (_) {}
+                                }, 300);
+                                setTimeout(() => {
+                                    isWallpaperTransitioning = false;
+                                }, 400);
+                            }, 80);
+                        });
+                    } else {
+                        const src = 'images/' + item.file;
+                        imgEl.src = src;
+                        imgEl.onload = function() {
+                            requestAnimationFrame(() => {
+                                setTimeout(() => {
+                                    imgEl.classList.add('active');
+                                    try {
+                                        detectBrightnessFromImage(imgEl).then(brightness => {
+                                            applyBrightnessClass(brightness);
+                                        }).catch(() => {});
+                                    } catch (_) {}
+                                    setTimeout(() => {
+                                        isWallpaperTransitioning = false;
+                                    }, 400);
+                                }, 80);
+                            });
+                        };
+                        imgEl.onerror = function() {
+                            isWallpaperTransitioning = false;
+                        };
+                    }
+                }, 400);
+
+                document.querySelectorAll('.wp-preview-item').forEach(el => {
+                    el.classList.toggle('active', el.dataset.id === id && el.dataset.type === type);
+                });
+            }
+
+            // ================================================================
+            // 2. 简洁模式日夜切换 (拉绳)
+            // ================================================================
+            const body = document.body;
+            let currentMode = 'day';
+
+            function setDayNight(mode) {
+                if (mode === currentMode) return;
+                currentMode = mode;
+                if (mode === 'day') {
+                    body.classList.remove('night-mode');
+                } else {
+                    body.classList.add('night-mode');
+                }
+                const sun = document.querySelector('.icon-sun');
+                const moon = document.querySelector('.icon-moon');
+                if (sun && moon) {
+                    sun.style.display = mode === 'day' ? 'inline-block' : 'none';
+                    moon.style.display = mode === 'night' ? 'inline-block' : 'none';
+                }
+            }
+
+            // ================================================================
+            // 3. 拉绳交互
+            // ================================================================
+            const ropeHandle = document.getElementById('rope-handle');
+            const ropeLine = document.getElementById('rope-line');
+            let isDragging = false;
+            let dragStartY = 0;
+            let currentPull = 0;
+            const MAX_PULL = 120;
+            const THRESHOLD = 70;
+            let hasTriggered = false;
+
+            function resetRope(animate) {
+                if (animate !== false) {
+                    ropeLine.style.transition = 'height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    ropeHandle.style.transition = 'top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                } else {
+                    ropeLine.style.transition = 'none';
+                    ropeHandle.style.transition = 'none';
+                }
+                ropeLine.style.height = '60px';
+                ropeHandle.style.top = '72px';
+                currentPull = 0;
+                hasTriggered = false;
+                if (animate !== false) {
+                    setTimeout(() => {
+                        ropeLine.style.transition = 'height 0.15s ease-out';
+                        ropeHandle.style.transition = 'none';
+                    }, 550);
+                } else {
+                    ropeLine.style.transition = 'height 0.15s ease-out';
+                    ropeHandle.style.transition = 'none';
+                }
+            }
+
+            function updateRope(pull) {
+                const clamped = Math.min(Math.max(pull, 0), MAX_PULL);
+                ropeLine.style.height = (60 + clamped) + 'px';
+                ropeHandle.style.top = (72 + clamped) + 'px';
+                currentPull = clamped;
+            }
+
+            function triggerSwitch() {
+                if (hasTriggered) return;
+                hasTriggered = true;
+                const target = currentMode === 'day' ? 'night' : 'day';
+                setDayNight(target);
+            }
+
+            ropeHandle.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                isDragging = true;
+                dragStartY = e.clientY;
+                hasTriggered = false;
+                ropeLine.style.transition = 'none';
+                ropeHandle.style.transition = 'none';
+                ropeHandle.style.cursor = 'grabbing';
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                const delta = e.clientY - dragStartY;
+                const pull = Math.max(0, delta);
+                updateRope(pull);
+                if (pull >= THRESHOLD && !hasTriggered) triggerSwitch();
+            });
+            document.addEventListener('mouseup', function(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                ropeHandle.style.cursor = 'grab';
+                if (currentPull >= THRESHOLD && !hasTriggered) triggerSwitch();
+                resetRope(true);
+            });
+            ropeHandle.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                isDragging = true;
+                dragStartY = touch.clientY;
+                hasTriggered = false;
+                ropeLine.style.transition = 'none';
+                ropeHandle.style.transition = 'none';
+            }, { passive: false });
+            document.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+                const touch = e.touches[0];
+                const delta = touch.clientY - dragStartY;
+                const pull = Math.max(0, delta);
+                updateRope(pull);
+                if (pull >= THRESHOLD && !hasTriggered) triggerSwitch();
+            }, { passive: true });
+            document.addEventListener('touchend', function(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                if (currentPull >= THRESHOLD && !hasTriggered) triggerSwitch();
+                resetRope(true);
+            }, { passive: true });
+            resetRope(false);
+
+            // ================================================================
+            // 4. 名人名言 (5秒轮换，双击锁定/解锁，单击切换)
+            // ================================================================
+            const quotes = [
+                { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。', author: '孙孙浩' },
+                { text: '杀人放火厉飞雨，万人敬仰韩天尊', author: '阿青' },
+                { text: '你倒是个有情有义之人。可惜在这乱世之中，最不值钱的便是情义。且看我那两个逆徒，本座养育他们两百年，却轻易背叛。', author: '玄骨上人' },
+                { text: '立哥哥,立giegie', author: '韩小妹' },
+                { text: '什么不会抹杀我的存在？没有了自主意识后的我，还会是我吗？和从这世间消失，有什么区别。', author: '小二黑' },
+                { text: '到头来,无非是求个念头通达罢liao。', author: '孙孙浩' },
+                { text: '所谓元婴之下第一人，也不过就是个结丹修士而已，不如温少主的性命，就交予在下如何。', author: '吕少主' },
+                { text: '韩大哥，没有灵根真的不能成为修仙者么？', author: '墨彩环' },
+            ];
+
+            let quoteIndex = 0;
+            let quoteLocked = false;
+            const quoteText = document.getElementById('quoteText');
+            const quoteAuthor = document.getElementById('quoteAuthor');
+            const quoteArea = document.getElementById('quoteArea');
+            const wqText = document.getElementById('wqText');
+            const wqAuthor = document.getElementById('wqAuthor');
+            const wqDisplay = document.getElementById('wallpaperQuoteDisplay');
+
+            function showQuote(index) {
+                const q = quotes[index % quotes.length];
+                // 简洁模式
+                quoteText.textContent = q.text;
+                quoteAuthor.textContent = '— ' + q.author;
+                quoteText.classList.remove('fade');
+                void quoteText.offsetWidth;
+                quoteText.classList.add('fade');
+                setTimeout(() => {
+                    quoteText.textContent = q.text;
+                    quoteText.classList.remove('fade');
+                }, 50);
+                // 壁纸模式
+                wqText.textContent = q.text;
+                wqAuthor.textContent = '— ' + q.author;
+                wqText.classList.remove('fade');
+                void wqText.offsetWidth;
+                wqText.classList.add('fade');
+                setTimeout(() => {
+                    wqText.textContent = q.text;
+                    wqText.classList.remove('fade');
+                }, 50);
+            }
+
+            function nextQuote() {
+                if (!quoteLocked) {
+                    quoteIndex = (quoteIndex + 1) % quotes.length;
+                    showQuote(quoteIndex);
+                }
+            }
+
+            // 简洁模式 双击锁定
+            quoteArea.addEventListener('dblclick', function(e) {
+                e.stopPropagation();
+                quoteLocked = !quoteLocked;
+                if (quoteLocked) {
+                    quoteArea.style.opacity = '0.6';
+                    quoteArea.style.cursor = 'default';
+                } else {
+                    quoteArea.style.opacity = '1';
+                    quoteArea.style.cursor = 'pointer';
+                }
+            });
+            quoteArea.addEventListener('click', function(e) {
+                if (this._clickTimer) {
+                    clearTimeout(this._clickTimer);
+                    this._clickTimer = null;
+                    return;
+                }
+                this._clickTimer = setTimeout(() => {
+                    this._clickTimer = null;
+                    if (!quoteLocked) nextQuote();
+                }, 200);
+            });
+
+            // 壁纸模式 双击锁定
+            wqDisplay.addEventListener('dblclick', function(e) {
+                e.stopPropagation();
+                quoteLocked = !quoteLocked;
+                if (quoteLocked) {
+                    wqDisplay.classList.add('locked');
+                } else {
+                    wqDisplay.classList.remove('locked');
+                }
+            });
+            wqDisplay.addEventListener('click', function(e) {
+                if (this._clickTimerW) {
+                    clearTimeout(this._clickTimerW);
+                    this._clickTimerW = null;
+                    return;
+                }
+                this._clickTimerW = setTimeout(() => {
+                    this._clickTimerW = null;
+                    if (!quoteLocked) nextQuote();
+                }, 200);
+            });
+
+            setInterval(nextQuote, 5000);
+            showQuote(0);
+
+            // ================================================================
+            // 5. 快捷链接 (简洁 + 壁纸模式)
+            // ================================================================
+            const linksGrid = document.getElementById('linksGrid');
+            const glassLinks = document.getElementById('glassLinks');
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalText = document.getElementById('modalText');
+            const modalUrl = document.getElementById('modalUrl');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSave = document.getElementById('modalSave');
+            const modalCancel = document.getElementById('modalCancel');
+            const modalDelete = document.getElementById('modalDelete');
+            const searchWrapper = document.getElementById('searchWrapper');
+            const searchBtn = document.getElementById('searchBtn');
+            const searchInput = document.getElementById('searchInput');
+            const glassSearchInput = document.getElementById('glassSearchInput');
+            const glassSearchBtn = document.getElementById('glassSearchBtn');
+
+            let editingIndex = -1;
+            let searchVisible = true;
+
+            function renderAllLinks() {
+                // 简洁模式链接
+                linksGrid.innerHTML = '';
+                links.forEach((link, index) => {
+                    const a = document.createElement('a');
+                    a.className = 'link-item';
+                    a.href = link.url;
+                    a.target = '_blank';
+                    a.textContent = link.text;
+                    a.dataset.index = index;
+                    a.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                        openEditor(index);
+                    });
+                    a.addEventListener('mousedown', function(e) {
+                        if (e.button === 0) this.classList.add('pressed');
+                    });
+                    a.addEventListener('mouseup', function(e) {
+                        if (e.button === 0) this.classList.remove('pressed');
+                    });
+                    a.addEventListener('mouseleave', function(e) {
+                        this.classList.remove('pressed');
+                    });
+                    linksGrid.appendChild(a);
+                });
+                const addBtn = document.createElement('button');
+                addBtn.className = 'add-link-btn';
+                addBtn.textContent = '＋';
+                addBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openEditor(-1);
+                });
+                addBtn.addEventListener('mousedown', function() { this.classList.add('pressed'); });
+                addBtn.addEventListener('mouseup', function() { this.classList.remove('pressed'); });
+                addBtn.addEventListener('mouseleave', function() { this.classList.remove('pressed'); });
+                linksGrid.appendChild(addBtn);
+
+                if (!searchVisible) {
+                    const mobileBtn = document.createElement('button');
+                    mobileBtn.className = 'search-btn-mobile';
+                    mobileBtn.id = 'searchBtnMobile';
+                    mobileBtn.innerHTML =
+                        `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>`;
+                    mobileBtn.addEventListener('click', toggleSearch);
+                    mobileBtn.addEventListener('mousedown', function() { this.classList.add('pressed'); });
+                    mobileBtn.addEventListener('mouseup', function() { this.classList.remove('pressed'); });
+                    mobileBtn.addEventListener('mouseleave', function() { this.classList.remove('pressed'); });
+                    linksGrid.appendChild(mobileBtn);
+                }
+
+                // 壁纸模式链接 (竖直排列，左侧)
+                glassLinks.innerHTML = '';
+                links.forEach((link, index) => {
+                    const a = document.createElement('a');
+                    a.className = 'glass-link';
+                    a.href = link.url;
+                    a.target = '_blank';
+                    a.textContent = link.text;
+                    a.dataset.index = index;
+                    a.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                        openEditor(index);
+                    });
+                    glassLinks.appendChild(a);
+                });
+                const glassAdd = document.createElement('button');
+                glassAdd.className = 'glass-add';
+                glassAdd.textContent = '＋';
+                glassAdd.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openEditor(-1);
+                });
+                glassLinks.appendChild(glassAdd);
+            }
+
+            function toggleSearch() {
+                searchVisible = !searchVisible;
+                if (searchVisible) {
+                    searchWrapper.classList.remove('hidden');
+                    const mobile = document.getElementById('searchBtnMobile');
+                    if (mobile) mobile.remove();
+                    const wrapper = document.getElementById('searchWrapper');
+                    if (!wrapper.contains(searchBtn)) {
+                        wrapper.appendChild(searchBtn);
+                    }
+                } else {
+                    searchWrapper.classList.add('hidden');
+                    const existingMobile = document.getElementById('searchBtnMobile');
+                    if (!existingMobile) {
+                        const btn = document.createElement('button');
+                        btn.className = 'search-btn-mobile';
+                        btn.id = 'searchBtnMobile';
+                        btn.innerHTML =
+                            `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>`;
+                        btn.addEventListener('click', toggleSearch);
+                        btn.addEventListener('mousedown', function() { this.classList.add('pressed'); });
+                        btn.addEventListener('mouseup', function() { this.classList.remove('pressed'); });
+                        btn.addEventListener('mouseleave', function() { this.classList.remove('pressed'); });
+                        const addBtn = linksGrid.querySelector('.add-link-btn');
+                        if (addBtn) {
+                            addBtn.after(btn);
+                        } else {
+                            linksGrid.appendChild(btn);
+                        }
+                    }
+                }
+                renderAllLinks();
+            }
+
+            function openEditor(index) {
+                editingIndex = index;
+                if (index === -1) {
+                    modalTitle.textContent = '添加新链接';
+                    modalText.value = '';
+                    modalUrl.value = '';
+                    modalDelete.style.display = 'none';
+                } else {
+                    modalTitle.textContent = '编辑链接';
+                    modalText.value = links[index].text;
+                    modalUrl.value = links[index].url;
+                    modalDelete.style.display = 'inline-block';
+                }
+                modalOverlay.classList.add('active');
+                modalText.focus();
+            }
+
+            function closeEditor() {
+                modalOverlay.classList.remove('active');
+                editingIndex = -1;
+            }
+
+            function saveLink() {
+                const text = modalText.value.trim();
+                const url = modalUrl.value.trim();
+                if (!text || !url) { alert('请填写完整信息'); return; }
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    alert('链接地址需以 http:// 或 https:// 开头');
+                    return;
+                }
+                if (editingIndex === -1) {
+                    links.push({ text, url });
+                } else {
+                    links[editingIndex] = { text, url };
+                }
+                renderAllLinks();
+                closeEditor();
+                saveLinksToStorage();
+            }
+
+            function deleteLink() {
+                if (editingIndex === -1) return;
+                if (confirm('确定删除？')) {
+                    links.splice(editingIndex, 1);
+                    renderAllLinks();
+                    closeEditor();
+                    saveLinksToStorage();
+                }
+            }
+
+            function saveLinksToStorage() {
+                try { localStorage.setItem('quickLinks', JSON.stringify(links)); } catch (e) {}
+            }
+
+            function loadLinksFromStorage() {
+                try {
+                    const data = localStorage.getItem('quickLinks');
+                    if (data) {
+                        const parsed = JSON.parse(data);
+                        if (Array.isArray(parsed) && parsed.length === DEFAULT_LINKS.length) {
+                            const hasOld = parsed.some(l =>
+                                l.text === '百度' || l.text === 'B站' ||
+                                l.url.includes('baidu') || l.url.includes('bilibili')
+                            );
+                            if (!hasOld) {
+                                links = parsed;
+                                return;
+                            }
+                        }
+                    }
+                    links = [...DEFAULT_LINKS];
+                    saveLinksToStorage();
+                } catch (e) {
+                    links = [...DEFAULT_LINKS];
+                }
+            }
+
+            modalSave.addEventListener('click', saveLink);
+            modalCancel.addEventListener('click', closeEditor);
+            modalDelete.addEventListener('click', deleteLink);
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === this) closeEditor();
+            });
+            modalText.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') saveLink();
+                if (e.key === 'Escape') closeEditor();
+            });
+            modalUrl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') saveLink();
+                if (e.key === 'Escape') closeEditor();
+            });
+
+            loadLinksFromStorage();
+            renderAllLinks();
+
+            // 搜索 (简洁)
+            function search() {
+                const query = searchInput.value.trim();
+                if (query) {
+                    window.location.href = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
+                } else {
+                    if (searchVisible) toggleSearch();
+                }
+            }
+            searchBtn.addEventListener('click', search);
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') search();
+            });
+
+            // 搜索 (壁纸 - 毛玻璃搜索框)
+            function glassSearch() {
+                const query = glassSearchInput.value.trim();
+                if (query) {
+                    window.location.href = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
+                }
+            }
+            glassSearchBtn.addEventListener('click', glassSearch);
+            glassSearchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') glassSearch();
+            });
+
+            // ================================================================
+            // 6. 壁纸模式 - 设置面板 & 预览 (每行4个)
+            // ================================================================
+            const settingsToggle = document.getElementById('settingsToggle');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const wallpaperPreview = document.getElementById('wallpaperPreview');
+            let settingsOpen = false;
+
+            settingsToggle.addEventListener('click', function() {
+                settingsOpen = !settingsOpen;
+                settingsPanel.classList.toggle('open', settingsOpen);
+                if (settingsOpen) renderWallpaperPreview();
+            });
+
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    renderWallpaperPreview();
+                });
+            });
+
+            function renderWallpaperPreview() {
+                wallpaperPreview.innerHTML = '';
+                const type = document.querySelector('.type-btn.active')?.dataset.type || 'static';
+                const items = wallpapers[type] || [];
+                items.forEach(wp => {
+                    const el = document.createElement('div');
+                    el.className = 'wp-preview-item';
+                    if (currentWallpaperType === type && currentWallpaperId === wp.id) {
+                        el.classList.add('active');
+                    }
+                    el.dataset.id = wp.id;
+                    el.dataset.type = type;
+
+                    const isVideo = type === 'dynamic';
+                    if (isVideo) {
+                        const vid = document.createElement('video');
+                        vid.src = 'videos/' + wp.file;
+                        vid.muted = true;
+                        vid.playsInline = true;
+                        vid.preload = 'metadata';
+                        vid.loop = true;
+                        vid.addEventListener('loadedmetadata', function() {
+                            this.play().catch(() => {});
+                        });
+                        el.appendChild(vid);
+                    } else {
+                        const img = document.createElement('img');
+                        img.src = 'images/' + wp.file;
+                        img.alt = wp.name;
+                        img.loading = 'lazy';
+                        el.appendChild(img);
+                    }
+
+                    const label = document.createElement('div');
+                    label.className = 'wp-label';
+                    label.textContent = wp.name;
+                    el.appendChild(label);
+
+                    const check = document.createElement('div');
+                    check.className = 'check-mark';
+                    check.textContent = '✓';
+                    el.appendChild(check);
+
+                    el.addEventListener('click', function() {
+                        applyWallpaper(type, wp.id);
+                        renderWallpaperPreview();
+                    });
+
+                    wallpaperPreview.appendChild(el);
+                });
+            }
+
+            // 毛玻璃透明度 (仅对播放器)
+            const glassRange = document.getElementById('glassOpacityRange');
+            const glassValue = document.getElementById('glassOpacityValue');
+
+            function updateGlassOpacity(val) {
+                const v = parseFloat(val);
+                glassValue.textContent = Math.round(v * 100) + '%';
+                document.querySelector('#musicPlayer').style.opacity = v;
+            }
+
+            glassRange.addEventListener('input', function() {
+                updateGlassOpacity(this.value);
+            });
+
+            // ================================================================
+            // 7. 音乐播放器 (支持 mp3, flac, wav 等)
+            // ================================================================
+            const musicPlayer = document.getElementById('musicPlayer');
+            const playerCover = document.getElementById('playerCover');
+            const playerCoverImg = document.getElementById('playerCoverImg');
+            const playerJoystickBtn = document.getElementById('playerJoystickBtn');
+
+            const IMAGE_COUNT = 36;
+            const albumImages = [];
+            for (let i = 1; i <= IMAGE_COUNT; i++) {
+                const num = String(i).padStart(2, '0');
+                albumImages.push(`images/cover_${num}.png`);
+            }
+
+            const songs = [
+                { name: '星尘', file: 'song_01.mp3' },
+                { name: '夜航', file: 'song_02.mp3' },
+                { name: '晨光', file: 'song_03.mp3' },
+            ];
+
+            let currentSongIndex = 0;
+            let currentImageIndex = 0;
+            let audioPlayer = null;
+            let isPlaying = false;
+
+            function initAudio() {
+                if (!audioPlayer) {
+                    audioPlayer = new Audio();
+                    audioPlayer.volume = 0.6;
+                    audioPlayer.addEventListener('ended', function() {
+                        isPlaying = false;
+                    });
+                }
+            }
+
+            function playSong(index) {
+                initAudio();
+                const song = songs[index % songs.length];
+                if (!song) return;
+                const src = 'songs/' + song.file;
+                audioPlayer.src = src;
+                audioPlayer.load();
+                audioPlayer.play().catch(() => {});
+                isPlaying = true;
+            }
+
+            function togglePlay() {
+                if (!audioPlayer) {
+                    initAudio();
+                    playSong(currentSongIndex);
+                    return;
+                }
+                if (isPlaying) {
+                    audioPlayer.pause();
+                    isPlaying = false;
+                } else {
+                    audioPlayer.play().catch(() => {});
+                    isPlaying = true;
+                }
+            }
+
+            function updatePlayerCover() {
+                playerCoverImg.src = albumImages[currentImageIndex] || 'images/cover_01.png';
+            }
+
+            playerCover.addEventListener('click', function(e) {
+                e.stopPropagation();
+                togglePlay();
+            });
+
+            const playerTouchDivs = document.querySelectorAll('.player-joystick .touch > div');
+            playerTouchDivs.forEach(div => {
+                const dir = div.dataset.dir;
+                div.addEventListener('mouseenter', function() {
+                    playerJoystickBtn.classList.remove('dir-up', 'dir-down', 'dir-left', 'dir-right');
+                    playerJoystickBtn.classList.add('dir-' + dir);
+                });
+                div.addEventListener('mouseleave', function() {
+                    playerJoystickBtn.classList.remove('dir-up', 'dir-down', 'dir-left', 'dir-right');
+                });
+                div.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handlePlayerJoystick(dir);
+                });
+                div.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handlePlayerJoystick(dir);
+                }, { passive: false });
+            });
+
+            function handlePlayerJoystick(dir) {
+                switch (dir) {
+                    case 'up':
+                        currentImageIndex = (currentImageIndex - 1 + IMAGE_COUNT) % IMAGE_COUNT;
+                        updatePlayerCover();
+                        break;
+                    case 'down':
+                        currentImageIndex = (currentImageIndex + 1) % IMAGE_COUNT;
+                        updatePlayerCover();
+                        break;
+                    case 'left':
+                        currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+                        playSong(currentSongIndex);
+                        break;
+                    case 'right':
+                        currentSongIndex = (currentSongIndex + 1) % songs.length;
+                        playSong(currentSongIndex);
+                        break;
+                }
+            }
+
+            let playerVisible = false;
+            document.addEventListener('dblclick', function(e) {
+                if (e.target.closest('.modal-overlay') || e.target.closest('#modeSwitch') ||
+                    e.target.closest('#rope-container') || e.target.closest('.player-joystick') ||
+                    e.target.closest('#wallpaperSettings') || e.target.closest('.settings-panel') ||
+                    e.target.closest('.settings-toggle') || e.target.closest('.player-cover') ||
+                    e.target.closest('.quote-area') || e.target.closest('.wallpaper-quote-display')) {
+                    return;
+                }
+                if (!playerVisible) {
+                    musicPlayer.classList.add('active');
+                    playerVisible = true;
+                    const w = window.innerWidth;
+                    const h = window.innerHeight;
+                    const pw = musicPlayer.offsetWidth || 270;
+                    const ph = musicPlayer.offsetHeight || 400;
+                    musicPlayer.style.left = Math.max(10, Math.min(w - pw - 10, w / 2 - pw / 2 + (Math.random() - 0.5) *
+                        100)) + 'px';
+                    musicPlayer.style.top = Math.max(10, Math.min(h - ph - 10, h / 2 - ph / 2 + (Math.random() - 0.5) *
+                        100)) + 'px';
+                    updatePlayerCover();
+                    initAudio();
+                    if (!isPlaying) {
+                        playSong(currentSongIndex);
+                    }
+                } else {
+                    musicPlayer.classList.remove('active');
+                    playerVisible = false;
+                }
+            });
+
+            // 拖动播放器
+            let isDraggingPlayer = false;
+            let dragOffsetX, dragOffsetY;
+
+            musicPlayer.addEventListener('mousedown', function(e) {
+                if (e.target.closest('.player-joystick') || e.target.closest('.player-cover')) return;
+                isDraggingPlayer = true;
+                const rect = musicPlayer.getBoundingClientRect();
+                dragOffsetX = e.clientX - rect.left;
+                dragOffsetY = e.clientY - rect.top;
+                musicPlayer.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!isDraggingPlayer) return;
+                let x = e.clientX - dragOffsetX;
+                let y = e.clientY - dragOffsetY;
+                x = Math.max(0, Math.min(window.innerWidth - musicPlayer.offsetWidth, x));
+                y = Math.max(0, Math.min(window.innerHeight - musicPlayer.offsetHeight, y));
+                musicPlayer.style.left = x + 'px';
+                musicPlayer.style.top = y + 'px';
+            });
+            document.addEventListener('mouseup', function(e) {
+                if (isDraggingPlayer) {
+                    isDraggingPlayer = false;
+                    musicPlayer.style.cursor = 'grab';
+                }
+            });
+            musicPlayer.addEventListener('touchstart', function(e) {
+                if (e.target.closest('.player-joystick') || e.target.closest('.player-cover')) return;
+                const touch = e.touches[0];
+                const rect = musicPlayer.getBoundingClientRect();
+                dragOffsetX = touch.clientX - rect.left;
+                dragOffsetY = touch.clientY - rect.top;
+                isDraggingPlayer = true;
+                e.preventDefault();
+            }, { passive: false });
+            document.addEventListener('touchmove', function(e) {
+                if (!isDraggingPlayer) return;
+                const touch = e.touches[0];
+                let x = touch.clientX - dragOffsetX;
+                let y = touch.clientY - dragOffsetY;
+                x = Math.max(0, Math.min(window.innerWidth - musicPlayer.offsetWidth, x));
+                y = Math.max(0, Math.min(window.innerHeight - musicPlayer.offsetHeight, y));
+                musicPlayer.style.left = x + 'px';
+                musicPlayer.style.top = y + 'px';
+            }, { passive: true });
+            document.addEventListener('touchend', function(e) {
+                if (isDraggingPlayer) {
+                    isDraggingPlayer = false;
+                }
+            }, { passive: true });
+
+            updatePlayerCover();
+
+            // ================================================================
+            // 8. 模式切换 (简洁 ↔ 壁纸) + 拖拽及位置管理
+            // ================================================================
+            const modeSwitch = document.getElementById('modeSwitch');
+            const modeLabel = document.getElementById('modeLabel');
+            let isWallpaperMode = false;
+
+            // 存储每个可拖动元素的位置 { id: {left, top} }
+            const positions = {};
+
+            // 可拖动元素列表
+            const draggableItems = document.querySelectorAll('.draggable-item');
+
+            // 初始化拖拽功能
+            function initDraggable(item) {
+                let startX, startY, origX, origY;
+                let dragging = false;
+
+                function onStart(e) {
+                    if (e.target.closest('input, textarea')) return;
+                    const ev = e.touches ? e.touches[0] : e;
+                    const rect = item.getBoundingClientRect();
+                    let left = parseFloat(item.style.left) || rect.left;
+                    let top = parseFloat(item.style.top) || rect.top;
+                    if (!item.style.left) {
+                        left = rect.left;
+                        item.style.left = left + 'px';
+                    }
+                    if (!item.style.top) {
+                        top = rect.top;
+                        item.style.top = top + 'px';
+                    }
+                    origX = left;
+                    origY = top;
+                    startX = ev.clientX;
+                    startY = ev.clientY;
+                    dragging = true;
+                    item.style.cursor = 'grabbing';
+                    e.preventDefault();
+                }
+
+                function onMove(e) {
+                    if (!dragging) return;
+                    const ev = e.touches ? e.touches[0] : e;
+                    const dx = ev.clientX - startX;
+                    const dy = ev.clientY - startY;
+                    let newX = origX + dx;
+                    let newY = origY + dy;
+                    const w = item.offsetWidth;
+                    const h = item.offsetHeight;
+                    newX = Math.max(0, Math.min(window.innerWidth - w, newX));
+                    newY = Math.max(0, Math.min(window.innerHeight - h, newY));
+                    item.style.left = newX + 'px';
+                    item.style.top = newY + 'px';
+                    e.preventDefault();
+                }
+
+                function onEnd(e) {
+                    if (dragging) {
+                        dragging = false;
+                        item.style.cursor = 'grab';
+                        const id = item.id;
+                        if (id) {
+                            positions[id] = {
+                                left: parseFloat(item.style.left),
+                                top: parseFloat(item.style.top)
+                            };
+                        }
+                    }
+                }
+
+                item.addEventListener('mousedown', onStart);
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onEnd);
+                item.addEventListener('touchstart', onStart, { passive: false });
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onEnd, { passive: false });
+
+                item._destroyDrag = function() {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onEnd);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onEnd);
+                    item.removeEventListener('mousedown', onStart);
+                    item.removeEventListener('touchstart', onStart);
+                };
+            }
+
+            draggableItems.forEach(item => initDraggable(item));
+
+            // 设置默认位置（首次进入壁纸模式）
+            function setDefaultPositions() {
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+
+                // 时间 - 中顶部 (水平居中)
+                const timeEl = document.getElementById('wallpaperTimeDisplay');
+                if (timeEl && !positions['wallpaperTimeDisplay']) {
+                    const tw = timeEl.offsetWidth || 200;
+                    const th = timeEl.offsetHeight || 100;
+                    positions['wallpaperTimeDisplay'] = {
+                        left: (w - tw) / 2,
+                        top: h * 0.08
+                    };
+                }
+
+                // 名言 - 右下
+                const quoteEl = document.getElementById('wallpaperQuoteDisplay');
+                if (quoteEl && !positions['wallpaperQuoteDisplay']) {
+                    const qw = quoteEl.offsetWidth || 300;
+                    const qh = quoteEl.offsetHeight || 80;
+                    positions['wallpaperQuoteDisplay'] = {
+                        left: w - qw - 30,
+                        top: h - qh - 80
+                    };
+                }
+
+                // 搜索框 - 中下方 (水平居中)
+                const searchEl = document.getElementById('glassSearch');
+                if (searchEl && !positions['glassSearch']) {
+                    const sw = searchEl.offsetWidth || 400;
+                    const sh = searchEl.offsetHeight || 52;
+                    positions['glassSearch'] = {
+                        left: (w - sw) / 2,
+                        top: h * 0.72
+                    };
+                }
+
+                // 链接 - 左侧竖直
+                const linksEl = document.getElementById('glassLinks');
+                if (linksEl && !positions['glassLinks']) {
+                    const lw = linksEl.offsetWidth || 120;
+                    const lh = linksEl.offsetHeight || 200;
+                    positions['glassLinks'] = {
+                        left: 20,
+                        top: h * 0.15
+                    };
+                }
+            }
+
+            // 应用位置到元素
+            function applyPositions() {
+                draggableItems.forEach(item => {
+                    const id = item.id;
+                    if (positions[id]) {
+                        item.style.left = positions[id].left + 'px';
+                        item.style.top = positions[id].top + 'px';
+                    }
+                });
+            }
+
+            // 切换模式
+            modeSwitch.addEventListener('click', function() {
+                isWallpaperMode = !isWallpaperMode;
+                this.classList.toggle('active', isWallpaperMode);
+                modeLabel.textContent = isWallpaperMode ? '壁纸' : '简洁';
+
+                if (isWallpaperMode) {
+                    body.classList.add('wallpaper-mode');
+                    if (!currentWallpaperType || !currentWallpaperId) {
+                        applyWallpaper('static', 's1');
+                    } else {
+                        applyWallpaper(currentWallpaperType, currentWallpaperId);
+                    }
+                    renderWallpaperPreview();
+                    document.querySelectorAll('.type-btn').forEach(b => {
+                        b.classList.toggle('active', b.dataset.type === currentWallpaperType);
+                    });
+                    updateGlassOpacity(glassRange.value);
+
+                    // 壁纸模式：显示所有可拖动元素，搜索框用 flex，其余用 block
+                    draggableItems.forEach(item => {
+                        if (item.id === 'glassSearch') {
+                            item.style.display = 'flex';
+                        } else {
+                            item.style.display = 'block';
+                        }
+                    });
+                    setDefaultPositions();
+                    applyPositions();
+
+                } else {
+                    body.classList.remove('wallpaper-mode');
+                    videoEl.classList.remove('active');
+                    imgEl.classList.remove('active');
+                    setDayNight(currentMode);
+                    body.removeAttribute('data-brightness');
+                    // 简洁模式：隐藏所有可拖动元素
+                    draggableItems.forEach(item => {
+                        item.style.display = 'none';
+                    });
+                    settingsPanel.classList.remove('open');
+                    settingsOpen = false;
+                }
+            });
+
+            // 窗口大小变化时，简单处理：如果元素超出边界则调整
+            window.addEventListener('resize', function() {
+                if (!isWallpaperMode) return;
+                draggableItems.forEach(item => {
+                    const rect = item.getBoundingClientRect();
+                    const w = window.innerWidth;
+                    const h = window.innerHeight;
+                    let left = parseFloat(item.style.left) || rect.left;
+                    let top = parseFloat(item.style.top) || rect.top;
+                    if (left + rect.width > w) left = w - rect.width - 10;
+                    if (top + rect.height > h) top = h - rect.height - 10;
+                    if (left < 0) left = 0;
+                    if (top < 0) top = 0;
+                    item.style.left = left + 'px';
+                    item.style.top = top + 'px';
+                    const id = item.id;
+                    if (id) {
+                        positions[id] = { left, top };
+                    }
+                });
+            });
+
+            // ================================================================
+            // 9. 时钟 (简洁 + 壁纸)
+            // ================================================================
+            const timeEl = document.getElementById('time');
+            const dateEl = document.getElementById('date');
+            const wpTimeEl = document.getElementById('wpTime');
+            const wpDateEl = document.getElementById('wpDate');
+
+            function updateClock() {
+                const now = new Date();
+                const h = String(now.getHours()).padStart(2, '0');
+                const m = String(now.getMinutes()).padStart(2, '0');
+                const timeStr = h + ':' + m;
+                const dateStr =
+                    `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${'日一二三四五六'[now.getDay()]}`;
+                timeEl.textContent = timeStr;
+                dateEl.textContent = dateStr;
+                wpTimeEl.textContent = timeStr;
+                wpDateEl.textContent = dateStr;
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // ================================================================
+            // 10. 初始化
+            // ================================================================
+            setDayNight('day');
+            body.classList.remove('wallpaper-mode');
+            document.getElementById('modeSwitch').classList.remove('active');
+            document.getElementById('modeLabel').textContent = '简洁';
+            // 确保所有可拖动元素在简洁模式下隐藏
+            draggableItems.forEach(item => {
+                item.style.display = 'none';
+            });
+            updateGlassOpacity(0.7);
+
+            console.log('✅ 新拟态 · 简洁/壁纸模式 · 音乐播放器');
+            console.log('📁 视频: videos/ , 图片: images/ , 歌曲: songs/');
+            console.log('💡 拉绳切换日夜 (简洁模式) | 双击唤起播放器');
+            console.log('🎵 摇杆上下切图，左右切歌 | 点击封面暂停/播放');
+            console.log('🖼️ 静态壁纸 ' + wallpapers.static.length + ' 张，动态壁纸 ' + wallpapers.dynamic.length + ' 张');
+            console.log('🌓 壁纸模式自适应文字颜色');
+            console.log('📐 壁纸预览每行最多4个，超出向下扩充');
+            console.log('🖱️ 所有元素 (时间、名言、搜索框、链接) 均可拖拽');
+            console.log('🎨 播放器封面与卡片一体，内凹阴影');
+        })();
+    </script>
+</body>
+</html>
