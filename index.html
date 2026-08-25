@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>新拟态 · 简洁/壁纸模式</title>
+    <title>小永子の首页</title>
     <style>
         /* ===== 全局重置 & 变量 ===== */
         * {
@@ -1866,7 +1866,7 @@
             'use strict';
 
             // ================================================================
-            // 0. 预置链接 (14个用户提供的链接)
+            // 0. 预置链接 (15个用户提供的链接)
             // ================================================================
             const DEFAULT_LINKS = [
                 { text: '我的简历', url: 'https://lvyyjianli.netlify.app/' },
@@ -1889,24 +1889,26 @@
             let links = [...DEFAULT_LINKS];
 
             // ================================================================
-            // 1. 壁纸系统 (静态10张，动态2张)
+            // 1. 壁纸系统 (静态12张，动态2张)  ———— 已修复 ID 重复问题
             // ================================================================
             const wallpapers = {
                 dynamic: [
-                    { id: 'd1', name: '晨曦', file: 'dynamic_01.mp4' },
-                    { id: 'd2', name: '星夜', file: 'dynamic_02.mp4' },
+                    { id: 'd1', name: '老婆', file: 'dynamic_01.mp4' },
+                    { id: 'd2', name: '师姐', file: 'dynamic_02.mp4' },
                 ],
                 static: [
-                    { id: 's1', name: '极光', file: 'static_01.png' },
-                    { id: 's2', name: '森林', file: 'static_02.png' },
-                    { id: 's3', name: '海洋', file: 'static_03.png' },
-                    { id: 's4', name: '山峦', file: 'static_04.png' },
-                    { id: 's5', name: '星空', file: 'static_05.png' },
-                    { id: 's6', name: '城市', file: 'static_06.png' },
-                    { id: 's7', name: '花园', file: 'static_07.png' },
-                    { id: 's8', name: '晨曦', file: 'static_08.png' },
-                    { id: 's9', name: '晚霞', file: 'static_09.png' },
-                    { id: 's10', name: '夜空', file: 'static_10.png' },
+                    { id: 's1', name: '韩立', file: 'static_01.png' },
+                    { id: 's2', name: '夫妻照', file: 'static_02.png' },
+                    { id: 's3', name: '天南双圣', file: 'static_03.png' },
+                    { id: 's4', name: '亲亲', file: 'static_04.png' },
+                    { id: 's5', name: '极阴岛传人', file: 'static_05.png' },
+                    { id: 's6', name: '老婆', file: 'static_06.png' },
+                    { id: 's7', name: '初恋', file: 'static_07.png' },
+                    { id: 's8', name: '徒儿', file: 'static_08.png' },
+                    { id: 's9', name: '小梅凝', file: 'static_09.png' },
+                    { id: 's10', name: '云梦山第一美人', file: 'static_10.png' },
+                    { id: 's11', name: '银月', file: 'static_11.png' },
+                    { id: 's12', name: '宋玉', file: 'static_12.png' },
                 ]
             };
 
@@ -1978,7 +1980,7 @@
                 }
             }
 
-            // ---------- 应用壁纸 ----------
+            // ---------- 应用壁纸 (使用预加载缓存) ----------
             function applyWallpaper(type, id) {
                 if (isWallpaperTransitioning) return;
                 const list = wallpapers[type];
@@ -1995,7 +1997,16 @@
 
                 setTimeout(() => {
                     if (type === 'dynamic') {
-                        const src = 'videos/' + item.file;
+                        // ✅ 优先使用预加载的 Blob URL
+                        let src;
+                        if (preloaded.blobs[item.id]) {
+                            src = preloaded.blobs[item.id];
+                            console.log(`🎬 使用预加载视频: ${item.file}`);
+                        } else {
+                            src = 'videos/' + item.file;
+                            console.warn(`⚠️ 视频未预加载，回退: ${item.file}`);
+                        }
+
                         const source = videoEl.querySelector('source');
                         if (source) {
                             source.setAttribute('src', src);
@@ -2178,9 +2189,9 @@
                 { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。', author: '孙孙浩' },
                 { text: '杀人放火厉飞雨，万人敬仰韩天尊', author: '阿青' },
                 { text: '你倒是个有情有义之人。可惜在这乱世之中，最不值钱的便是情义。且看我那两个逆徒，本座养育他们两百年，却轻易背叛。', author: '玄骨上人' },
-                { text: '立哥哥,立giegie', author: '韩小妹' },
+                { text: '立哥哥,立giegie', author: '小佳乐' },
                 { text: '什么不会抹杀我的存在？没有了自主意识后的我，还会是我吗？和从这世间消失，有什么区别。', author: '小二黑' },
-                { text: '到头来,无非是求个念头通达罢liao。', author: '孙孙浩' },
+                { text: '到头来,无非是求个念头通达罢liao。', author: '李化元' },
                 { text: '所谓元婴之下第一人，也不过就是个结丹修士而已，不如温少主的性命，就交予在下如何。', author: '吕少主' },
                 { text: '韩大哥，没有灵根真的不能成为修仙者么？', author: '墨彩环' },
             ];
@@ -2563,7 +2574,12 @@
                     const isVideo = type === 'dynamic';
                     if (isVideo) {
                         const vid = document.createElement('video');
-                        vid.src = 'videos/' + wp.file;
+                        // 预览视频也优先使用缓存
+                        if (preloaded.blobs[wp.id]) {
+                            vid.src = preloaded.blobs[wp.id];
+                        } else {
+                            vid.src = 'videos/' + wp.file;
+                        }
                         vid.muted = true;
                         vid.playsInline = true;
                         vid.preload = 'metadata';
@@ -2653,8 +2669,14 @@
                 initAudio();
                 const song = songs[index % songs.length];
                 if (!song) return;
-                const src = 'songs/' + song.file;
-                audioPlayer.src = src;
+                // ✅ 优先使用预加载的 Blob URL
+                if (preloaded.blobs[song.file]) {
+                    audioPlayer.src = preloaded.blobs[song.file];
+                    console.log(`🎵 使用预加载歌曲: ${song.file}`);
+                } else {
+                    audioPlayer.src = 'songs/' + song.file;
+                    console.warn(`⚠️ 歌曲未预加载，回退: ${song.file}`);
+                }
                 audioPlayer.load();
                 audioPlayer.play().catch(() => {});
                 isPlaying = true;
@@ -2676,6 +2698,7 @@
             }
 
             function updatePlayerCover() {
+                // 预加载后，浏览器已缓存图片，直接赋值即可秒显
                 playerCoverImg.src = albumImages[currentImageIndex] || 'images/cover_01.png';
             }
 
@@ -3054,7 +3077,84 @@
             updateClock();
 
             // ================================================================
-            // 10. 初始化
+            // 10. ★★★ 资源预加载系统 (核心优化) ★★★
+            // ================================================================
+            const preloaded = {
+                images: {},
+                blobs: {}
+            };
+
+            let loadedCount = 0;
+            let totalCount = 0;
+
+            function updateProgress() {
+                loadedCount++;
+                if (loadedCount >= totalCount) {
+                    console.log('✅ 所有资源预加载完成！');
+                }
+            }
+
+            async function preloadAllResources() {
+                // 统计总资源数（静态12张 + 动态2个 + 封面36张 + 歌曲3首）
+                totalCount = wallpapers.static.length + wallpapers.dynamic.length + albumImages.length + songs.length;
+                console.log(`🎯 预加载启动，共 ${totalCount} 个资源`);
+
+                // ---------- 1. 静态壁纸（使用 Image 对象，浏览器缓存） ----------
+                wallpapers.static.forEach(wp => {
+                    const img = new Image();
+                    img.onload = updateProgress;
+                    img.onerror = updateProgress;
+                    img.src = 'images/' + wp.file;
+                });
+
+                // ---------- 2. 动态壁纸视频（使用 fetch + Blob URL） ----------
+                for (const wp of wallpapers.dynamic) {
+                    try {
+                        const resp = await fetch('videos/' + wp.file);
+                        const blob = await resp.blob();
+                        const url = URL.createObjectURL(blob);
+                        preloaded.blobs[wp.id] = url;
+                        console.log(`📹 视频已缓存: ${wp.file}`);
+                    } catch (e) {
+                        console.warn('⚠️ 预加载视频失败:', wp.file, e);
+                    }
+                    updateProgress();
+                }
+
+                // ---------- 3. 专辑封面（使用 Image 对象） ----------
+                albumImages.forEach(src => {
+                    const img = new Image();
+                    img.onload = updateProgress;
+                    img.onerror = updateProgress;
+                    img.src = src;
+                });
+
+                // ---------- 4. 歌曲（使用 fetch + Blob URL） ----------
+                for (const song of songs) {
+                    try {
+                        const resp = await fetch('songs/' + song.file);
+                        const blob = await resp.blob();
+                        const url = URL.createObjectURL(blob);
+                        preloaded.blobs[song.file] = url;
+                        console.log(`🎵 歌曲已缓存: ${song.file}`);
+                    } catch (e) {
+                        console.warn('⚠️ 预加载歌曲失败:', song.file, e);
+                    }
+                    updateProgress();
+                }
+            }
+
+            // 页面加载完成后立即开始预加载（延迟100ms，不阻塞UI渲染）
+            if (document.readyState === 'complete') {
+                setTimeout(preloadAllResources, 100);
+            } else {
+                window.addEventListener('load', function() {
+                    setTimeout(preloadAllResources, 100);
+                });
+            }
+
+            // ================================================================
+            // 11. 初始化
             // ================================================================
             setDayNight('day');
             body.classList.remove('wallpaper-mode');
@@ -3066,7 +3166,7 @@
             });
             updateGlassOpacity(0.7);
 
-            console.log('✅ 新拟态 · 简洁/壁纸模式 · 音乐播放器');
+            console.log('✅ 新拟态 · 简洁/壁纸模式 · 全预加载版');
             console.log('📁 视频: videos/ , 图片: images/ , 歌曲: songs/');
             console.log('💡 拉绳切换日夜 (简洁模式) | 双击唤起播放器');
             console.log('🎵 摇杆上下切图，左右切歌 | 点击封面暂停/播放');
@@ -3075,6 +3175,7 @@
             console.log('📐 壁纸预览每行最多4个，超出向下扩充');
             console.log('🖱️ 所有元素 (时间、名言、搜索框、链接) 均可拖拽');
             console.log('🎨 播放器封面与卡片一体，内凹阴影');
+            console.log('⚡ 所有图片/视频/音频已启动预加载，操作流畅不卡顿');
         })();
     </script>
 </body>
