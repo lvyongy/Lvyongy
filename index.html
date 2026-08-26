@@ -213,7 +213,7 @@
             margin-left: 2px;
         }
 
-        /* —— 搜索框 (默认隐藏，带细边框：白天黑，夜间白) —— */
+        /* —— 搜索框 (默认隐藏，带细边框) —— */
         .simple-draggable.search-wrapper {
             display: none;
             align-items: center;
@@ -228,13 +228,11 @@
             -webkit-backdrop-filter: blur(32px) !important;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02) !important;
             border: 1px solid rgba(0, 0, 0, 0.15);
-            /* 白天黑色细边框 */
             transition: border-color 0.3s, box-shadow 0.3s;
         }
         body.night-mode .simple-draggable.search-wrapper {
             background: rgba(0, 0, 0, 0.08) !important;
             border-color: rgba(255, 255, 255, 0.25);
-            /* 夜间白色细边框 */
         }
         .simple-draggable.search-wrapper:focus-within {
             box-shadow: 0 8px 40px rgba(0, 0, 0, 0.04) !important;
@@ -425,14 +423,12 @@
         .simple-draggable.links-grid .add-link-btn:active {
             transform: scale(0.94);
         }
-        /* 搜索切换按钮（位于链接尾部），使用放大镜SVG */
         .simple-draggable.links-grid .search-toggle-btn {
             padding: 6px 12px;
             min-width: 34px;
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(128, 128, 128, 0.04);
             font-size: 0;
-            /* 隐藏文字，只显示SVG */;
         }
         body.night-mode .simple-draggable.links-grid .search-toggle-btn {
             border-color: rgba(255, 255, 255, 0.02);
@@ -668,6 +664,14 @@
         body.wallpaper-mode.night-mode #modeSwitch span {
             color: var(--text-night);
         }
+        /* 壁纸模式 "壁纸" 文字始终白色 */
+        body.wallpaper-mode #modeLabel {
+            color: #fff !important;
+        }
+        body.wallpaper-mode.night-mode #modeLabel {
+            color: #fff !important;
+        }
+
         #modeSwitch .toggle-track {
             width: 44px;
             height: 24px;
@@ -730,6 +734,8 @@
         .draggable-item.dragging {
             cursor: grabbing;
         }
+
+        /* 壁纸模式各元素透明度由JS控制，但保留基础样式 */
         #wallpaperTimeDisplay {
             padding: 4px 16px;
             border-radius: 40px;
@@ -739,6 +745,7 @@
             text-align: center;
             border: none;
             box-shadow: none;
+            transition: opacity 0.4s ease;
         }
         #wallpaperTimeDisplay .wp-time {
             font-size: 4.8rem;
@@ -756,6 +763,7 @@
             color: var(--wallpaper-text-secondary);
             text-shadow: 0 1px 12px rgba(0, 0, 0, 0.10);
         }
+
         #wallpaperQuoteDisplay {
             padding: 0;
             background: transparent;
@@ -764,6 +772,7 @@
             box-shadow: none;
             max-width: 420px;
             cursor: pointer;
+            transition: opacity 0.4s ease;
         }
         #wallpaperQuoteDisplay .wq-text {
             font-size: 1.2rem;
@@ -789,6 +798,7 @@
         #wallpaperQuoteDisplay.locked {
             opacity: 0.6;
         }
+
         .glass-search-wrapper {
             display: flex;
             align-items: center;
@@ -863,6 +873,7 @@
             stroke-linecap: round;
             stroke-linejoin: round;
         }
+
         .glass-links {
             display: flex;
             flex-direction: column;
@@ -874,6 +885,7 @@
             backdrop-filter: none !important;
             border: none !important;
             box-shadow: none !important;
+            transition: opacity 0.4s ease;
         }
         .glass-links .glass-link {
             display: flex;
@@ -953,6 +965,7 @@
         body.wallpaper-mode #wallpaperSettings {
             display: flex;
         }
+
         .settings-toggle {
             width: 42px;
             height: 42px;
@@ -976,6 +989,7 @@
         .settings-toggle:hover {
             transform: rotate(60deg) scale(1.05);
         }
+
         .settings-panel {
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(20px);
@@ -984,21 +998,52 @@
             padding: 16px 18px 18px;
             border: 1px solid rgba(255, 255, 255, 0.04);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-            min-width: 160px;
-            max-width: 25vw;
+            min-width: 180px;
+            max-width: 28vw;
             display: none;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
             transition: color 0.6s ease;
-            max-height: 70vh;
+            max-height: 75vh;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.15) rgba(255, 255, 255, 0.05);
         }
+        /* 夜间模式：黑底白字 */
         body.night-mode .settings-panel {
-            background: rgba(0, 0, 0, 0.20);
-            border-color: rgba(255, 255, 255, 0.02);
+            background: rgba(0, 0, 0, 0.65) !important;
+            border-color: rgba(255, 255, 255, 0.06) !important;
+            color: #ffffff !important;
         }
+        body.night-mode .settings-panel .setting-row label {
+            color: #ffffff !important;
+        }
+        body.night-mode .settings-panel .setting-row .type-btn {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+        }
+        body.night-mode .settings-panel .setting-row .type-btn.active {
+            background: rgba(255, 255, 255, 0.18) !important;
+            color: #ffffff !important;
+        }
+        body.night-mode .settings-panel .setting-row .range-value {
+            color: #ffffff !important;
+        }
+        body.night-mode .settings-panel .setting-row input[type="range"] {
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+        body.night-mode .settings-panel .setting-row input[type="range"]::-webkit-slider-thumb {
+            background: #5a5c5e !important;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.1) !important;
+        }
+        body.night-mode .settings-panel .setting-row .wp-preview-item.active {
+            border-color: rgba(255, 255, 255, 0.5) !important;
+        }
+        body.night-mode .settings-panel .setting-row .wp-preview-item .check-mark {
+            background: rgba(255, 255, 255, 0.9) !important;
+            color: #000 !important;
+        }
+
         .settings-panel::-webkit-scrollbar {
             width: 6px;
         }
@@ -1016,11 +1061,12 @@
             background: rgba(255, 255, 255, 0.25);
         }
         body.night-mode .settings-panel::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.05);
         }
         body.night-mode .settings-panel::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.15);
         }
+
         .settings-panel.open {
             display: flex;
         }
@@ -1031,11 +1077,15 @@
         }
         .settings-panel .setting-row label {
             font-size: 0.7rem;
-            opacity: 0.5;
+            opacity: 0.6;
             letter-spacing: 0.5px;
             color: var(--wallpaper-text);
             transition: color 0.6s ease;
         }
+        body.wallpaper-mode .settings-panel .setting-row label {
+            color: var(--wallpaper-text);
+        }
+
         .settings-panel .setting-row .type-btns {
             display: flex;
             gap: 4px;
@@ -1151,7 +1201,7 @@
             cursor: pointer;
         }
         body.night-mode .settings-panel .setting-row input[type="range"]::-webkit-slider-thumb {
-            background: #3a3c3e;
+            background: #5a5c5e;
         }
         .settings-panel .setting-row input[type="range"]::-moz-range-thumb {
             width: 16px;
@@ -1164,7 +1214,7 @@
         }
         .settings-panel .setting-row .range-value {
             font-size: 0.75rem;
-            opacity: 0.4;
+            opacity: 0.5;
             text-align: right;
             color: var(--wallpaper-text);
             transition: color 0.6s ease;
@@ -1718,6 +1768,35 @@
                 padding: 4px 12px;
                 min-height: 30px;
             }
+            .settings-panel {
+                min-width: 140px;
+                max-width: 80vw !important;
+                padding: 12px 14px;
+                max-height: 60vh;
+            }
+            .settings-panel .setting-row .wp-preview-item {
+                aspect-ratio: 4/3;
+            }
+            #modeSwitch {
+                top: 14px;
+                left: 14px;
+                padding: 4px 8px 4px 12px;
+            }
+            #modeSwitch span {
+                font-size: 0.7rem;
+            }
+            #wallpaperTimeDisplay .wp-time {
+                font-size: 3.4rem;
+            }
+            #wallpaperTimeDisplay .wp-date {
+                font-size: 1rem;
+            }
+            #wallpaperQuoteDisplay {
+                max-width: 300px;
+            }
+            #wallpaperQuoteDisplay .wq-text {
+                font-size: 1rem;
+            }
             .glass-search-wrapper {
                 max-width: 92%;
                 padding: 0 4px 0 12px;
@@ -1788,34 +1867,6 @@
                 height: 36px;
                 font-size: 1.1rem;
             }
-            .settings-panel {
-                min-width: 140px;
-                padding: 12px 14px;
-                max-height: 60vh;
-            }
-            .settings-panel .setting-row .wp-preview-item {
-                aspect-ratio: 4/3;
-            }
-            #modeSwitch {
-                top: 14px;
-                left: 14px;
-                padding: 4px 8px 4px 12px;
-            }
-            #modeSwitch span {
-                font-size: 0.7rem;
-            }
-            #wallpaperTimeDisplay .wp-time {
-                font-size: 3.4rem;
-            }
-            #wallpaperTimeDisplay .wp-date {
-                font-size: 1rem;
-            }
-            #wallpaperQuoteDisplay {
-                max-width: 300px;
-            }
-            #wallpaperQuoteDisplay .wq-text {
-                font-size: 1rem;
-            }
         }
         @media (max-width: 400px) {
             .simple-draggable.clock #time {
@@ -1854,6 +1905,10 @@
                 font-size: 0.6rem;
                 padding: 3px 8px;
                 min-height: 26px;
+            }
+            .settings-panel {
+                min-width: 120px;
+                max-width: 90vw !important;
             }
             .player-cover {
                 border-radius: 16px 16px 0 0;
@@ -1970,9 +2025,6 @@
         body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row .range-value {
             color: #1a1a1a;
         }
-        body.wallpaper-mode[data-brightness="light"] #modeSwitch span {
-            color: #1a1a1a;
-        }
         body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-time {
             color: #1a1a1a;
         }
@@ -2054,7 +2106,7 @@
             <div id="quoteText" class="quote-text">学而不思则罔，思而不学则殆。</div>
             <div id="quoteAuthor" class="quote-author">— 孔子</div>
         </div>
-        <!-- 搜索框 (默认隐藏，带细边框：白天黑，夜间白) -->
+        <!-- 搜索框 (默认隐藏) -->
         <div id="searchWrapper" class="simple-draggable search-wrapper">
             <div class="search-box">
                 <input type="text" id="searchInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="搜索..." />
@@ -2103,9 +2155,29 @@
                 <div class="wallpaper-preview" id="wallpaperPreview"></div>
             </div>
             <div class="setting-row">
-                <label>播放器透明度</label>
+                <label>毛玻璃透明度</label>
                 <input type="range" id="glassOpacityRange" min="0.1" max="1" step="0.05" value="0.7" />
                 <div class="range-value" id="glassOpacityValue">70%</div>
+            </div>
+            <div class="setting-row">
+                <label>🔍 搜索框透明度</label>
+                <input type="range" id="searchOpacityRange" min="0.1" max="1" step="0.05" value="1" />
+                <div class="range-value" id="searchOpacityValue">100%</div>
+            </div>
+            <div class="setting-row">
+                <label>📎 链接透明度</label>
+                <input type="range" id="linksOpacityRange" min="0.1" max="1" step="0.05" value="1" />
+                <div class="range-value" id="linksOpacityValue">100%</div>
+            </div>
+            <div class="setting-row">
+                <label>🕐 时间透明度</label>
+                <input type="range" id="timeOpacityRange" min="0.1" max="1" step="0.05" value="1" />
+                <div class="range-value" id="timeOpacityValue">100%</div>
+            </div>
+            <div class="setting-row">
+                <label>💬 名言透明度</label>
+                <input type="range" id="quoteOpacityRange" min="0.1" max="1" step="0.05" value="1" />
+                <div class="range-value" id="quoteOpacityValue">100%</div>
             </div>
         </div>
     </div>
@@ -2612,9 +2684,7 @@
                 if (searchActive) return;
                 searchActive = true;
                 searchWrapper.style.display = 'flex';
-                // 定位到链接网格上方（左对齐）
                 const linksRect = linksGrid.getBoundingClientRect();
-                const wrapperWidth = searchWrapper.offsetWidth || 360;
                 const left = linksRect.left;
                 const top = linksRect.top - searchWrapper.offsetHeight - 12;
                 searchWrapper.style.left = Math.max(10, left) + 'px';
@@ -2661,7 +2731,6 @@
                     linksGrid.appendChild(a);
                 });
 
-                // 添加链接按钮
                 const addBtn = document.createElement('button');
                 addBtn.className = 'add-link-btn';
                 addBtn.textContent = '＋';
@@ -2674,13 +2743,11 @@
                 addBtn.addEventListener('mouseleave', function() { this.classList.remove('pressed'); });
                 linksGrid.appendChild(addBtn);
 
-                // 搜索切换按钮（使用放大镜SVG，与搜索按钮一致）
                 const toggleBtn = document.createElement('button');
                 toggleBtn.className = 'search-toggle-btn';
                 toggleBtn.innerHTML =
                     `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>`;
                 toggleBtn.addEventListener('mousedown', function(e) {
-                    // 阻止事件冒泡到 linksGrid，防止误拖拽
                     e.stopPropagation();
                     e.preventDefault();
                 });
@@ -2694,7 +2761,6 @@
                 });
                 linksGrid.appendChild(toggleBtn);
 
-                // 壁纸模式链接
                 glassLinks.innerHTML = '';
                 links.forEach((link, index) => {
                     const a = document.createElement('a');
@@ -2734,7 +2800,6 @@
                 e.stopPropagation();
                 hideSearchBox();
             });
-            // 点击外部关闭搜索
             document.addEventListener('click', function(e) {
                 if (searchActive && !searchWrapper.contains(e.target) && !e.target.closest('.search-toggle-btn')) {
                     hideSearchBox();
@@ -2844,12 +2909,63 @@
             });
 
             // ================================================================
-            // 7. 壁纸模式设置
+            // 7. 壁纸设置 — 透明度控制 + 壁纸预览
             // ================================================================
             const settingsToggle = document.getElementById('settingsToggle');
             const settingsPanel = document.getElementById('settingsPanel');
             const wallpaperPreview = document.getElementById('wallpaperPreview');
             let settingsOpen = false;
+
+            // 透明度控制
+            const glassRange = document.getElementById('glassOpacityRange');
+            const glassValue = document.getElementById('glassOpacityValue');
+            const searchOpacityRange = document.getElementById('searchOpacityRange');
+            const searchOpacityValue = document.getElementById('searchOpacityValue');
+            const linksOpacityRange = document.getElementById('linksOpacityRange');
+            const linksOpacityValue = document.getElementById('linksOpacityValue');
+            const timeOpacityRange = document.getElementById('timeOpacityRange');
+            const timeOpacityValue = document.getElementById('timeOpacityValue');
+            const quoteOpacityRange = document.getElementById('quoteOpacityRange');
+            const quoteOpacityValue = document.getElementById('quoteOpacityValue');
+
+            const glassSearchEl = document.getElementById('glassSearch');
+            const glassLinksEl = document.getElementById('glassLinks');
+            const wallpaperTimeEl = document.getElementById('wallpaperTimeDisplay');
+            const wallpaperQuoteEl = document.getElementById('wallpaperQuoteDisplay');
+
+            function updateElementOpacity(el, val) {
+                if (el) el.style.opacity = parseFloat(val);
+            }
+
+            glassRange.addEventListener('input', function() {
+                const v = this.value;
+                glassValue.textContent = Math.round(parseFloat(v) * 100) + '%';
+                document.querySelector('#musicPlayer').style.opacity = v;
+            });
+
+            searchOpacityRange.addEventListener('input', function() {
+                const v = this.value;
+                searchOpacityValue.textContent = Math.round(parseFloat(v) * 100) + '%';
+                updateElementOpacity(glassSearchEl, v);
+            });
+
+            linksOpacityRange.addEventListener('input', function() {
+                const v = this.value;
+                linksOpacityValue.textContent = Math.round(parseFloat(v) * 100) + '%';
+                updateElementOpacity(glassLinksEl, v);
+            });
+
+            timeOpacityRange.addEventListener('input', function() {
+                const v = this.value;
+                timeOpacityValue.textContent = Math.round(parseFloat(v) * 100) + '%';
+                updateElementOpacity(wallpaperTimeEl, v);
+            });
+
+            quoteOpacityRange.addEventListener('input', function() {
+                const v = this.value;
+                quoteOpacityValue.textContent = Math.round(parseFloat(v) * 100) + '%';
+                updateElementOpacity(wallpaperQuoteEl, v);
+            });
 
             settingsToggle.addEventListener('click', function() {
                 settingsOpen = !settingsOpen;
@@ -2907,18 +3023,6 @@
                     wallpaperPreview.appendChild(el);
                 });
             }
-
-            const glassRange = document.getElementById('glassOpacityRange');
-            const glassValue = document.getElementById('glassOpacityValue');
-
-            function updateGlassOpacity(val) {
-                const v = parseFloat(val);
-                glassValue.textContent = Math.round(v * 100) + '%';
-                document.querySelector('#musicPlayer').style.opacity = v;
-            }
-            glassRange.addEventListener('input', function() {
-                updateGlassOpacity(this.value);
-            });
 
             // ================================================================
             // 8. 音乐播放器
@@ -3125,7 +3229,7 @@
             updatePlayerCover();
 
             // ================================================================
-            // 9. 模式切换 (简洁 ↔ 壁纸) — 彻底隔离
+            // 9. 模式切换 (简洁 ↔ 壁纸) — 彻底隔离 + 防粘手
             // ================================================================
             const modeSwitch = document.getElementById('modeSwitch');
             const modeLabel = document.getElementById('modeLabel');
@@ -3211,7 +3315,7 @@
                     const dy = ev.clientY - startY;
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
-                    if (dist > 10) {
+                    if (dist > 8) {
                         if (!dragging) {
                             dragging = true;
                             e.preventDefault();
@@ -3253,13 +3357,13 @@
                         dragJustResetTimer = setTimeout(() => {
                             dragJustHappened = false;
                             dragJustResetTimer = null;
-                        }, 300);
+                        }, 350);
                     } else {
                         if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
                         dragJustResetTimer = setTimeout(() => {
                             dragJustHappened = false;
                             dragJustResetTimer = null;
-                        }, 50);
+                        }, 60);
                     }
                 }
 
@@ -3313,7 +3417,6 @@
                         if (currentDraggingItem._forceEndSimple) currentDraggingItem._forceEndSimple();
                     }
                     if (e.target.closest('input, textarea')) return;
-                    // 对链接网格内的 a 标签和 .search-toggle-btn 不触发拖拽
                     if (item.id === 'linksGrid' && (e.target.closest('a') || e.target.closest('.search-toggle-btn')))
                     return;
                     const ev = e.touches ? e.touches[0] : e;
@@ -3345,7 +3448,7 @@
                     const dy = ev.clientY - startY;
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
-                    if (dist > 10) {
+                    if (dist > 8) {
                         if (!dragging) {
                             dragging = true;
                             e.preventDefault();
@@ -3387,13 +3490,13 @@
                         dragJustResetTimer = setTimeout(() => {
                             dragJustHappened = false;
                             dragJustResetTimer = null;
-                        }, 300);
+                        }, 350);
                     } else {
                         if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
                         dragJustResetTimer = setTimeout(() => {
                             dragJustHappened = false;
                             dragJustResetTimer = null;
-                        }, 50);
+                        }, 60);
                     }
                 }
 
@@ -3484,7 +3587,6 @@
                 });
             }
 
-            // 简洁模式默认布局：时间左上（下移），名言右下，链接左下，搜索隐藏
             function setDefaultSimplePositions() {
                 const w = window.innerWidth,
                     h = window.innerHeight;
@@ -3493,7 +3595,6 @@
                     const tw = clock.offsetWidth || 180,
                         th = clock.offsetHeight || 100;
                     simplePositions['clock'] = { left: 24, top: 80 };
-                    // 下移：从24改为80
                 }
                 const quote = document.getElementById('quoteArea');
                 if (quote && !simplePositions['quoteArea']) {
@@ -3507,7 +3608,6 @@
                         lh = links.offsetHeight || 90;
                     simplePositions['linksGrid'] = { left: 24, top: h - lh - 24 };
                 }
-                // 搜索框默认隐藏，不设位置
             }
 
             function applySimplePositions() {
@@ -3553,7 +3653,6 @@
                 modeLabel.textContent = isWallpaperMode ? '壁纸' : '简洁';
                 forceEndAllDrags();
                 if (isWallpaperMode) {
-                    // 切换到壁纸模式：隐藏所有简洁元素，显示壁纸元素
                     hideSimpleElements();
                     body.classList.add('wallpaper-mode');
                     if (!currentWallpaperType || !currentWallpaperId) applyWallpaper('static', 's1');
@@ -3562,7 +3661,11 @@
                     document.querySelectorAll('.type-btn').forEach(b => {
                         b.classList.toggle('active', b.dataset.type === currentWallpaperType);
                     });
-                    updateGlassOpacity(glassRange.value);
+                    // 应用透明度
+                    updateElementOpacity(glassSearchEl, searchOpacityRange.value);
+                    updateElementOpacity(glassLinksEl, linksOpacityRange.value);
+                    updateElementOpacity(wallpaperTimeEl, timeOpacityRange.value);
+                    updateElementOpacity(wallpaperQuoteEl, quoteOpacityRange.value);
                     draggableItems.forEach(item => {
                         if (item.id === 'glassSearch') item.style.display = 'flex';
                         else if (item.id === 'glassLinks') item.style.display = 'flex';
@@ -3571,7 +3674,6 @@
                     setDefaultPositions();
                     applyPositions();
                 } else {
-                    // 切换到简洁模式：隐藏所有壁纸元素，显示简洁元素
                     body.classList.remove('wallpaper-mode');
                     videoEl.classList.remove('active', 'fade-out');
                     imgEl.classList.remove('active', 'fade-out');
@@ -3586,7 +3688,6 @@
                 }
             });
 
-            // 响应式
             window.addEventListener('resize', function() {
                 if (isWallpaperMode) {
                     draggableItems.forEach(item => {
@@ -3785,12 +3886,16 @@
             showSimpleElements();
             setDefaultSimplePositions();
             applySimplePositions();
-            updateGlassOpacity(0.7);
 
-            console.log('✅ 简洁模式已隔离：时间左上（下移），名言右下，链接左下，搜索默认隐藏');
-            console.log('✅ 搜索框带细边框（白天黑，夜间白），切换按钮使用放大镜SVG');
-            console.log('✅ 拖拽防误触增强：点击搜索切换按钮不会触发链接网格拖拽');
-            console.log('✅ 时间显示秒数');
+            // 初始化透明度显示
+            glassValue.textContent = Math.round(parseFloat(glassRange.value) * 100) + '%';
+            searchOpacityValue.textContent = Math.round(parseFloat(searchOpacityRange.value) * 100) + '%';
+            linksOpacityValue.textContent = Math.round(parseFloat(linksOpacityRange.value) * 100) + '%';
+            timeOpacityValue.textContent = Math.round(parseFloat(timeOpacityRange.value) * 100) + '%';
+            quoteOpacityValue.textContent = Math.round(parseFloat(quoteOpacityRange.value) * 100) + '%';
+
+            console.log('✅ 所有问题已修复：防粘手、夜间壁纸面板黑底白字、壁纸文字白色、透明度调节');
+            console.log('✅ 搜索框拖拽不再粘手，各模式元素彻底隔离');
         })();
     </script>
 </body>
