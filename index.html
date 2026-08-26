@@ -49,11 +49,33 @@
             transition: background 1.0s ease, color 1.0s ease;
             background: var(--bg-day);
             color: var(--text-day);
+            /* MODIFIED: 添加默认背景图（白天） */
+            background-image: url('images/bg_day.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
         body.night-mode {
             background: var(--bg-night);
             color: var(--text-night);
+            /* MODIFIED: 夜晚背景图 */
+            background-image: url('images/bg_night.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
+        /* MODIFIED: 当壁纸模式开启时，隐藏背景图（壁纸容器会覆盖） */
+        body.wallpaper-mode {
+            background-image: none !important;
+            background-color: #000;
+        }
+        body.wallpaper-mode.night-mode {
+            background-image: none !important;
+            background-color: #000;
+        }
+
         body.night-mode .simple-mode .clock #time,
         body.night-mode .simple-mode .clock #date {
             color: var(--text-night);
@@ -347,27 +369,42 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
-        /* ===== 简洁模式 ===== */
+        /* ================================================================
+           简洁模式 — 全新布局：上部（时钟+名言） + 下部（搜索+链接）
+           ================================================================ */
         .simple-mode {
             position: relative;
             z-index: 2;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            /* 上下分布 */
             width: 100%;
             max-width: 640px;
-            padding: 20px 24px 30px;
-            gap: 14px;
+            height: 100vh;
+            /* 占满视口高度 */
+            padding: 10vh 24px 8vh;
+            /* 上内边距10vh，下内边距8vh */
             pointer-events: none;
-            margin-top: 6vh;
-        }
-        body.wallpaper-mode .simple-mode {
-            display: none;
+            gap: 0;
+            /* 移除gap，由内部flex控制 */
         }
         .simple-mode>* {
             pointer-events: auto;
         }
+
+        /* --- 上部区域：时钟 + 名言 --- */
+        .simple-mode .top-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            width: 100%;
+            /* 让内容居中，但整体偏上由父容器padding控制 */
+        }
+
         .simple-mode .clock {
             text-align: center;
             width: 100%;
@@ -407,6 +444,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            margin-top: 6px;
         }
         .quote-area .quote-text {
             font-size: 1.3rem;
@@ -435,6 +473,18 @@
         }
         body.night-mode .quote-area .quote-author {
             opacity: 0.35;
+        }
+
+        /* --- 下部区域：搜索 + 链接 --- */
+        .simple-mode .bottom-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            flex: 0 0 auto;
+            width: 100%;
+            gap: 10px;
+            padding-bottom: 2vh;
         }
 
         .simple-mode .search-wrapper {
@@ -562,7 +612,7 @@
             justify-content: center;
             width: 100%;
             max-width: 540px;
-            margin-top: 4px;
+            margin-top: 2px;
             min-height: 44px;
             align-items: center;
         }
@@ -608,6 +658,11 @@
             min-width: 44px;
             font-size: 1.2rem;
             font-weight: 300;
+        }
+
+        /* MODIFIED: 壁纸模式下隐藏简洁模式的所有内容（解决需求2） */
+        body.wallpaper-mode .simple-mode {
+            display: none !important;
         }
 
         /* ===== 壁纸模式 - 可拖动元素 ===== */
@@ -1458,6 +1513,9 @@
 
         /* ===== 响应式 ===== */
         @media (max-width: 600px) {
+            .simple-mode {
+                padding: 8vh 16px 6vh;
+            }
             .simple-mode #time {
                 font-size: 3rem;
             }
@@ -1578,6 +1636,9 @@
             }
         }
         @media (max-width: 400px) {
+            .simple-mode {
+                padding: 6vh 12px 4vh;
+            }
             .simple-mode #time {
                 font-size: 2.4rem;
             }
@@ -1938,25 +1999,33 @@
         </div>
     </div>
 
-    <!-- 简洁模式 -->
+    <!-- ============================================================
+    简洁模式 — 新布局：上部（时钟+名言） + 下部（搜索+链接）
+    ============================================================ -->
     <div class="simple-mode" id="simpleMode">
-        <div class="clock">
-            <div id="time">00:00</div>
-            <div id="date">加载中...</div>
-        </div>
-        <div class="quote-area" id="quoteArea">
-            <div class="quote-text" id="quoteText">学而不思则罔，思而不学则殆。</div>
-            <div class="quote-author" id="quoteAuthor">— 孔子</div>
-        </div>
-        <div class="search-wrapper" id="searchWrapper">
-            <div class="search-box">
-                <input type="text" id="searchInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        <!-- 上部区域 -->
+        <div class="top-area">
+            <div class="clock">
+                <div id="time">00:00</div>
+                <div id="date">加载中...</div>
             </div>
-            <button class="search-btn" id="searchBtn">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            </button>
+            <div class="quote-area" id="quoteArea">
+                <div class="quote-text" id="quoteText">学而不思则罔，思而不学则殆。</div>
+                <div class="quote-author" id="quoteAuthor">— 孔子</div>
+            </div>
         </div>
-        <div class="links-grid" id="linksGrid"></div>
+        <!-- 下部区域 -->
+        <div class="bottom-area">
+            <div class="search-wrapper" id="searchWrapper">
+                <div class="search-box">
+                    <input type="text" id="searchInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+                </div>
+                <button class="search-btn" id="searchBtn">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                </button>
+            </div>
+            <div class="links-grid" id="linksGrid"></div>
+        </div>
     </div>
 
     <!-- 壁纸模式 - 可拖动元素 -->
@@ -3002,19 +3071,30 @@
             let dragJustResetTimer = null;
             let currentDraggingItem = null; // 当前正在拖拽的元素
 
+            // ---------- 强制结束所有拖拽（防粘手） ----------
+            function forceEndAllDrags() {
+                draggableItems.forEach(item => {
+                    if (item._forceEnd) item._forceEnd();
+                });
+                if (dragJustResetTimer) {
+                    clearTimeout(dragJustResetTimer);
+                    dragJustResetTimer = null;
+                }
+                dragJustHappened = false;
+                currentDraggingItem = null;
+            }
+
             // ---------- 初始化可拖拽元素（修复粘手问题） ----------
             function initDraggable(item) {
                 let startX, startY, origX, origY;
                 let dragging = false;
 
-                // 强制结束当前拖拽（安全重置）
                 function forceEnd() {
                     if (dragging) {
                         dragging = false;
                         item.style.cursor = 'grab';
                         item.classList.remove('dragging');
                         if (currentDraggingItem === item) currentDraggingItem = null;
-                        // 重置防误触标志
                         if (dragJustResetTimer) {
                             clearTimeout(dragJustResetTimer);
                             dragJustResetTimer = null;
@@ -3025,11 +3105,12 @@
                 item._forceEnd = forceEnd;
 
                 function onStart(e) {
-                    // 如果有其他元素正在拖拽，先强制结束它
                     if (currentDraggingItem && currentDraggingItem !== item) {
                         if (currentDraggingItem._forceEnd) currentDraggingItem._forceEnd();
                     }
                     if (e.target.closest('input, textarea')) return;
+                    // MODIFIED: 壁纸模式扩大范围，允许玻璃链接面板内的链接作为拖拽起点（需求3）
+                    if (e.target.closest('a') && item.id !== 'glassLinks') return;
                     const ev = e.touches ? e.touches[0] : e;
                     const rect = item.getBoundingClientRect();
                     let left = parseFloat(item.style.left) || rect.left;
@@ -3049,7 +3130,6 @@
                     dragging = false;
                     item.style.cursor = 'grabbing';
                     currentDraggingItem = item;
-                    // 阻止默认拖拽行为（针对 a 标签）
                     if (e.target.closest('a')) e.preventDefault();
                 }
 
@@ -3060,7 +3140,8 @@
                     const dy = ev.clientY - startY;
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
-                    if (dist > 5) {
+                    // MODIFIED: 扩大移动触发距离阈值，减少误触（需求3）
+                    if (dist > 10) {
                         if (!dragging) {
                             dragging = true;
                             e.preventDefault();
@@ -3104,7 +3185,6 @@
                             dragJustResetTimer = null;
                         }, 200);
                     } else {
-                        // 未触发拖拽，但也要重置标志
                         if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
                         dragJustResetTimer = setTimeout(() => {
                             dragJustHappened = false;
@@ -3113,7 +3193,6 @@
                     }
                 }
 
-                // 事件绑定到 window，增加 touchcancel
                 item.addEventListener('mousedown', onStart);
                 window.addEventListener('mousemove', onMove);
                 window.addEventListener('mouseup', onEnd);
@@ -3122,10 +3201,8 @@
                 window.addEventListener('touchend', onEnd, { passive: false });
                 window.addEventListener('touchcancel', onEnd, { passive: false });
 
-                // 阻止浏览器默认拖拽图片/链接
                 item.addEventListener('dragstart', function(e) { e.preventDefault(); }, false);
 
-                // 清理函数
                 item._destroyDrag = function() {
                     window.removeEventListener('mousemove', onMove);
                     window.removeEventListener('mouseup', onEnd);
@@ -3138,17 +3215,45 @@
                 };
             }
 
-            // 初始化所有可拖拽元素
             draggableItems.forEach(item => initDraggable(item));
 
-            // 全局点击拦截（防误触）
+            // ---------- MODIFIED: 全局点击拦截（对链接放行，防止粘手） ----------
             document.addEventListener('click', function(e) {
                 if (dragJustHappened) {
+                    // 如果是链接点击，放行并重置拖拽标志
+                    if (e.target.closest('a')) {
+                        dragJustHappened = false;
+                        if (dragJustResetTimer) {
+                            clearTimeout(dragJustResetTimer);
+                            dragJustResetTimer = null;
+                        }
+                        return;
+                    }
                     e.stopPropagation();
                     e.preventDefault();
                     return false;
                 }
             }, true);
+
+            // ---------- MODIFIED: 页面可见性变化时重置拖拽 ----------
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    forceEndAllDrags();
+                } else {
+                    // 页面重新可见时，也重置一次
+                    setTimeout(forceEndAllDrags, 50);
+                }
+            });
+
+            // ---------- MODIFIED: 页面卸载前重置拖拽 ----------
+            window.addEventListener('beforeunload', function() {
+                forceEndAllDrags();
+            });
+
+            // ---------- MODIFIED: 页面加载完成时重置拖拽 ----------
+            window.addEventListener('load', function() {
+                setTimeout(forceEndAllDrags, 100);
+            });
 
             // ---------- 布局辅助 ----------
             function setDefaultPositions() {
@@ -3370,6 +3475,8 @@
 
             console.log('✅ 新拟态 · 简洁/壁纸模式 · 拖拽防误触已修复');
             console.log('🖱️ 拖拽链接不会再“粘手”，松开立即停止');
+            console.log('📁 简洁模式背景图：白天 → images/bg_day.png（命名：晨曦）');
+            console.log('📁 简洁模式背景图：夜晚 → images/bg_night.png（命名：星夜）');
         })();
     </script>
 </body>
