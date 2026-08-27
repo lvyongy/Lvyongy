@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>小永子の首页</title>
     <style>
         /* ===== 全局重置 & 变量 ===== */
@@ -36,12 +36,25 @@
             --shadow-light-night: #2a2c2e;
             --wallpaper-text: #fff;
             --wallpaper-text-secondary: rgba(255, 255, 255, 0.7);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-top: env(safe-area-inset-top, 0px);
+        }
+        html,
+        body {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            height: 100%;
+            min-height: 100vh;
+            min-height: 100dvh;
         }
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            min-height: 100dvh;
             font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
             overflow: hidden;
             user-select: none;
@@ -54,6 +67,9 @@
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            position: relative;
+            width: 100%;
+            max-width: 100vw;
         }
         body.night-mode {
             background: var(--bg-night);
@@ -100,21 +116,6 @@
         body.night-mode .simple-mode .add-link-btn:hover {
             box-shadow: 8px 8px 16px #0a0c0e, -8px -8px 16px #3a3c3e;
         }
-        body.night-mode #modeSwitch {
-            background: rgba(42, 44, 46, 0.85);
-            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
-        }
-        body.night-mode #modeSwitch span {
-            color: #eaeaea;
-        }
-        body.night-mode #modeSwitch .toggle-track {
-            background: #2a2c2e;
-            box-shadow: inset 3px 3px 6px #0a0c0e, inset -3px -3px 6px #3a3c3e;
-        }
-        body.night-mode #modeSwitch .toggle-thumb {
-            background: #3a3c3e;
-            box-shadow: 3px 3px 6px #0a0c0e, -3px -3px 6px #4a4c4e;
-        }
 
         /* ===== 壁纸容器 ===== */
         .wallpaper-container {
@@ -123,6 +124,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             z-index: 0;
             overflow: hidden;
             display: none;
@@ -157,18 +159,17 @@
             transform: scale(1.04);
         }
 
-        /* ===== 简洁模式拉绳 ===== */
+        /* ===== 拉绳 (左上角) ===== */
         #rope-container {
             position: fixed;
             top: 0;
-            right: 30px;
+            left: 30px;
             z-index: 10;
             width: 60px;
             height: 100vh;
+            height: 100dvh;
             pointer-events: none;
-        }
-        body.wallpaper-mode #rope-container {
-            display: none;
+            touch-action: none;
         }
         .rope-mount {
             position: absolute;
@@ -211,6 +212,7 @@
             transition: height 0.15s ease-out, background 0.6s ease;
             z-index: 1;
             box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+            will-change: height;
         }
         body.night-mode #rope-line {
             background: #aaa;
@@ -247,6 +249,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: none;
+            will-change: top;
         }
         body.night-mode #rope-handle {
             background: #2a2c2e;
@@ -284,90 +288,8 @@
             display: inline-block;
         }
 
-        /* ===== 左上角模式切换 ===== */
-        #modeSwitch {
-            position: fixed;
-            top: 24px;
-            left: 24px;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--switch-bg);
-            padding: 6px 10px 6px 14px;
-            border-radius: 40px;
-            box-shadow: 6px 6px 12px var(--switch-shadow), -6px -6px 12px var(--shadow-light);
-            backdrop-filter: blur(4px);
-            transition: all 0.4s ease;
-            cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        body.wallpaper-mode #modeSwitch {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-        }
-        body.wallpaper-mode.night-mode #modeSwitch {
-            background: rgba(0, 0, 0, 0.20);
-            border-color: rgba(255, 255, 255, 0.02);
-        }
-        #modeSwitch span {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text);
-            letter-spacing: 0.5px;
-        }
-        body.wallpaper-mode #modeSwitch span {
-            color: var(--text);
-        }
-        body.wallpaper-mode.night-mode #modeSwitch span {
-            color: var(--text-night);
-        }
-        #modeSwitch .toggle-track {
-            width: 44px;
-            height: 24px;
-            border-radius: 20px;
-            background: var(--input-bg);
-            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
-            position: relative;
-            transition: background 0.3s;
-        }
-        body.wallpaper-mode #modeSwitch .toggle-track {
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.05), inset -2px -2px 6px rgba(255, 255, 255, 0.05);
-        }
-        #modeSwitch .toggle-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--link-bg);
-            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        body.wallpaper-mode #modeSwitch .toggle-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05), -2px -2px 8px rgba(255, 255, 255, 0.05);
-        }
-        #modeSwitch.active .toggle-thumb {
-            transform: translateX(20px);
-        }
-        #modeSwitch.active .toggle-track {
-            background: #c0c8d0;
-        }
-        body.night-mode #modeSwitch.active .toggle-track {
-            background: #3a3c3e;
-        }
-        body.wallpaper-mode #modeSwitch.active .toggle-track {
-            background: rgba(255, 255, 255, 0.15);
-        }
-
         /* ================================================================
-           简洁模式 — 新布局：时钟（独立） + 名言（独立） + 底部（搜索+链接）
+           阴阳模式 (原简洁模式)
            ================================================================ */
         .simple-mode {
             position: fixed;
@@ -375,6 +297,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             z-index: 2;
             display: flex;
             flex-direction: column;
@@ -388,8 +311,6 @@
         .simple-mode>* {
             pointer-events: auto;
         }
-
-        /* --- 时钟区域（独立拖拽） --- */
         .simple-mode .clock-area {
             display: flex;
             flex-direction: column;
@@ -400,6 +321,7 @@
             will-change: transform;
             touch-action: none;
             opacity: 1 !important;
+            transition: opacity 0.3s ease;
         }
         .simple-mode .clock-area:active {
             cursor: grabbing;
@@ -413,7 +335,14 @@
         .simple-mode .clock-area.dragging-simple * {
             pointer-events: none !important;
         }
-
+        .simple-mode .clock-area.locked {
+            opacity: 0.5;
+            cursor: default;
+            filter: grayscale(0.2);
+        }
+        .simple-mode .clock-area.locked:active {
+            cursor: default;
+        }
         .simple-mode .clock {
             text-align: center;
             width: 100%;
@@ -440,8 +369,6 @@
             color: var(--text-night);
             opacity: 0.6;
         }
-
-        /* --- 名言区域（独立拖拽）— 左对齐，宽度由内容决定，max-width 由 JS 动态控制 --- */
         .simple-mode .quote-area {
             width: auto;
             flex: 0 0 auto;
@@ -463,7 +390,8 @@
             background: transparent;
             border: none;
             box-shadow: none;
-            /* max-width 由 JS 动态设置，初始为 420px */
+            transition: opacity 0.3s ease;
+            max-width: 420px;
         }
         .simple-mode .quote-area:active {
             cursor: grabbing;
@@ -477,7 +405,14 @@
         .simple-mode .quote-area.dragging-simple * {
             pointer-events: none !important;
         }
-
+        .simple-mode .quote-area.locked {
+            opacity: 0.5;
+            cursor: default;
+            filter: grayscale(0.2);
+        }
+        .simple-mode .quote-area.locked:active {
+            cursor: default;
+        }
         .simple-mode .quote-area .quote-text {
             font-size: 1.3rem;
             font-family: '华文行楷', 'STXingkai', 'KaiTi', '楷体', serif;
@@ -508,8 +443,6 @@
         body.night-mode .simple-mode .quote-area .quote-author {
             opacity: 0.35;
         }
-
-        /* --- 底部区域（独立拖拽）— 左对齐 --- */
         .simple-mode .bottom-area {
             display: flex;
             flex-direction: column;
@@ -522,6 +455,7 @@
             will-change: transform;
             touch-action: none;
             opacity: 1 !important;
+            transition: opacity 0.3s ease;
         }
         .simple-mode .bottom-area:active {
             cursor: grabbing;
@@ -535,7 +469,14 @@
         .simple-mode .bottom-area.dragging-simple * {
             pointer-events: none !important;
         }
-
+        .simple-mode .bottom-area.locked {
+            opacity: 0.5;
+            cursor: default;
+            filter: grayscale(0.2);
+        }
+        .simple-mode .bottom-area.locked:active {
+            cursor: default;
+        }
         .simple-mode .search-wrapper {
             display: flex !important;
             width: 100%;
@@ -578,6 +519,7 @@
             color: var(--text-day);
             user-select: text;
             -webkit-user-select: text;
+            min-width: 0;
         }
         body.night-mode .simple-mode .search-box input {
             color: var(--text-night);
@@ -616,41 +558,6 @@
             stroke-linecap: round;
             stroke-linejoin: round;
         }
-        .simple-mode .search-btn-mobile {
-            display: none;
-            background: var(--link-bg);
-            border: none;
-            min-width: 54px;
-            height: 54px;
-            border-radius: 16px;
-            box-shadow: 6px 6px 12px var(--link-shadow-dark), -6px -6px 12px var(--link-shadow-light);
-            cursor: pointer;
-            color: var(--text-day);
-            transition: all 0.15s ease;
-            align-items: center;
-            justify-content: center;
-            padding: 0 14px;
-        }
-        body.night-mode .simple-mode .search-btn-mobile {
-            background: #2a2c2e;
-            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
-            color: var(--text-night);
-        }
-        .simple-mode .search-btn-mobile:active {
-            box-shadow: inset 6px 6px 12px var(--link-shadow-dark), inset -6px -6px 12px var(--link-shadow-light);
-            transform: scale(0.96);
-        }
-        .simple-mode .search-btn-mobile svg {
-            width: 22px;
-            height: 22px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        /* 链接网格 — 左对齐 */
         .simple-mode .links-grid {
             display: flex;
             flex-wrap: wrap;
@@ -705,12 +612,45 @@
             font-size: 1.2rem;
             font-weight: 300;
         }
-
+        .simple-mode .links-grid .search-btn-end {
+            min-width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: var(--link-bg);
+            box-shadow: 6px 6px 12px var(--link-shadow-dark), -6px -6px 12px var(--link-shadow-light);
+            border: none;
+            color: var(--text-day);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            font-size: 1.1rem;
+            padding: 0 12px;
+        }
+        body.night-mode .simple-mode .links-grid .search-btn-end {
+            background: #2a2c2e;
+            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
+            color: var(--text-night);
+        }
+        .simple-mode .links-grid .search-btn-end:active {
+            box-shadow: inset 6px 6px 12px var(--link-shadow-dark), inset -6px -6px 12px var(--link-shadow-light);
+            transform: scale(0.96);
+        }
+        .simple-mode .links-grid .search-btn-end svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
         body.wallpaper-mode .simple-mode {
             display: none !important;
         }
 
-        /* ===== 壁纸模式 - 可拖动元素 ===== */
+        /* ===== 修仙模式 (原壁纸模式) - 可拖动元素 ===== */
         .draggable-item {
             position: fixed;
             display: none;
@@ -721,6 +661,7 @@
             pointer-events: auto;
             -webkit-user-drag: none;
             user-drag: none;
+            transition: opacity 0.3s ease;
         }
         .draggable-item:active {
             cursor: grabbing;
@@ -739,7 +680,6 @@
         .draggable-item.locked:active {
             cursor: default;
         }
-
         #wallpaperTimeDisplay {
             padding: 4px 16px;
             border-radius: 40px;
@@ -749,6 +689,7 @@
             text-align: center;
             border: none;
             box-shadow: none;
+            transition: opacity 0.3s ease;
         }
         #wallpaperTimeDisplay .wp-time {
             font-size: 4.8rem;
@@ -766,7 +707,6 @@
             color: var(--wallpaper-text-secondary);
             text-shadow: 0 1px 12px rgba(0, 0, 0, 0.10);
         }
-
         #wallpaperQuoteDisplay {
             padding: 0;
             background: transparent;
@@ -775,6 +715,7 @@
             box-shadow: none;
             max-width: 420px;
             cursor: pointer;
+            transition: opacity 0.3s ease;
         }
         #wallpaperQuoteDisplay .wq-text {
             font-size: 1.2rem;
@@ -784,6 +725,7 @@
             color: var(--wallpaper-text);
             text-shadow: 0 1px 12px rgba(0, 0, 0, 0.15);
             opacity: 0.8;
+            transition: font-size 0.2s ease;
         }
         #wallpaperQuoteDisplay .wq-author {
             font-size: 0.8rem;
@@ -800,7 +742,6 @@
         #wallpaperQuoteDisplay.locked {
             opacity: 0.6;
         }
-
         .glass-search-wrapper {
             display: flex;
             align-items: center;
@@ -838,6 +779,7 @@
             -webkit-user-select: text;
             padding: 0;
             font-family: inherit;
+            min-width: 0;
         }
         .glass-search-input::placeholder {
             color: var(--wallpaper-text-secondary);
@@ -875,7 +817,6 @@
             stroke-linecap: round;
             stroke-linejoin: round;
         }
-
         .glass-links {
             display: flex;
             flex-direction: column;
@@ -887,6 +828,7 @@
             backdrop-filter: none !important;
             border: none !important;
             box-shadow: none !important;
+            transition: opacity 0.3s ease;
         }
         .glass-links .glass-link {
             display: flex;
@@ -952,30 +894,29 @@
             background: rgba(255, 255, 255, 0.18);
         }
 
-        /* ===== 壁纸模式设置 (右上角) ===== */
-        #wallpaperSettings {
+        /* ================================================================
+           设置面板 - 全新设计
+           ================================================================ */
+        #settingsPanelWrapper {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 15;
-            display: none;
+            display: flex;
             flex-direction: column;
             align-items: flex-end;
             gap: 8px;
         }
-        body.wallpaper-mode #wallpaperSettings {
-            display: flex;
-        }
         .settings-toggle {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.10);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.04);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
             cursor: pointer;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             color: var(--wallpaper-text);
             display: flex;
             align-items: center;
@@ -989,115 +930,265 @@
         .settings-toggle:hover {
             transform: rotate(60deg) scale(1.05);
         }
+        body:not(.wallpaper-mode) .settings-toggle {
+            background: rgba(200, 200, 200, 0.15);
+            color: var(--text-day);
+            border-color: rgba(0, 0, 0, 0.04);
+        }
+        body:not(.wallpaper-mode).night-mode .settings-toggle {
+            color: var(--text-night);
+            background: rgba(0, 0, 0, 0.12);
+        }
 
         .settings-panel {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 18px;
-            padding: 16px 18px 18px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-            min-width: 160px;
-            max-width: 25vw;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 20px;
+            padding: 18px 16px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.10);
+            min-width: 220px;
+            max-width: 340px;
+            width: 92vw;
             display: none;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
             transition: color 0.6s ease;
-            max-height: 70vh;
+            max-height: 75vh;
+            max-height: 75dvh;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.15) rgba(255, 255, 255, 0.05);
+            position: absolute;
+            top: 52px;
+            right: 0;
         }
         body.night-mode .settings-panel {
-            background: rgba(0, 0, 0, 0.20);
-            border-color: rgba(255, 255, 255, 0.02);
+            background: rgba(0, 0, 0, 0.25);
+            border-color: rgba(255, 255, 255, 0.03);
+        }
+        body:not(.wallpaper-mode) .settings-panel {
+            background: rgba(240, 242, 245, 0.88);
+            border-color: rgba(0, 0, 0, 0.04);
+        }
+        body:not(.wallpaper-mode).night-mode .settings-panel {
+            background: rgba(30, 30, 30, 0.88);
         }
         .settings-panel::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
         .settings-panel::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
+            border-radius: 2px;
         }
         .settings-panel::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.15);
-            border-radius: 3px;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            border-radius: 2px;
         }
-        .settings-panel::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.25);
-        }
-        body.night-mode .settings-panel::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-        body.night-mode .settings-panel::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.08);
-        }
-
         .settings-panel.open {
             display: flex;
         }
-        .settings-panel .setting-row {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+
+        /* ---- 设置模块 ---- */
+        .settings-module {
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            overflow: hidden;
+            transition: all 0.2s;
         }
-        .settings-panel .setting-row label {
-            font-size: 0.7rem;
-            opacity: 0.5;
+        body:not(.wallpaper-mode) .settings-module {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.03);
+        }
+        .settings-module-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            font-size: 0.75rem;
+            font-weight: 600;
             letter-spacing: 0.5px;
             color: var(--wallpaper-text);
-            transition: color 0.6s ease;
+            opacity: 0.8;
+            transition: opacity 0.2s;
         }
-        .settings-panel .setting-row .type-btns {
-            display: flex;
-            gap: 4px;
+        body:not(.wallpaper-mode) .settings-module-header {
+            color: var(--text-day);
         }
-        .settings-panel .setting-row .type-btn {
-            flex: 1;
-            padding: 5px 0;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--wallpaper-text);
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s, color 0.6s ease;
-            font-family: inherit;
+        body:not(.wallpaper-mode).night-mode .settings-module-header {
+            color: var(--text-night);
         }
-        body.night-mode .settings-panel .setting-row .type-btn {
-            color: var(--wallpaper-text);
-            background: rgba(0, 0, 0, 0.04);
+        .settings-module-header:hover {
+            opacity: 1;
         }
-        .settings-panel .setting-row .type-btn.active {
-            background: rgba(255, 255, 255, 0.14);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        .settings-module-header .arrow {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 0.7rem;
+            opacity: 0.5;
         }
-        body.night-mode .settings-panel .setting-row .type-btn.active {
-            background: rgba(255, 255, 255, 0.04);
+        .settings-module-header .arrow.collapsed {
+            transform: rotate(-90deg);
+        }
+        .settings-module-body {
+            padding: 0 12px 12px;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), padding 0.3s ease;
+            max-height: 800px;
+        }
+        .settings-module-body.collapsed {
+            max-height: 0 !important;
+            padding: 0 12px !important;
         }
 
-        .settings-panel .setting-row .wallpaper-preview {
+        /* ---- 模式切换开关 (新设计) ---- */
+        .mode-switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 0 2px;
+        }
+        .mode-switch-big {
+            position: relative;
+            width: 180px;
+            height: 52px;
+            border-radius: 30px;
+            background: rgba(128, 128, 128, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+            transition: background 0.4s, border-color 0.4s;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+        body.night-mode .mode-switch-big {
+            background: rgba(0, 0, 0, 0.20);
+            border-color: rgba(255, 255, 255, 0.04);
+        }
+        body:not(.wallpaper-mode) .mode-switch-big {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        .mode-switch-big .slider-track {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: calc(50% - 4px);
+            height: calc(100% - 8px);
+            border-radius: 26px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.4s;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            z-index: 0;
+            pointer-events: none;
+        }
+        body.night-mode .mode-switch-big .slider-track {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        body:not(.wallpaper-mode) .mode-switch-big .slider-track {
+            background: rgba(255, 255, 255, 0.30);
+        }
+        .mode-switch-big.wallpaper .slider-track {
+            transform: translateX(100%);
+        }
+        .mode-switch-big .mode-label-left,
+        .mode-switch-big .mode-label-right {
+            position: relative;
+            z-index: 1;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--wallpaper-text);
+            opacity: 0.5;
+            transition: opacity 0.4s, color 0.4s;
+            pointer-events: none;
+            flex: 1;
+            text-align: center;
+        }
+        body.night-mode .mode-switch-big .mode-label-left,
+        body.night-mode .mode-switch-big .mode-label-right {
+            color: #fff !important;
+        }
+        body:not(.wallpaper-mode) .mode-switch-big .mode-label-left,
+        body:not(.wallpaper-mode) .mode-switch-big .mode-label-right {
+            color: var(--text-day);
+        }
+        body:not(.wallpaper-mode).night-mode .mode-switch-big .mode-label-left,
+        body:not(.wallpaper-mode).night-mode .mode-switch-big .mode-label-right {
+            color: #fff !important;
+        }
+        body.wallpaper-mode[data-brightness="light"] .mode-switch-big .mode-label-left,
+        body.wallpaper-mode[data-brightness="light"] .mode-switch-big .mode-label-right {
+            color: #1a1a1a !important;
+        }
+        .mode-switch-big .mode-label-left.active {
+            opacity: 1;
+        }
+        .mode-switch-big .mode-label-right.active {
+            opacity: 1;
+        }
+        .mode-switch-big.wallpaper .mode-label-right.active {
+            opacity: 1;
+        }
+        .mode-switch-big.wallpaper .mode-label-left {
+            opacity: 0.3;
+        }
+        .mode-switch-big:not(.wallpaper) .mode-label-left.active {
+            opacity: 1;
+        }
+        .mode-switch-big:not(.wallpaper) .mode-label-right {
+            opacity: 0.3;
+        }
+
+        /* ---- 修仙滚轮 (毛玻璃风格) ---- */
+        .wallpaper-scroll-container {
+            max-height: 160px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            padding: 4px 2px 4px 0;
+            margin: 4px 0 2px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        body.night-mode .wallpaper-scroll-container {
+            background: rgba(0, 0, 0, 0.08);
+            border-color: rgba(255, 255, 255, 0.02);
+        }
+        body:not(.wallpaper-mode) .wallpaper-scroll-container {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        .wallpaper-scroll-container::-webkit-scrollbar {
+            width: 3px;
+        }
+        .wallpaper-scroll-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 2px;
+        }
+        .wallpaper-scroll-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 2px;
+        }
+        .wallpaper-scroll-container .wp-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 2px;
-            max-height: none;
-            overflow: visible;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            padding: 4px;
         }
-        .settings-panel .setting-row .wallpaper-preview::-webkit-scrollbar {
-            width: 4px;
-        }
-        .settings-panel .setting-row .wallpaper-preview::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .settings-panel .setting-row .wallpaper-preview::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-        }
-        .settings-panel .setting-row .wp-preview-item {
+        .wallpaper-scroll-container .wp-preview-item {
             width: 100%;
             aspect-ratio: 4 / 3;
             border-radius: 8px;
@@ -1108,19 +1199,19 @@
             background: rgba(0, 0, 0, 0.06);
             position: relative;
         }
-        .settings-panel .setting-row .wp-preview-item img,
-        .settings-panel .setting-row .wp-preview-item video {
+        .wallpaper-scroll-container .wp-preview-item img,
+        .wallpaper-scroll-container .wp-preview-item video {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
         }
-        .settings-panel .setting-row .wp-preview-item .wp-label {
+        .wallpaper-scroll-container .wp-preview-item .wp-label {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            font-size: 0.5rem;
+            font-size: 0.45rem;
             background: rgba(0, 0, 0, 0.6);
             color: #fff;
             text-align: center;
@@ -1129,72 +1220,340 @@
             opacity: 0;
             transition: opacity 0.3s;
         }
-        .settings-panel .setting-row .wp-preview-item:hover .wp-label {
+        .wallpaper-scroll-container .wp-preview-item:hover .wp-label {
             opacity: 1;
         }
-        .settings-panel .setting-row .wp-preview-item.active {
+        .wallpaper-scroll-container .wp-preview-item.active {
             border-color: rgba(255, 255, 255, 0.6);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
             transform: scale(1.02);
         }
-        body.night-mode .settings-panel .setting-row .wp-preview-item.active {
-            border-color: rgba(255, 255, 255, 0.3);
+        body.night-mode .wallpaper-scroll-container .wp-preview-item.active {
+            border-color: rgba(255, 255, 255, 0.25);
         }
-        .settings-panel .setting-row .wp-preview-item .check-mark {
+        .wallpaper-scroll-container .wp-preview-item .check-mark {
             position: absolute;
-            top: 3px;
-            right: 3px;
-            width: 16px;
-            height: 16px;
-            background: rgba(255, 255, 255, 0.85);
+            top: 2px;
+            right: 2px;
+            width: 14px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
             display: none;
             align-items: center;
             justify-content: center;
-            font-size: 9px;
+            font-size: 8px;
             color: #222;
         }
-        .settings-panel .setting-row .wp-preview-item.active .check-mark {
+        .wallpaper-scroll-container .wp-preview-item.active .check-mark {
             display: flex;
         }
 
-        .settings-panel .setting-row input[type="range"] {
+        /* ---- 设置面板其他元素 ---- */
+        .settings-module-body .setting-row {
+            margin-bottom: 6px;
+        }
+        .settings-module-body .setting-row:last-child {
+            margin-bottom: 0;
+        }
+        .settings-module-body .setting-row label {
+            font-size: 0.6rem;
+            opacity: 0.5;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 2px;
+            color: var(--wallpaper-text);
+            transition: color 0.6s ease;
+        }
+        body:not(.wallpaper-mode) .settings-module-body .setting-row label {
+            color: var(--text-day);
+        }
+        body:not(.wallpaper-mode).night-mode .settings-module-body .setting-row label {
+            color: var(--text-night);
+        }
+        .settings-module-body .type-btns {
+            display: flex;
+            gap: 4px;
+        }
+        .settings-module-body .type-btn {
+            flex: 1;
+            padding: 4px 0;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--wallpaper-text);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s, color 0.6s ease;
+            font-family: inherit;
+        }
+        body.night-mode .settings-module-body .type-btn {
+            color: var(--wallpaper-text);
+            background: rgba(0, 0, 0, 0.04);
+        }
+        body:not(.wallpaper-mode) .settings-module-body .type-btn {
+            color: var(--text-day);
+        }
+        body:not(.wallpaper-mode).night-mode .settings-module-body .type-btn {
+            color: var(--text-night);
+        }
+        .settings-module-body .type-btn.active {
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        body.night-mode .settings-module-body .type-btn.active {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* 元素控制 */
+        .elem-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        body:not(.wallpaper-mode) .elem-control {
+            border-bottom-color: rgba(0, 0, 0, 0.03);
+        }
+        .elem-control .elem-name {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            flex: 1;
+            min-width: 40px;
+            color: var(--wallpaper-text);
+        }
+        body:not(.wallpaper-mode) .elem-control .elem-name {
+            color: var(--text-day);
+        }
+        body:not(.wallpaper-mode).night-mode .elem-control .elem-name {
+            color: var(--text-night);
+        }
+        .elem-control .elem-toggle {
+            width: 30px;
+            height: 16px;
+            border-radius: 10px;
+            background: rgba(128, 128, 128, 0.15);
+            cursor: pointer;
+            position: relative;
+            transition: background 0.3s;
+            flex-shrink: 0;
+            border: none;
+            padding: 0;
+        }
+        .elem-control .elem-toggle.active {
+            background: rgba(100, 200, 255, 0.35);
+        }
+        body.night-mode .elem-control .elem-toggle.active {
+            background: rgba(80, 180, 255, 0.25);
+        }
+        .elem-control .elem-toggle .thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10);
+        }
+        .elem-control .elem-toggle.active .thumb {
+            transform: translateX(14px);
+        }
+        .elem-control .elem-opacity {
+            width: 44px;
+            flex-shrink: 0;
+        }
+        .elem-control .elem-opacity input[type="range"] {
             width: 100%;
             -webkit-appearance: none;
             appearance: none;
-            height: 4px;
+            height: 2px;
             border-radius: 2px;
             background: rgba(128, 128, 128, 0.15);
             outline: none;
+            padding: 0;
         }
-        .settings-panel .setting-row input[type="range"]::-webkit-slider-thumb {
+        .elem-control .elem-opacity input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: var(--link-bg);
-            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.08), -3px -3px 8px rgba(255, 255, 255, 0.2);
-            cursor: pointer;
-        }
-        body.night-mode .settings-panel .setting-row input[type="range"]::-webkit-slider-thumb {
-            background: #3a3c3e;
-        }
-        .settings-panel .setting-row input[type="range"]::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: var(--link-bg);
-            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.08), -3px -3px 8px rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.5);
             cursor: pointer;
             border: none;
         }
-        .settings-panel .setting-row .range-value {
-            font-size: 0.75rem;
+        body.night-mode .elem-control .elem-opacity input[type="range"]::-webkit-slider-thumb {
+            background: rgba(200, 200, 200, 0.5);
+        }
+        .elem-control .elem-opacity input[type="range"]::-moz-range-thumb {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            border: none;
+        }
+        .elem-control .elem-opacity-value {
+            font-size: 0.5rem;
             opacity: 0.4;
+            width: 24px;
             text-align: right;
+            flex-shrink: 0;
             color: var(--wallpaper-text);
-            transition: color 0.6s ease;
+        }
+        body:not(.wallpaper-mode) .elem-control .elem-opacity-value {
+            color: var(--text-day);
+        }
+        body:not(.wallpaper-mode).night-mode .elem-control .elem-opacity-value {
+            color: var(--text-night);
+        }
+
+        /* 经典语录管理 */
+        .quote-manager {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 120px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .quote-manager::-webkit-scrollbar {
+            width: 3px;
+        }
+        .quote-manager::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 2px;
+        }
+        .quote-manager::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.10);
+            border-radius: 2px;
+        }
+        .quote-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 6px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            font-size: 0.65rem;
+            color: var(--wallpaper-text);
+        }
+        body:not(.wallpaper-mode) .quote-item {
+            color: var(--text-day);
+        }
+        body:not(.wallpaper-mode).night-mode .quote-item {
+            color: var(--text-night);
+        }
+        .quote-item .q-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.6rem;
+        }
+        .quote-item .q-author {
+            opacity: 0.4;
+            margin-right: 2px;
+            flex-shrink: 0;
+            font-size: 0.55rem;
+        }
+        .quote-item .q-actions {
+            display: flex;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .quote-item .q-actions button {
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-size: 0.5rem;
+            cursor: pointer;
+            color: inherit;
+            transition: background 0.2s;
+        }
+        .quote-item .q-actions button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .quote-item .q-actions .del-btn {
+            color: #f77;
+        }
+        .quote-add-form {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .quote-add-form input {
+            flex: 1;
+            min-width: 60px;
+            padding: 3px 6px;
+            border-radius: 6px;
+            border: none;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--wallpaper-text);
+            font-size: 0.65rem;
+            outline: none;
+            font-family: inherit;
+        }
+        body:not(.wallpaper-mode) .quote-add-form input {
+            color: var(--text-day);
+            background: rgba(0, 0, 0, 0.03);
+        }
+        body:not(.wallpaper-mode).night-mode .quote-add-form input {
+            color: var(--text-night);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .quote-add-form input::placeholder {
+            opacity: 0.3;
+        }
+        .quote-add-form button {
+            padding: 3px 10px;
+            border-radius: 6px;
+            border: none;
+            background: rgba(255, 255, 255, 0.10);
+            color: inherit;
+            font-size: 0.6rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .quote-add-form button:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+        .interval-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+        }
+        .interval-control label {
+            font-size: 0.6rem;
+            opacity: 0.5;
+        }
+        .interval-control input {
+            width: 50px;
+            padding: 2px 4px;
+            border-radius: 6px;
+            border: none;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--wallpaper-text);
+            font-size: 0.65rem;
+            text-align: center;
+            outline: none;
+            font-family: inherit;
+        }
+        body:not(.wallpaper-mode) .interval-control input {
+            color: var(--text-day);
+            background: rgba(0, 0, 0, 0.03);
+        }
+        body:not(.wallpaper-mode).night-mode .interval-control input {
+            color: var(--text-night);
+            background: rgba(255, 255, 255, 0.03);
         }
 
         /* ===== 音乐播放器 ===== */
@@ -1233,6 +1592,7 @@
             flex-shrink: 0;
             cursor: pointer;
             transition: transform 0.2s;
+            position: relative;
         }
         .player-cover:hover {
             transform: scale(1.02);
@@ -1246,6 +1606,13 @@
             object-fit: cover;
             display: block;
             filter: brightness(0.9) contrast(1.1);
+            pointer-events: none;
+        }
+        .player-cover.dragging-cover {
+            cursor: grabbing;
+        }
+        .player-cover.dragging-cover img {
+            pointer-events: none;
         }
         .player-joystick {
             position: relative;
@@ -1274,23 +1641,15 @@
             align-items: center;
             border-radius: 50%;
             background: #c5d1da;
-            box-shadow:
-                0 0 10px rgba(0, 0, 0, 0.30),
-                0 10px 10px rgba(0, 0, 0, 0.10),
-                inset 0 0 16px rgba(0, 0, 0, 0.70),
-                inset 0 0 24px rgba(0, 0, 0, 0.50),
-                inset 0 0 48px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.30), 0 10px 10px rgba(0, 0, 0, 0.10), inset 0 0 16px rgba(0, 0, 0, 0.70),
+                inset 0 0 24px rgba(0, 0, 0, 0.50), inset 0 0 48px rgba(0, 0, 0, 0.06);
             perspective: 300px;
             transition: all 0.15s;
         }
         body.night-mode .player-joystick .handle {
             background: #3a3c3e;
-            box-shadow:
-                0 0 10px rgba(0, 0, 0, 0.40),
-                0 10px 10px rgba(0, 0, 0, 0.20),
-                inset 0 0 16px rgba(0, 0, 0, 0.70),
-                inset 0 0 24px rgba(0, 0, 0, 0.50),
-                inset 0 0 48px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.40), 0 10px 10px rgba(0, 0, 0, 0.20), inset 0 0 16px rgba(0, 0, 0, 0.70),
+                inset 0 0 24px rgba(0, 0, 0, 0.50), inset 0 0 48px rgba(0, 0, 0, 0.12);
         }
         .player-joystick .button-wrapper {
             width: 82px;
@@ -1300,24 +1659,16 @@
             align-items: center;
             border-radius: 50%;
             background-image: linear-gradient(0deg, #86969c, #eff1f1);
-            box-shadow:
-                0 9px 14px rgba(0, 0, 0, 0.30),
-                0 19px 8px -2px rgba(0, 0, 0, 0.10),
-                0 33px 8px rgba(0, 0, 0, 0.20),
-                0 -12px 10px rgba(255, 255, 255, 0.30),
-                inset 0 3px 3px rgba(255, 255, 255, 0.40),
-                inset 0 -3px 3px rgba(89, 91, 92, 0.40);
+            box-shadow: 0 9px 14px rgba(0, 0, 0, 0.30), 0 19px 8px -2px rgba(0, 0, 0, 0.10),
+                0 33px 8px rgba(0, 0, 0, 0.20), 0 -12px 10px rgba(255, 255, 255, 0.30),
+                inset 0 3px 3px rgba(255, 255, 255, 0.40), inset 0 -3px 3px rgba(89, 91, 92, 0.40);
             transition: 0.25s ease-out;
         }
         body.night-mode .player-joystick .button-wrapper {
             background-image: linear-gradient(0deg, #4a4c4e, #5a5c5e);
-            box-shadow:
-                0 9px 14px rgba(0, 0, 0, 0.40),
-                0 19px 8px -2px rgba(0, 0, 0, 0.20),
-                0 33px 8px rgba(0, 0, 0, 0.30),
-                0 -12px 10px rgba(255, 255, 255, 0.02),
-                inset 0 3px 3px rgba(255, 255, 255, 0.04),
-                inset 0 -3px 3px rgba(0, 0, 0, 0.30);
+            box-shadow: 0 9px 14px rgba(0, 0, 0, 0.40), 0 19px 8px -2px rgba(0, 0, 0, 0.20),
+                0 33px 8px rgba(0, 0, 0, 0.30), 0 -12px 10px rgba(255, 255, 255, 0.02),
+                inset 0 3px 3px rgba(255, 255, 255, 0.04), inset 0 -3px 3px rgba(0, 0, 0, 0.30);
         }
         .player-joystick .inside {
             position: relative;
@@ -1325,15 +1676,11 @@
             height: 66px;
             border-radius: 50%;
             background-image: linear-gradient(180deg, #adb9bf, #d4dbdd);
-            box-shadow:
-                inset 0 3px 6px rgba(152, 160, 163, 0.20),
-                inset 0 -3px 6px rgba(238, 244, 246, 0.20);
+            box-shadow: inset 0 3px 6px rgba(152, 160, 163, 0.20), inset 0 -3px 6px rgba(238, 244, 246, 0.20);
         }
         body.night-mode .player-joystick .inside {
             background-image: linear-gradient(180deg, #4a5055, #5a6065);
-            box-shadow:
-                inset 0 3px 6px rgba(0, 0, 0, 0.20),
-                inset 0 -3px 6px rgba(100, 110, 120, 0.10);
+            box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.20), inset 0 -3px 6px rgba(100, 110, 120, 0.10);
         }
         .player-joystick .dot {
             position: absolute;
@@ -1363,7 +1710,6 @@
             left: 10%;
             top: 50%;
         }
-
         .player-joystick .touch {
             position: absolute;
             display: flex;
@@ -1410,7 +1756,6 @@
         .player-joystick .touch>div:active {
             background: rgba(128, 128, 128, 0.18);
         }
-
         .player-joystick .button-wrapper.dir-up {
             transform-style: preserve-3d;
             transform: translate(0, -8px) rotateX(12deg);
@@ -1447,6 +1792,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             background: rgba(0, 0, 0, 0.35);
             backdrop-filter: blur(4px);
             z-index: 999;
@@ -1564,309 +1910,60 @@
             color: #ccc;
         }
 
-        /* ===== 响应式 ===== */
-        @media (max-width: 600px) {
-            .simple-mode {
-                padding: 8vh 16px 6vh;
+        /* ===== Toast 提示 ===== */
+        #toastContainer {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .toast {
+            padding: 8px 20px;
+            border-radius: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            color: #fff;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 1.5s forwards;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
             }
-            .simple-mode #time {
-                font-size: 3rem;
-            }
-            .simple-mode .search-box {
-                height: 42px;
-            }
-            .simple-mode .search-btn {
-                width: 40px;
-                height: 40px;
-            }
-            .simple-mode .link-item,
-            .simple-mode .add-link-btn {
-                min-width: 44px;
-                height: 38px;
-                padding: 0 8px;
-                font-size: 0.75rem;
-            }
-            .simple-mode .quote-area .quote-text {
-                font-size: 1rem;
-            }
-            .glass-search-wrapper {
-                max-width: 92%;
-                padding: 0 4px 0 12px;
-                height: 46px;
-            }
-            .glass-search-input {
-                font-size: 0.85rem;
-            }
-            .glass-search-btn {
-                width: 36px;
-                height: 36px;
-            }
-            .glass-search-btn svg {
-                width: 18px;
-                height: 18px;
-            }
-            .glass-links {
-                gap: 6px;
-            }
-            .glass-links .glass-link {
-                font-size: 0.75rem;
-                padding: 4px 10px;
-            }
-            .glass-links .glass-add {
-                font-size: 1rem;
-                padding: 4px 10px;
-            }
-            #musicPlayer {
-                width: 230px;
-            }
-            .player-cover {
-                border-radius: 20px 20px 0 0;
-            }
-            .player-joystick {
-                width: 140px;
-                height: 140px;
-            }
-            .player-joystick .around {
-                width: 140px;
-                height: 140px;
-            }
-            .player-joystick .handle {
-                width: 108px;
-                height: 108px;
-            }
-            .player-joystick .button-wrapper {
-                width: 72px;
-                height: 72px;
-            }
-            .player-joystick .inside {
-                width: 58px;
-                height: 58px;
-            }
-            .player-joystick .touch {
-                width: 140px;
-                height: 140px;
-            }
-            .player-joystick .touch>div {
-                width: 48px;
-                height: 48px;
-            }
-            #wallpaperSettings {
-                top: 14px;
-                right: 14px;
-            }
-            .settings-toggle {
-                width: 36px;
-                height: 36px;
-                font-size: 1.1rem;
-            }
-            .settings-panel {
-                min-width: 140px;
-                padding: 12px 14px;
-                max-height: 60vh;
-            }
-            .settings-panel .setting-row .wp-preview-item {
-                aspect-ratio: 4/3;
-            }
-            #modeSwitch {
-                top: 14px;
-                left: 14px;
-                padding: 4px 8px 4px 12px;
-            }
-            #modeSwitch span {
-                font-size: 0.7rem;
-            }
-            #wallpaperTimeDisplay .wp-time {
-                font-size: 3.4rem;
-            }
-            #wallpaperTimeDisplay .wp-date {
-                font-size: 1rem;
-            }
-            #wallpaperQuoteDisplay {
-                max-width: 300px;
-            }
-            #wallpaperQuoteDisplay .wq-text {
-                font-size: 1rem;
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
             }
         }
-        @media (max-width: 400px) {
-            .simple-mode {
-                padding: 6vh 12px 4vh;
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
             }
-            .simple-mode #time {
-                font-size: 2.4rem;
-            }
-            .simple-mode .search-box {
-                height: 36px;
-                padding: 0 10px;
-            }
-            .simple-mode .search-btn {
-                width: 34px;
-                height: 34px;
-            }
-            .simple-mode .search-btn svg {
-                width: 18px;
-                height: 18px;
-            }
-            .simple-mode .link-item,
-            .simple-mode .add-link-btn {
-                min-width: 38px;
-                height: 32px;
-                padding: 0 6px;
-                font-size: 0.65rem;
-            }
-            .simple-mode .quote-area .quote-text {
-                font-size: 0.85rem;
-            }
-            .player-cover {
-                border-radius: 16px 16px 0 0;
-            }
-            .player-joystick {
-                width: 120px;
-                height: 120px;
-            }
-            .player-joystick .around {
-                width: 120px;
-                height: 120px;
-            }
-            .player-joystick .handle {
-                width: 92px;
-                height: 92px;
-            }
-            .player-joystick .button-wrapper {
-                width: 62px;
-                height: 62px;
-            }
-            .player-joystick .inside {
-                width: 50px;
-                height: 50px;
-            }
-            .player-joystick .touch {
-                width: 120px;
-                height: 120px;
-            }
-            .player-joystick .touch>div {
-                width: 40px;
-                height: 40px;
-            }
-            #musicPlayer {
-                width: 200px;
-            }
-            .glass-links .glass-link {
-                font-size: 0.7rem;
-                padding: 3px 8px;
-            }
-            .glass-links .glass-add {
-                font-size: 0.9rem;
-                padding: 3px 8px;
-            }
-            .glass-search-wrapper {
-                height: 40px;
-                padding: 0 4px 0 10px;
-            }
-            .glass-search-input {
-                font-size: 0.8rem;
-            }
-            .glass-search-btn {
-                width: 32px;
-                height: 32px;
-            }
-            .glass-search-btn svg {
-                width: 16px;
-                height: 16px;
-            }
-            .settings-panel .setting-row .wp-preview-item {
-                aspect-ratio: 4/3;
-            }
-            #wallpaperTimeDisplay .wp-time {
-                font-size: 2.6rem;
-            }
-            #wallpaperTimeDisplay .wp-date {
-                font-size: 0.8rem;
-            }
-            #wallpaperQuoteDisplay .wq-text {
-                font-size: 0.85rem;
+            to {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.95);
             }
         }
 
-        .hidden {
-            display: none !important;
-        }
-
-        /* ===== 壁纸模式 - 文字颜色自适应 ===== */
-        body.wallpaper-mode[data-brightness="dark"] {
-            --wallpaper-text: #ffffff;
-            --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
-        }
-        body.wallpaper-mode[data-brightness="light"] {
-            --wallpaper-text: #1a1a1a;
-            --wallpaper-text-secondary: rgba(26, 26, 26, 0.65);
-        }
-        body.wallpaper-mode {
-            --wallpaper-text: #ffffff;
-            --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
-        }
-        body.wallpaper-mode[data-brightness="light"] .settings-toggle {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-wrapper {
-            background: rgba(255, 255, 255, 0.20);
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-input {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-input::placeholder {
-            color: rgba(26, 26, 26, 0.4);
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-btn {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-links .glass-link {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-links .glass-add {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row label {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row .type-btn {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row .range-value {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] #modeSwitch span {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-time {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-date {
-            color: rgba(26, 26, 26, 0.6);
-        }
-        body.wallpaper-mode[data-brightness="light"] #wallpaperQuoteDisplay .wq-text {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] #wallpaperQuoteDisplay .wq-author {
-            color: rgba(26, 26, 26, 0.4);
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-wrapper {
-            background: rgba(255, 255, 255, 0.20);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-btn {
-            background: rgba(255, 255, 255, 0.20);
-        }
-
-        /* ================================================================
-           开始页 — 纯文字 + 呼吸灯，无毛玻璃卡片
-           ================================================================ */
+        /* ===== 开始页 ===== */
         #startPage {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             z-index: 99999;
             background-color: #0a0c0e;
             background-size: cover;
@@ -1981,7 +2078,22 @@
         #startPage.hide {
             display: none !important;
         }
-        #startPage .raindrop {
+
+        /* ===== 独立的雨丝容器（进入首页后继续显示） ===== */
+        #rain-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            pointer-events: none;
+            z-index: 99998;
+            overflow: hidden;
+            transition: opacity 1.2s ease;
+            opacity: 1;
+        }
+        #rain-container .raindrop {
             position: absolute;
             width: 2px;
             background: rgba(255, 255, 255, 0.08);
@@ -2003,7 +2115,7 @@
             }
         }
 
-        /* ===== 简洁模式拖拽 - 无变淡 ===== */
+        /* ===== 阴阳模式拖拽 ===== */
         .simple-mode .clock-area.dragging-simple,
         .simple-mode .quote-area.dragging-simple,
         .simple-mode .bottom-area.dragging-simple {
@@ -2017,60 +2129,408 @@
             pointer-events: none !important;
         }
 
-        /* ===== 搜索按钮在链接末尾 ===== */
-        .simple-mode .links-grid .search-btn-end {
-            min-width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: var(--link-bg);
-            box-shadow: 6px 6px 12px var(--link-shadow-dark), -6px -6px 12px var(--link-shadow-light);
-            border: none;
-            color: var(--text-day);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s ease;
-            font-size: 1.1rem;
-            padding: 0 12px;
+        /* ===== 修仙模式文字颜色自适应 ===== */
+        body.wallpaper-mode[data-brightness="dark"] {
+            --wallpaper-text: #ffffff;
+            --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
         }
-        body.night-mode .simple-mode .links-grid .search-btn-end {
-            background: #2a2c2e;
-            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
-            color: var(--text-night);
+        body.wallpaper-mode[data-brightness="light"] {
+            --wallpaper-text: #1a1a1a;
+            --wallpaper-text-secondary: rgba(26, 26, 26, 0.65);
         }
-        .simple-mode .links-grid .search-btn-end:active {
-            box-shadow: inset 6px 6px 12px var(--link-shadow-dark), inset -6px -6px 12px var(--link-shadow-light);
-            transform: scale(0.96);
+        body.wallpaper-mode {
+            --wallpaper-text: #ffffff;
+            --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
         }
-        .simple-mode .links-grid .search-btn-end svg {
-            width: 20px;
-            height: 20px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
+        body.wallpaper-mode[data-brightness="light"] .settings-toggle {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-wrapper {
+            background: rgba(255, 255, 255, 0.20);
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-input {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-input::placeholder {
+            color: rgba(26, 26, 26, 0.4);
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-btn {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-links .glass-link {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-links .glass-add {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-panel .settings-module-header {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-module-body .setting-row label {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-module-body .type-btn {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-module-body .elem-control .elem-name {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-module-body .elem-control .elem-opacity-value {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-module-body .quote-item {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-time {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-date {
+            color: rgba(26, 26, 26, 0.6);
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperQuoteDisplay .wq-text {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperQuoteDisplay .wq-author {
+            color: rgba(26, 26, 26, 0.4);
+        }
+        body.wallpaper-mode[data-brightness="light"] .mode-switch-big {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.06);
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-panel {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-module {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 600px) {
+            .simple-mode {
+                padding: 8vh 16px 6vh;
+            }
+            .simple-mode #time {
+                font-size: 3rem;
+            }
+            .simple-mode .search-box {
+                height: 42px;
+            }
+            .simple-mode .search-btn {
+                width: 40px;
+                height: 40px;
+            }
+            .simple-mode .link-item,
+            .simple-mode .add-link-btn {
+                min-width: 44px;
+                height: 38px;
+                padding: 0 8px;
+                font-size: 0.75rem;
+            }
+            .simple-mode .quote-area .quote-text {
+                font-size: 1rem;
+            }
+            .glass-search-wrapper {
+                max-width: 92%;
+                padding: 0 4px 0 12px;
+                height: 46px;
+            }
+            .glass-search-input {
+                font-size: 0.85rem;
+            }
+            .glass-search-btn {
+                width: 36px;
+                height: 36px;
+            }
+            .glass-search-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+            .glass-links {
+                gap: 6px;
+            }
+            .glass-links .glass-link {
+                font-size: 0.75rem;
+                padding: 4px 10px;
+            }
+            .glass-links .glass-add {
+                font-size: 1rem;
+                padding: 4px 10px;
+            }
+            #musicPlayer {
+                width: 230px;
+            }
+            .player-cover {
+                border-radius: 20px 20px 0 0;
+            }
+            .player-joystick {
+                width: 140px;
+                height: 140px;
+            }
+            .player-joystick .around {
+                width: 140px;
+                height: 140px;
+            }
+            .player-joystick .handle {
+                width: 108px;
+                height: 108px;
+            }
+            .player-joystick .button-wrapper {
+                width: 72px;
+                height: 72px;
+            }
+            .player-joystick .inside {
+                width: 58px;
+                height: 58px;
+            }
+            .player-joystick .touch {
+                width: 140px;
+                height: 140px;
+            }
+            .player-joystick .touch>div {
+                width: 48px;
+                height: 48px;
+            }
+            #settingsPanelWrapper {
+                top: 14px;
+                right: 14px;
+            }
+            .settings-toggle {
+                width: 38px;
+                height: 38px;
+                font-size: 1.2rem;
+            }
+            .settings-panel {
+                min-width: 160px;
+                padding: 14px 12px;
+                max-height: 60vh;
+                max-height: 60dvh;
+                max-width: 88vw;
+                top: 46px;
+                right: 0;
+            }
+            .mode-switch-big {
+                width: 150px;
+                height: 44px;
+            }
+            .mode-switch-big .mode-label-left,
+            .mode-switch-big .mode-label-right {
+                font-size: 0.75rem;
+            }
+            .wallpaper-scroll-container {
+                max-height: 120px;
+            }
+            .wallpaper-scroll-container .wp-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4px;
+            }
+            .settings-module-header {
+                font-size: 0.7rem;
+                padding: 6px 10px;
+            }
+            .settings-module-body {
+                padding: 0 10px 10px;
+            }
+            #wallpaperTimeDisplay .wp-time {
+                font-size: 3.4rem;
+            }
+            #wallpaperTimeDisplay .wp-date {
+                font-size: 1rem;
+            }
+            #wallpaperQuoteDisplay {
+                max-width: 300px;
+            }
+            #wallpaperQuoteDisplay .wq-text {
+                font-size: 1rem;
+            }
+            .elem-control .elem-name {
+                font-size: 0.6rem;
+                min-width: 32px;
+            }
+            .elem-control .elem-opacity {
+                width: 36px;
+            }
+            .elem-control .elem-opacity-value {
+                font-size: 0.45rem;
+                width: 20px;
+            }
+            .quote-manager {
+                max-height: 100px;
+            }
+            #rope-container {
+                left: 12px;
+                width: 40px;
+            }
+            #rope-handle {
+                width: 28px;
+                height: 28px;
+                top: 62px;
+            }
+            #rope-handle svg {
+                width: 18px;
+                height: 18px;
+            }
+            #rope-line {
+                top: 16px;
+                height: 48px;
+            }
+            .rope-mount {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        @media (max-width: 400px) {
+            .simple-mode {
+                padding: 6vh 12px 4vh;
+            }
+            .simple-mode #time {
+                font-size: 2.4rem;
+            }
+            .simple-mode .search-box {
+                height: 36px;
+                padding: 0 10px;
+            }
+            .simple-mode .search-btn {
+                width: 34px;
+                height: 34px;
+            }
+            .simple-mode .search-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+            .simple-mode .link-item,
+            .simple-mode .add-link-btn {
+                min-width: 38px;
+                height: 32px;
+                padding: 0 6px;
+                font-size: 0.65rem;
+            }
+            .simple-mode .quote-area .quote-text {
+                font-size: 0.85rem;
+            }
+            .player-cover {
+                border-radius: 16px 16px 0 0;
+            }
+            .player-joystick {
+                width: 120px;
+                height: 120px;
+            }
+            .player-joystick .around {
+                width: 120px;
+                height: 120px;
+            }
+            .player-joystick .handle {
+                width: 92px;
+                height: 92px;
+            }
+            .player-joystick .button-wrapper {
+                width: 62px;
+                height: 62px;
+            }
+            .player-joystick .inside {
+                width: 50px;
+                height: 50px;
+            }
+            .player-joystick .touch {
+                width: 120px;
+                height: 120px;
+            }
+            .player-joystick .touch>div {
+                width: 40px;
+                height: 40px;
+            }
+            #musicPlayer {
+                width: 200px;
+            }
+            .glass-links .glass-link {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+            }
+            .glass-links .glass-add {
+                font-size: 0.9rem;
+                padding: 3px 8px;
+            }
+            .glass-search-wrapper {
+                height: 40px;
+                padding: 0 4px 0 10px;
+            }
+            .glass-search-input {
+                font-size: 0.8rem;
+            }
+            .glass-search-btn {
+                width: 32px;
+                height: 32px;
+            }
+            .glass-search-btn svg {
+                width: 16px;
+                height: 16px;
+            }
+            .mode-switch-big {
+                width: 130px;
+                height: 38px;
+            }
+            .mode-switch-big .mode-label-left,
+            .mode-switch-big .mode-label-right {
+                font-size: 0.65rem;
+            }
+            .wallpaper-scroll-container .wp-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 3px;
+            }
+            .settings-panel {
+                min-width: 140px;
+                max-width: 92vw;
+                padding: 10px 10px;
+                top: 42px;
+                max-height: 55vh;
+                max-height: 55dvh;
+            }
+            #wallpaperTimeDisplay .wp-time {
+                font-size: 2.6rem;
+            }
+            #wallpaperTimeDisplay .wp-date {
+                font-size: 0.8rem;
+            }
+            #wallpaperQuoteDisplay .wq-text {
+                font-size: 0.85rem;
+            }
+            #rope-container {
+                left: 8px;
+                width: 32px;
+            }
+            #rope-handle {
+                width: 24px;
+                height: 24px;
+                top: 54px;
+            }
+            #rope-handle svg {
+                width: 15px;
+                height: 15px;
+            }
+            #rope-line {
+                top: 14px;
+                height: 42px;
+            }
+            .rope-mount {
+                width: 14px;
+                height: 14px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== 工具类 ===== */
+        .no-pointer-events {
+            pointer-events: none !important;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- 开始页 -->
+    <!-- 开始页（雨丝已独立移出，保留占位） -->
     <div id="startPage" class="loading">
-        <div class="raindrop" style="left:10%; animation-duration:2.4s; animation-delay:0.2s; height:60px;"></div>
-        <div class="raindrop" style="left:22%; animation-duration:3.0s; animation-delay:0.8s; height:80px;"></div>
-        <div class="raindrop" style="left:35%; animation-duration:2.0s; animation-delay:0.0s; height:50px;"></div>
-        <div class="raindrop" style="left:48%; animation-duration:2.8s; animation-delay:0.5s; height:70px;"></div>
-        <div class="raindrop" style="left:60%; animation-duration:2.2s; animation-delay:1.0s; height:55px;"></div>
-        <div class="raindrop" style="left:73%; animation-duration:3.2s; animation-delay:0.3s; height:90px;"></div>
-        <div class="raindrop" style="left:85%; animation-duration:2.6s; animation-delay:0.7s; height:65px;"></div>
-        <div class="raindrop" style="left:92%; animation-duration:2.0s; animation-delay:1.2s; height:45px;"></div>
-        <div class="raindrop" style="left:15%; animation-duration:2.9s; animation-delay:0.9s; height:75px;"></div>
-        <div class="raindrop" style="left:42%; animation-duration:2.1s; animation-delay:0.1s; height:50px;"></div>
-        <div class="raindrop" style="left:68%; animation-duration:3.1s; animation-delay:0.6s; height:85px;"></div>
-        <div class="raindrop" style="left:78%; animation-duration:2.3s; animation-delay:1.1s; height:60px;"></div>
         <div class="start-loading">
             <div class="spinner"></div>
             <span>加载中 ...</span>
@@ -2078,10 +2538,13 @@
         <div class="start-subtitle">✦ 点击任意处开启 ✦</div>
     </div>
 
-    <!-- 壁纸容器 -->
+    <!-- 独立雨丝容器（进入首页后继续显示，2秒后淡出） -->
+    <div id="rain-container"></div>
+
+    <!-- 修仙容器 (原壁纸容器) -->
     <div class="wallpaper-container" id="wallpaperContainer">
         <video id="wallpaperVideo" muted playsinline preload="auto" loop></video>
-        <img id="wallpaperImg" src="" alt="壁纸" />
+        <img id="wallpaperImg" src="" alt="仙境" />
     </div>
 
     <!-- 拉绳 -->
@@ -2094,33 +2557,18 @@
         </div>
     </div>
 
-    <!-- 模式切换 -->
-    <div id="modeSwitch">
-        <span id="modeLabel">简洁</span>
-        <div class="toggle-track">
-            <div class="toggle-thumb"></div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-    简洁模式 — 三个独立拖拽区域：时钟、名言、底部（搜索+链接）
-    ============================================================ -->
+    <!-- 阴阳模式 (原简洁模式) -->
     <div class="simple-mode" id="simpleMode">
-        <!-- 时钟区域（独立拖拽） -->
         <div class="clock-area simple-draggable" id="clockArea">
             <div class="clock">
                 <div id="time">00:00</div>
                 <div id="date">加载中...</div>
             </div>
         </div>
-
-        <!-- 名言区域（独立拖拽） -->
         <div class="quote-area simple-draggable" id="quoteArea">
             <div class="quote-text" id="quoteText">学而不思则罔，思而不学则殆。</div>
             <div class="quote-author" id="quoteAuthor">— 孔子</div>
         </div>
-
-        <!-- 底部区域（独立拖拽） -->
         <div class="bottom-area simple-draggable" id="bottomArea">
             <div class="search-wrapper" id="searchWrapper">
                 <div class="search-box">
@@ -2134,7 +2582,7 @@
         </div>
     </div>
 
-    <!-- 壁纸模式 - 可拖动元素 -->
+    <!-- 修仙模式元素 -->
     <div class="draggable-item" id="wallpaperTimeDisplay" data-draggable>
         <div class="wp-time" id="wpTime">00:00</div>
         <div class="wp-date" id="wpDate">加载中...</div>
@@ -2153,26 +2601,11 @@
     </div>
     <div class="draggable-item glass-links" id="glassLinks" data-draggable></div>
 
-    <!-- 壁纸设置 -->
-    <div id="wallpaperSettings">
-        <button class="settings-toggle" id="settingsToggle">⚙</button>
+    <!-- 设置面板 -->
+    <div id="settingsPanelWrapper">
+        <button class="settings-toggle" id="wallpaperSettingsBtn">⚙</button>
         <div class="settings-panel" id="settingsPanel">
-            <div class="setting-row">
-                <label>壁纸类型</label>
-                <div class="type-btns">
-                    <button class="type-btn active" data-type="static">静态</button>
-                    <button class="type-btn" data-type="dynamic">动态</button>
-                </div>
-            </div>
-            <div class="setting-row">
-                <label>选择壁纸</label>
-                <div class="wallpaper-preview" id="wallpaperPreview"></div>
-            </div>
-            <div class="setting-row">
-                <label>播放器透明度</label>
-                <input type="range" id="glassOpacityRange" min="0.1" max="1" step="0.05" value="0.7" />
-                <div class="range-value" id="glassOpacityValue">70%</div>
-            </div>
+            <div id="settingsDynamicContent"></div>
         </div>
     </div>
 
@@ -2219,24 +2652,90 @@
         </div>
     </div>
 
+    <!-- Toast -->
+    <div id="toastContainer"></div>
+
     <script>
         (function() {
             'use strict';
 
             // ================================================================
-            // 0. 开始页控制
+            // 0. 工具
+            // ================================================================
+            function showToast(msg, duration) {
+                duration = duration || 1800;
+                const container = document.getElementById('toastContainer');
+                const el = document.createElement('div');
+                el.className = 'toast';
+                el.textContent = msg;
+                container.appendChild(el);
+                setTimeout(function() {
+                    if (el.parentNode) el.parentNode.removeChild(el);
+                }, duration);
+            }
+
+            function isMobile() {
+                return window.innerWidth <= 768 || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            }
+
+            function getStorageKey(baseKey) {
+                return isMobile() ? baseKey + '_mobile' : baseKey + '_desktop';
+            }
+
+            // ================================================================
+            // 0b. 开始页 + 独立雨丝
             // ================================================================
             const startPage = document.getElementById('startPage');
+            const rainContainer = document.getElementById('rain-container');
             let startPageHidden = false;
             let startPageReady = false;
+
+            // 在 rain-container 中生成雨滴（从 startPage 迁移过来）
+            function buildRaindrops() {
+                // 清空
+                rainContainer.innerHTML = '';
+                // 从 startPage 取雨滴数据（硬编码，与之前一致）
+                const raindropConfigs = [
+                    { left: 10, duration: 2.4, delay: 0.2, height: 60 },
+                    { left: 22, duration: 3.0, delay: 0.8, height: 80 },
+                    { left: 35, duration: 2.0, delay: 0.0, height: 50 },
+                    { left: 48, duration: 2.8, delay: 0.5, height: 70 },
+                    { left: 60, duration: 2.2, delay: 1.0, height: 55 },
+                    { left: 73, duration: 3.2, delay: 0.3, height: 90 },
+                    { left: 85, duration: 2.6, delay: 0.7, height: 65 },
+                    { left: 92, duration: 2.0, delay: 1.2, height: 45 },
+                    { left: 15, duration: 2.9, delay: 0.9, height: 75 },
+                    { left: 42, duration: 2.1, delay: 0.1, height: 50 },
+                    { left: 68, duration: 3.1, delay: 0.6, height: 85 },
+                    { left: 78, duration: 2.3, delay: 1.1, height: 60 },
+                ];
+                raindropConfigs.forEach(cfg => {
+                    const el = document.createElement('div');
+                    el.className = 'raindrop';
+                    el.style.left = cfg.left + '%';
+                    el.style.animationDuration = cfg.duration + 's';
+                    el.style.animationDelay = cfg.delay + 's';
+                    el.style.height = cfg.height + 'px';
+                    rainContainer.appendChild(el);
+                });
+            }
+            buildRaindrops();
 
             function enterSite(e) {
                 if (startPageHidden) return;
                 if (!startPageReady) return;
                 startPageHidden = true;
+                // 开始页淡出
                 startPage.classList.add('fade-out');
+                // 雨丝容器继续显示，2秒后淡出移除
                 setTimeout(function() {
                     startPage.classList.add('hide');
+                    // 雨丝淡出
+                    rainContainer.style.transition = 'opacity 1.2s ease';
+                    rainContainer.style.opacity = '0';
+                    setTimeout(function() {
+                        rainContainer.style.display = 'none';
+                    }, 1200);
                 }, 1200);
             }
             startPage.addEventListener('click', enterSite);
@@ -2267,7 +2766,7 @@
             let links = [...DEFAULT_LINKS];
 
             // ================================================================
-            // 2. 壁纸系统
+            // 2. 修仙系统 (原壁纸系统)
             // ================================================================
             const wallpapers = {
                 dynamic: [
@@ -2296,6 +2795,7 @@
             let currentWallpaperId = 's1';
             let isWallpaperTransitioning = false;
             let wallpaperTimeout = null;
+            let wallpaperBrightness = 'dark';
 
             function detectBrightnessFromImage(img) {
                 return new Promise((resolve) => {
@@ -2348,6 +2848,7 @@
             }
 
             function applyBrightnessClass(brightness) {
+                wallpaperBrightness = brightness || 'dark';
                 const body = document.body;
                 if (brightness === 'dark') body.setAttribute('data-brightness', 'dark');
                 else if (brightness === 'light') body.setAttribute('data-brightness', 'light');
@@ -2427,11 +2928,13 @@
                             if (isWallpaperTransitioning) onLoaded();
                         }, 2000);
                     }
+                    // 更新预览高亮（仅当预览网格存在时）
                     document.querySelectorAll('.wp-preview-item').forEach(el => {
                         el.classList.toggle('active', el.dataset.id === id && el.dataset.type === type);
                     });
                     currentWallpaperType = type;
                     currentWallpaperId = id;
+                    saveAllSettings();
                 }, 800);
             }
 
@@ -2452,10 +2955,11 @@
                     sun.style.display = mode === 'day' ? 'inline-block' : 'none';
                     moon.style.display = mode === 'night' ? 'inline-block' : 'none';
                 }
+                saveAllSettings();
             }
 
             // ================================================================
-            // 4. 拉绳交互
+            // 4. 拉绳交互 - 优化版
             // ================================================================
             const ropeHandle = document.getElementById('rope-handle');
             const ropeLine = document.getElementById('rope-line');
@@ -2465,8 +2969,13 @@
             const MAX_PULL = 120;
             const THRESHOLD = 70;
             let hasTriggered = false;
+            let ropeRafId = null;
 
             function resetRope(animate) {
+                if (ropeRafId) {
+                    cancelAnimationFrame(ropeRafId);
+                    ropeRafId = null;
+                }
                 if (animate !== false) {
                     ropeLine.style.transition = 'height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
                     ropeHandle.style.transition = 'top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -2491,9 +3000,16 @@
 
             function updateRope(pull) {
                 const clamped = Math.min(Math.max(pull, 0), MAX_PULL);
-                ropeLine.style.height = (60 + clamped) + 'px';
-                ropeHandle.style.top = (72 + clamped) + 'px';
-                currentPull = clamped;
+                if (ropeRafId) {
+                    cancelAnimationFrame(ropeRafId);
+                    ropeRafId = null;
+                }
+                ropeRafId = requestAnimationFrame(() => {
+                    ropeLine.style.height = (60 + clamped) + 'px';
+                    ropeHandle.style.top = (72 + clamped) + 'px';
+                    currentPull = clamped;
+                    ropeRafId = null;
+                });
             }
 
             function triggerSwitch() {
@@ -2525,6 +3041,10 @@
                 ropeHandle.style.cursor = 'grab';
                 if (currentPull >= THRESHOLD && !hasTriggered) triggerSwitch();
                 resetRope(true);
+                if (ropeRafId) {
+                    cancelAnimationFrame(ropeRafId);
+                    ropeRafId = null;
+                }
             });
             ropeHandle.addEventListener('touchstart', function(e) {
                 e.preventDefault();
@@ -2548,31 +3068,45 @@
                 isDraggingRope = false;
                 if (currentPull >= THRESHOLD && !hasTriggered) triggerSwitch();
                 resetRope(true);
+                if (ropeRafId) {
+                    cancelAnimationFrame(ropeRafId);
+                    ropeRafId = null;
+                }
             }, { passive: true });
             window.addEventListener('touchcancel', function(e) {
                 if (isDraggingRope) {
                     isDraggingRope = false;
                     ropeHandle.style.cursor = 'grab';
                     resetRope(true);
+                    if (ropeRafId) {
+                        cancelAnimationFrame(ropeRafId);
+                        ropeRafId = null;
+                    }
                 }
             }, { passive: true });
             resetRope(false);
 
             // ================================================================
-            // 5. 名人名言
+            // 5. 经典语录 (原名人名言)
             // ================================================================
-            const quotes = [
+            const DEFAULT_QUOTES = [
                 { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。', author: '孙孙浩' },
                 { text: '杀人放火厉飞雨，万人敬仰韩天尊', author: '阿青' },
-                { text: '你倒是个有情有义之人。可惜在这乱世之中，最不值钱的便是情义。且看我那两个逆徒，本座养育他们两百年，却轻易背叛。', author: '玄骨上人' },
+                { text: '你倒是个有情有义之人。可惜在这乱世之中，最不值钱的便是情义。且看我那两个逆徒，本座养育他们两百年，却轻易背叛。',
+                    author: '玄骨上人' },
                 { text: '立哥哥,立giegie', author: '小佳乐' },
                 { text: '什么不会抹杀我的存在？没有了自主意识后的我，还会是我吗？和从这世间消失，有什么区别。', author: '小二黑' },
                 { text: '到头来,无非是求个念头通达罢liao。', author: '李化元' },
                 { text: '所谓元婴之下第一人，也不过就是个结丹修士而已，不如温少主的性命，就交予在下如何。', author: '吕少主' },
                 { text: '韩大哥，没有灵根真的不能成为修仙者么？', author: '墨彩环' },
             ];
+
+            let quotes = [];
             let quoteIndex = 0;
             let quoteLocked = false;
+            let quoteInterval = 5000;
+            let intervalTimer = null;
+
             const quoteText = document.getElementById('quoteText');
             const quoteAuthor = document.getElementById('quoteAuthor');
             const quoteArea = document.getElementById('quoteArea');
@@ -2580,7 +3114,44 @@
             const wqAuthor = document.getElementById('wqAuthor');
             const wqDisplay = document.getElementById('wallpaperQuoteDisplay');
 
+            function loadQuotes() {
+                try {
+                    const data = localStorage.getItem('quotesData');
+                    if (data) {
+                        const parsed = JSON.parse(data);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            quotes = parsed;
+                            return;
+                        }
+                    }
+                } catch (e) {}
+                quotes = DEFAULT_QUOTES.map(q => ({ ...q }));
+                saveQuotes();
+            }
+
+            function saveQuotes() {
+                try { localStorage.setItem('quotesData', JSON.stringify(quotes)); } catch (e) {}
+            }
+
+            function loadInterval() {
+                try {
+                    const val = parseInt(localStorage.getItem('quoteInterval'));
+                    if (val && val > 0) quoteInterval = val;
+                } catch (e) {}
+            }
+
+            function saveInterval() {
+                try { localStorage.setItem('quoteInterval', String(quoteInterval)); } catch (e) {}
+            }
+
             function showQuote(index) {
+                if (quotes.length === 0) {
+                    quoteText.textContent = '暂无名言';
+                    quoteAuthor.textContent = '';
+                    wqText.textContent = '暂无名言';
+                    wqAuthor.textContent = '';
+                    return;
+                }
                 const q = quotes[index % quotes.length];
                 quoteText.textContent = q.text;
                 quoteAuthor.textContent = '— ' + q.author;
@@ -2603,22 +3174,48 @@
             }
 
             function nextQuote() {
-                if (!quoteLocked) {
+                if (!quoteLocked && quotes.length > 0) {
                     quoteIndex = (quoteIndex + 1) % quotes.length;
                     showQuote(quoteIndex);
                 }
             }
-            quoteArea.addEventListener('dblclick', function(e) {
-                e.stopPropagation();
+
+            function restartInterval() {
+                if (intervalTimer) clearInterval(intervalTimer);
+                if (quoteInterval > 0 && quotes.length > 1) {
+                    intervalTimer = setInterval(nextQuote, quoteInterval);
+                }
+            }
+
+            loadQuotes();
+            loadInterval();
+            if (quotes.length === 0) quotes = DEFAULT_QUOTES.map(q => ({ ...q }));
+            showQuote(0);
+            restartInterval();
+
+            function toggleQuoteLock() {
                 quoteLocked = !quoteLocked;
                 if (quoteLocked) {
-                    quoteArea.style.opacity = '0.6';
+                    quoteArea.classList.add('locked');
                     quoteArea.style.cursor = 'default';
+                    wqDisplay.classList.add('locked');
                 } else {
-                    quoteArea.style.opacity = '1';
+                    quoteArea.classList.remove('locked');
                     quoteArea.style.cursor = 'pointer';
+                    wqDisplay.classList.remove('locked');
                 }
+                saveAllSettings();
+            }
+
+            quoteArea.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                toggleQuoteLock();
             });
+            wqDisplay.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                toggleQuoteLock();
+            });
+
             quoteArea.addEventListener('click', function(e) {
                 if (this._clickTimer) {
                     clearTimeout(this._clickTimer);
@@ -2629,12 +3226,6 @@
                     this._clickTimer = null;
                     if (!quoteLocked) nextQuote();
                 }, 200);
-            });
-            wqDisplay.addEventListener('dblclick', function(e) {
-                e.stopPropagation();
-                quoteLocked = !quoteLocked;
-                if (quoteLocked) wqDisplay.classList.add('locked');
-                else wqDisplay.classList.remove('locked');
             });
             wqDisplay.addEventListener('click', function(e) {
                 if (this._clickTimerW) {
@@ -2647,8 +3238,6 @@
                     if (!quoteLocked) nextQuote();
                 }, 200);
             });
-            setInterval(nextQuote, 5000);
-            showQuote(0);
 
             // ================================================================
             // 6. 快捷链接
@@ -2737,8 +3326,12 @@
                     a.dataset.index = index;
                     a.addEventListener('contextmenu', function(e) {
                         e.preventDefault();
+                        e.stopPropagation();
                         openEditor(index);
                     });
+                    a.addEventListener('mousedown', function(e) {
+                        e.stopPropagation();
+                    }, true);
                     glassLinks.appendChild(a);
                 });
                 const glassAdd = document.createElement('button');
@@ -2770,6 +3363,7 @@
                     if (searchWrapper.contains(searchBtn)) searchWrapper.removeChild(searchBtn);
                     renderAllLinks();
                 }
+                saveAllSettings();
             }
 
             function openEditor(index) {
@@ -2797,9 +3391,9 @@
             function saveLink() {
                 const text = modalText.value.trim();
                 const url = modalUrl.value.trim();
-                if (!text || !url) { alert('请填写完整信息'); return; }
+                if (!text || !url) { showToast('请填写完整信息'); return; }
                 if (!/^(https?|ftp|mailto|tel):/i.test(url) && !url.includes('://')) {
-                    alert('链接地址需包含协议（如 http://, https://, ftp://, mailto:, tel:）');
+                    showToast('链接地址需包含协议（如 http://, https://）');
                     return;
                 }
                 if (editingIndex === -1) links.push({ text, url });
@@ -2807,6 +3401,7 @@
                 renderAllLinks();
                 closeEditor();
                 saveLinksToStorage();
+                saveAllSettings();
             }
 
             function deleteLink() {
@@ -2816,6 +3411,7 @@
                     renderAllLinks();
                     closeEditor();
                     saveLinksToStorage();
+                    saveAllSettings();
                 }
             }
 
@@ -2828,10 +3424,10 @@
                     const data = localStorage.getItem('quickLinks');
                     if (data) {
                         const parsed = JSON.parse(data);
-                        if (Array.isArray(parsed) && parsed.length === DEFAULT_LINKS.length) {
+                        if (Array.isArray(parsed) && parsed.length > 0) {
                             const hasOld = parsed.some(l =>
                                 l.text === '百度' || l.text === 'B站' ||
-                                l.url.includes('baidu') || l.url.includes('bilibili')
+                                (l.url && (l.url.includes('baidu') || l.url.includes('bilibili')))
                             );
                             if (!hasOld) {
                                 links = parsed;
@@ -2863,7 +3459,6 @@
             loadLinksFromStorage();
             renderAllLinks();
 
-            // 搜索
             function search() {
                 const query = searchInput.value.trim();
                 if (query) window.location.href = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
@@ -2884,39 +3479,170 @@
             });
 
             // ================================================================
-            // 7. 壁纸模式设置
+            // 7. 设置面板 - 模块化设计（修复：静态/动态切换不关闭面板）
             // ================================================================
-            const settingsToggle = document.getElementById('settingsToggle');
+            const settingsToggleBtn = document.getElementById('wallpaperSettingsBtn');
             const settingsPanel = document.getElementById('settingsPanel');
-            const wallpaperPreview = document.getElementById('wallpaperPreview');
+            const settingsDynamic = document.getElementById('settingsDynamicContent');
             let settingsOpen = false;
 
-            settingsToggle.addEventListener('click', function() {
-                settingsOpen = !settingsOpen;
-                settingsPanel.classList.toggle('open', settingsOpen);
-                if (settingsOpen) renderWallpaperPreview();
-            });
+            let moduleStates = {
+                mode: true,
+                wallpaper: true,
+                elements: true,
+                quotes: true,
+            };
 
-            document.querySelectorAll('.type-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    renderWallpaperPreview();
+            const elemDefs = {
+                simple: [
+                    { id: 'simpleClock', name: '阴阳·时钟', defaultVisible: true, defaultOpacity: 1, getEl: () => document
+                            .getElementById('clockArea') },
+                    { id: 'simpleQuote', name: '阴阳·语录', defaultVisible: true, defaultOpacity: 1, getEl: () => document
+                            .getElementById('quoteArea') },
+                    { id: 'simpleBottom', name: '阴阳·底部', defaultVisible: true, defaultOpacity: 1, getEl: () => document
+                            .getElementById('bottomArea') },
+                ],
+                wallpaper: [
+                    { id: 'wpTime', name: '修仙·时间', defaultVisible: true, defaultOpacity: 1, getEl: () => document
+                            .getElementById('wallpaperTimeDisplay') },
+                    { id: 'wpQuote', name: '修仙·语录', defaultVisible: true, defaultOpacity: 1, getEl: () => document
+                            .getElementById('wallpaperQuoteDisplay') },
+                    { id: 'wpSearch', name: '修仙·搜索', defaultVisible: true, defaultOpacity: 1, getEl: () => document
+                            .getElementById('glassSearch') },
+                    { id: 'wpLinks', name: '修仙·链接', defaultVisible: true, defaultOpacity: 1, getEl: () => document
+                            .getElementById('glassLinks') },
+                    { id: 'musicPlayer', name: '音乐播放器', defaultVisible: false, defaultOpacity: 0.9, getEl: () =>
+                            document.getElementById('musicPlayer') },
+                ]
+            };
+
+            let elemState = {};
+
+            function getDefaultElemState() {
+                const s = {};
+                [...elemDefs.simple, ...elemDefs.wallpaper].forEach(def => {
+                    s[def.id] = {
+                        visible: def.defaultVisible,
+                        opacity: def.defaultOpacity
+                    };
                 });
-            });
+                return s;
+            }
 
-            function renderWallpaperPreview() {
-                wallpaperPreview.innerHTML = '';
-                const type = document.querySelector('.type-btn.active')?.dataset.type || 'static';
+            function loadElemState() {
+                try {
+                    const raw = localStorage.getItem('elemState');
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        const defs = getDefaultElemState();
+                        for (const key in defs) {
+                            if (parsed[key]) {
+                                defs[key].visible = (parsed[key].visible !== undefined) ? parsed[key].visible : defs[key]
+                                    .visible;
+                                defs[key].opacity = (parsed[key].opacity !== undefined) ? parsed[key].opacity : defs[key]
+                                    .opacity;
+                            }
+                        }
+                        elemState = defs;
+                        return;
+                    }
+                } catch (e) {}
+                elemState = getDefaultElemState();
+                if (elemState['musicPlayer']) elemState['musicPlayer'].visible = false;
+            }
+
+            function saveElemState() {
+                try { localStorage.setItem('elemState', JSON.stringify(elemState)); } catch (e) {}
+            }
+
+            function applyElemState() {
+                const allDefs = [...elemDefs.simple, ...elemDefs.wallpaper];
+                allDefs.forEach(def => {
+                    const state = elemState[def.id];
+                    if (!state) return;
+                    const el = def.getEl();
+                    if (!el) return;
+                    if (state.visible) {
+                        if (el.classList.contains('hidden')) el.classList.remove('hidden');
+                        if (def.id === 'musicPlayer') {
+                            if (!el.classList.contains('active')) el.classList.add('active');
+                        }
+                    } else {
+                        if (def.id === 'musicPlayer') {
+                            el.classList.remove('active');
+                        } else {
+                            el.classList.add('hidden');
+                        }
+                    }
+                    el.style.opacity = state.opacity;
+                });
+                syncElemControls();
+            }
+
+            let isWallpaperMode = false;
+
+            function toggleMode() {
+                isWallpaperMode = !isWallpaperMode;
+                if (isWallpaperMode) {
+                    body.classList.add('wallpaper-mode');
+                    if (!currentWallpaperType || !currentWallpaperId) applyWallpaper('static', 's1');
+                    else applyWallpaper(currentWallpaperType, currentWallpaperId);
+                    draggableItems.forEach(item => {
+                        if (item.id === 'glassSearch') item.style.display = 'flex';
+                        else if (item.id === 'glassLinks') item.style.display = 'flex';
+                        else item.style.display = 'block';
+                    });
+                    loadWallpaperPositions();
+                    loadWallpaperLocks();
+                } else {
+                    body.classList.remove('wallpaper-mode');
+                    videoEl.classList.remove('active', 'fade-out');
+                    imgEl.classList.remove('active', 'fade-out');
+                    setDayNight(currentMode);
+                    body.removeAttribute('data-brightness');
+                    draggableItems.forEach(item => { item.style.display = 'none'; });
+                }
+                applyElemState();
+                // 重新渲染设置面板（保持打开状态）
+                const wasOpen = settingsOpen;
+                renderSettings();
+                if (wasOpen) {
+                    settingsPanel.classList.add('open');
+                }
+                saveAllSettings();
+                updateModeSwitchUI();
+            }
+
+            function updateModeSwitchUI() {
+                const bigSwitch = document.getElementById('modeSwitchBig');
+                if (bigSwitch) {
+                    bigSwitch.classList.toggle('wallpaper', isWallpaperMode);
+                    const leftLabel = bigSwitch.querySelector('.mode-label-left');
+                    const rightLabel = bigSwitch.querySelector('.mode-label-right');
+                    if (leftLabel) leftLabel.classList.toggle('active', !isWallpaperMode);
+                    if (rightLabel) rightLabel.classList.toggle('active', isWallpaperMode);
+                }
+                const statusText = document.querySelector('.mode-status-text');
+                if (statusText) {
+                    statusText.textContent = isWallpaperMode ? '修仙' : '阴阳';
+                }
+            }
+
+            // ================================================================
+            // 独立的预览网格更新函数（用于类型切换，不重新渲染整个面板）
+            // ================================================================
+            function updateWallpaperPreview(type, id) {
+                const previewGrid = document.getElementById('wallpaperPreviewGrid');
+                if (!previewGrid) return;
                 const items = wallpapers[type] || [];
+                previewGrid.innerHTML = '';
                 items.forEach(wp => {
                     const el = document.createElement('div');
-                    el.className = 'wp-preview-item';
-                    if (currentWallpaperType === type && currentWallpaperId === wp.id) el.classList.add('active');
+                    el.className = 'wp-preview-item' + (type === currentWallpaperType && id === wp.id ? ' active' :
+                    '');
                     el.dataset.id = wp.id;
                     el.dataset.type = type;
-                    const isVideo = type === 'dynamic';
-                    if (isVideo) {
+                    if (type === 'dynamic') {
                         const vid = document.createElement('video');
                         vid.src = preloaded.blobs[wp.id] || 'videos/' + wp.file;
                         vid.muted = true;
@@ -2940,24 +3666,363 @@
                     check.className = 'check-mark';
                     check.textContent = '✓';
                     el.appendChild(check);
+                    // 点击预览项切换壁纸
                     el.addEventListener('click', function() {
                         applyWallpaper(type, wp.id);
-                        renderWallpaperPreview();
+                        // 更新类型按钮 active
+                        document.querySelectorAll('.type-btn').forEach(b => {
+                            b.classList.toggle('active', b.dataset.type === type);
+                        });
+                        // 更新预览项高亮
+                        document.querySelectorAll('.wp-preview-item').forEach(item => {
+                            item.classList.toggle('active', item.dataset.id === wp.id &&
+                                item.dataset.type === type);
+                        });
+                        // 不重新渲染整个面板
                     });
-                    wallpaperPreview.appendChild(el);
+                    previewGrid.appendChild(el);
                 });
             }
 
-            const glassRange = document.getElementById('glassOpacityRange');
-            const glassValue = document.getElementById('glassOpacityValue');
+            // ================================================================
+            // 渲染设置面板
+            // ================================================================
+            function renderSettings() {
+                const isWp = isWallpaperMode;
+                let html = '';
 
-            function updateGlassOpacity(val) {
-                const v = parseFloat(val);
-                glassValue.textContent = Math.round(v * 100) + '%';
-                document.querySelector('#musicPlayer').style.opacity = v;
+                // ---- 模块1: 模式切换 ----
+                html += `
+                    <div class="settings-module" data-module="mode">
+                        <div class="settings-module-header" data-module-toggle="mode">
+                            <span>✦ 模式</span>
+                            <span class="arrow ${moduleStates.mode ? '' : 'collapsed'}">▾</span>
+                        </div>
+                        <div class="settings-module-body ${moduleStates.mode ? '' : 'collapsed'}">
+                            <div class="setting-row">
+                                <div class="mode-switch-container">
+                                    <div class="mode-switch-big ${isWp ? 'wallpaper' : ''}" id="modeSwitchBig">
+                                        <span class="mode-label-left ${!isWp ? 'active' : ''}">阴阳</span>
+                                        <span class="mode-label-right ${isWp ? 'active' : ''}">修仙</span>
+                                        <div class="slider-track"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // ---- 模块2: 修仙 (仅修仙模式显示) ----
+                if (isWp) {
+                    html += `
+                        <div class="settings-module" data-module="wallpaper">
+                            <div class="settings-module-header" data-module-toggle="wallpaper">
+                                <span>🏔 修仙</span>
+                                <span class="arrow ${moduleStates.wallpaper ? '' : 'collapsed'}">▾</span>
+                            </div>
+                            <div class="settings-module-body ${moduleStates.wallpaper ? '' : 'collapsed'}">
+                                <div class="setting-row">
+                                    <label>类型</label>
+                                    <div class="type-btns">
+                                        <button class="type-btn ${currentWallpaperType === 'static' ? 'active' : ''}" data-type="static">静态</button>
+                                        <button class="type-btn ${currentWallpaperType === 'dynamic' ? 'active' : ''}" data-type="dynamic">动态</button>
+                                    </div>
+                                </div>
+                                <div class="setting-row">
+                                    <label>选择仙境</label>
+                                    <div class="wallpaper-scroll-container">
+                                        <div class="wp-grid" id="wallpaperPreviewGrid"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // ---- 模块3: 元素控制 ----
+                const defs = isWp ? elemDefs.wallpaper : elemDefs.simple;
+                let elemHtml = '';
+                defs.forEach(def => {
+                    const state = elemState[def.id] || { visible: true, opacity: 1 };
+                    elemHtml += `
+                        <div class="elem-control" data-elem-id="${def.id}">
+                            <span class="elem-name">${def.name}</span>
+                            <button class="elem-toggle ${state.visible ? 'active' : ''}"><span class="thumb"></span></button>
+                            <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${state.opacity}" /></div>
+                            <span class="elem-opacity-value">${Math.round(state.opacity*100)}%</span>
+                        </div>
+                    `;
+                });
+                html += `
+                    <div class="settings-module" data-module="elements">
+                        <div class="settings-module-header" data-module-toggle="elements">
+                            <span>⊞ 元素控制</span>
+                            <span class="arrow ${moduleStates.elements ? '' : 'collapsed'}">▾</span>
+                        </div>
+                        <div class="settings-module-body ${moduleStates.elements ? '' : 'collapsed'}">
+                            <div class="setting-row">
+                                <div id="elemControlList">${elemHtml}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // ---- 模块4: 经典语录管理 ----
+                let quoteHtml = '';
+                quotes.forEach((q, i) => {
+                    quoteHtml += `
+                        <div class="quote-item" data-index="${i}">
+                            <span class="q-text">${q.text}</span>
+                            <span class="q-author">— ${q.author}</span>
+                            <div class="q-actions">
+                                <button class="edit-btn" data-index="${i}">✎</button>
+                                <button class="del-btn" data-index="${i}">✕</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `
+                    <div class="settings-module" data-module="quotes">
+                        <div class="settings-module-header" data-module-toggle="quotes">
+                            <span>❝ 经典语录</span>
+                            <span class="arrow ${moduleStates.quotes ? '' : 'collapsed'}">▾</span>
+                        </div>
+                        <div class="settings-module-body ${moduleStates.quotes ? '' : 'collapsed'}">
+                            <div class="setting-row">
+                                <div class="quote-manager" id="quoteManager">${quoteHtml}</div>
+                                <div class="quote-add-form">
+                                    <input type="text" id="newQuoteText" placeholder="语录内容" />
+                                    <input type="text" id="newQuoteAuthor" placeholder="作者" />
+                                    <button id="addQuoteBtn">添加</button>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <div class="interval-control">
+                                    <label>切换间隔（秒）</label>
+                                    <input type="number" id="intervalInput" min="1" max="300" value="${Math.round(quoteInterval/1000)}" />
+                                    <span style="font-size:0.6rem;opacity:0.4;">秒</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                settingsDynamic.innerHTML = html;
+
+                // ---- 绑定事件 ----
+
+                document.querySelectorAll('[data-module-toggle]').forEach(header => {
+                    header.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const moduleName = this.dataset.moduleToggle;
+                        if (moduleStates[moduleName] !== undefined) {
+                            moduleStates[moduleName] = !moduleStates[moduleName];
+                            const body = this.closest('.settings-module').querySelector(
+                            '.settings-module-body');
+                            const arrow = this.querySelector('.arrow');
+                            if (body) body.classList.toggle('collapsed', !moduleStates[moduleName]);
+                            if (arrow) arrow.classList.toggle('collapsed', !moduleStates[moduleName]);
+                            saveModuleStates();
+                        }
+                    });
+                });
+
+                const bigSwitch = document.getElementById('modeSwitchBig');
+                if (bigSwitch) {
+                    bigSwitch.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        toggleMode();
+                    });
+                }
+
+                // ★★★ 核心修复：类型按钮点击 → 只更新预览网格，不重新渲染整个面板 ★★★
+                document.querySelectorAll('.type-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation(); // 阻止冒泡，防止外部点击关闭面板
+                        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        const type = this.dataset.type;
+                        currentWallpaperType = type;
+                        const items = wallpapers[type] || [];
+                        if (items.length > 0) {
+                            const exists = items.some(w => w.id === currentWallpaperId);
+                            if (!exists) {
+                                currentWallpaperId = items[0].id;
+                            }
+                        }
+                        // ★ 只更新预览网格，不调用 renderSettings()
+                        updateWallpaperPreview(type, currentWallpaperId);
+                        saveAllSettings();
+                    });
+                });
+
+                // 预览网格初始化（仅当修仙模式且面板打开时）
+                if (isWp) {
+                    updateWallpaperPreview(currentWallpaperType, currentWallpaperId);
+                }
+
+                // 元素控制事件
+                document.querySelectorAll('.elem-control').forEach(row => {
+                    const id = row.dataset.elemId;
+                    const state = elemState[id];
+                    if (!state) return;
+                    const toggle = row.querySelector('.elem-toggle');
+                    const range = row.querySelector('.elem-opacity input[type="range"]');
+                    const valDisplay = row.querySelector('.elem-opacity-value');
+
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const newVis = !elemState[id].visible;
+                        elemState[id].visible = newVis;
+                        this.classList.toggle('active', newVis);
+                        applyElemState();
+                        saveElemState();
+                    });
+
+                    range.addEventListener('input', function() {
+                        const val = parseFloat(this.value);
+                        elemState[id].opacity = val;
+                        applyElemState();
+                        saveElemState();
+                        if (valDisplay) valDisplay.textContent = Math.round(val * 100) + '%';
+                    });
+                });
+
+                // 语录管理事件
+                const manager = document.getElementById('quoteManager');
+                if (manager) {
+                    manager.querySelectorAll('.edit-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const idx = parseInt(this.dataset.index);
+                            const q = quotes[idx];
+                            if (!q) return;
+                            const newText = prompt('编辑语录内容：', q.text);
+                            if (newText !== null) {
+                                const newAuthor = prompt('编辑作者：', q.author);
+                                if (newAuthor !== null) {
+                                    quotes[idx] = { text: newText.trim(), author: newAuthor.trim() };
+                                    saveQuotes();
+                                    renderSettings();
+                                    if (quoteIndex === idx) showQuote(quoteIndex);
+                                    restartInterval();
+                                }
+                            }
+                        });
+                    });
+                    manager.querySelectorAll('.del-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const idx = parseInt(this.dataset.index);
+                            if (confirm('确定删除此语录？')) {
+                                quotes.splice(idx, 1);
+                                saveQuotes();
+                                if (quotes.length === 0) {
+                                    quotes = DEFAULT_QUOTES.map(q => ({ ...q }));
+                                    saveQuotes();
+                                }
+                                if (quoteIndex >= quotes.length) quoteIndex = 0;
+                                showQuote(quoteIndex);
+                                renderSettings();
+                                restartInterval();
+                            }
+                        });
+                    });
+                }
+
+                const addBtn = document.getElementById('addQuoteBtn');
+                const newText = document.getElementById('newQuoteText');
+                const newAuthor = document.getElementById('newQuoteAuthor');
+                if (addBtn) {
+                    addBtn.addEventListener('click', function() {
+                        const text = newText.value.trim();
+                        const author = newAuthor.value.trim();
+                        if (!text) { showToast('请输入语录内容'); return; }
+                        quotes.push({ text, author: author || '佚名' });
+                        saveQuotes();
+                        newText.value = '';
+                        newAuthor.value = '';
+                        renderSettings();
+                        restartInterval();
+                        showToast('语录已添加');
+                    });
+                }
+
+                const intervalInput = document.getElementById('intervalInput');
+                if (intervalInput) {
+                    intervalInput.addEventListener('change', function() {
+                        let val = parseInt(this.value);
+                        if (isNaN(val) || val < 1) val = 1;
+                        if (val > 300) val = 300;
+                        this.value = val;
+                        quoteInterval = val * 1000;
+                        saveInterval();
+                        restartInterval();
+                        showToast('间隔已更新');
+                    });
+                }
+
+                restoreLocks();
+                updateModeSwitchUI();
             }
-            glassRange.addEventListener('input', function() {
-                updateGlassOpacity(this.value);
+
+            function saveModuleStates() {
+                try { localStorage.setItem('moduleStates', JSON.stringify(moduleStates)); } catch (e) {}
+            }
+
+            function loadModuleStates() {
+                try {
+                    const data = localStorage.getItem('moduleStates');
+                    if (data) {
+                        const parsed = JSON.parse(data);
+                        for (const key in parsed) {
+                            if (moduleStates[key] !== undefined) {
+                                moduleStates[key] = parsed[key];
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }
+            loadModuleStates();
+
+            function restoreLocks() {
+                if (quoteLocked) {
+                    quoteArea.classList.add('locked');
+                    quoteArea.style.cursor = 'default';
+                    wqDisplay.classList.add('locked');
+                } else {
+                    quoteArea.classList.remove('locked');
+                    quoteArea.style.cursor = 'pointer';
+                    wqDisplay.classList.remove('locked');
+                }
+            }
+
+            function syncElemControls() {}
+
+            function toggleSettings(e) {
+                if (e) e.stopPropagation();
+                settingsOpen = !settingsOpen;
+                settingsPanel.classList.toggle('open', settingsOpen);
+                if (settingsOpen) {
+                    renderSettings();
+                    document.querySelectorAll('.settings-module').forEach(mod => {
+                        const name = mod.dataset.module;
+                        if (name && moduleStates[name] !== undefined) {
+                            const body = mod.querySelector('.settings-module-body');
+                            const arrow = mod.querySelector('.arrow');
+                            if (body) body.classList.toggle('collapsed', !moduleStates[name]);
+                            if (arrow) arrow.classList.toggle('collapsed', !moduleStates[name]);
+                        }
+                    });
+                }
+            }
+
+            settingsToggleBtn.addEventListener('click', toggleSettings);
+
+            document.addEventListener('click', function(e) {
+                if (settingsOpen && !settingsPanel.contains(e.target) &&
+                    e.target !== settingsToggleBtn && !settingsToggleBtn.contains(e.target)) {
+                    settingsPanel.classList.remove('open');
+                    settingsOpen = false;
+                }
             });
 
             // ================================================================
@@ -2983,6 +4048,63 @@
             let audioPlayer = null;
             let isPlaying = false;
             let isCoverLoading = false;
+
+            let isCoverDragging = false;
+            let coverDragStartX = 0,
+                coverDragStartY = 0;
+            let coverDragOrigLeft = 0,
+                coverDragOrigTop = 0;
+            let coverClickThreshold = 8;
+            let coverPointerDownTime = 0;
+
+            playerCover.addEventListener('pointerdown', function(e) {
+                if (e.button !== 0) return;
+                const rect = musicPlayer.getBoundingClientRect();
+                coverDragOrigLeft = rect.left;
+                coverDragOrigTop = rect.top;
+                coverDragStartX = e.clientX;
+                coverDragStartY = e.clientY;
+                coverPointerDownTime = Date.now();
+                isCoverDragging = false;
+                playerCover.style.cursor = 'grabbing';
+                playerCover._draggingActive = true;
+                e.preventDefault();
+            });
+
+            document.addEventListener('pointermove', function(e) {
+                if (!playerCover._draggingActive) return;
+                const dx = e.clientX - coverDragStartX;
+                const dy = e.clientY - coverDragStartY;
+                if (Math.sqrt(dx * dx + dy * dy) > coverClickThreshold) {
+                    isCoverDragging = true;
+                    playerCover.classList.add('dragging-cover');
+                    let newLeft = coverDragOrigLeft + dx;
+                    let newTop = coverDragOrigTop + dy;
+                    const w = musicPlayer.offsetWidth;
+                    const h = musicPlayer.offsetHeight;
+                    newLeft = Math.max(0, Math.min(window.innerWidth - w, newLeft));
+                    newTop = Math.max(0, Math.min(window.innerHeight - h, newTop));
+                    musicPlayer.style.left = newLeft + 'px';
+                    musicPlayer.style.top = newTop + 'px';
+                    saveMusicPlayerPos();
+                }
+            });
+
+            document.addEventListener('pointerup', function(e) {
+                if (!playerCover._draggingActive) return;
+                playerCover._draggingActive = false;
+                playerCover.style.cursor = 'pointer';
+                if (isCoverDragging) {
+                    playerCover.classList.remove('dragging-cover');
+                    saveMusicPlayerPos();
+                } else {
+                    const dt = Date.now() - coverPointerDownTime;
+                    if (dt < 300) {
+                        togglePlay();
+                    }
+                }
+                isCoverDragging = false;
+            });
 
             function initAudio() {
                 if (!audioPlayer) {
@@ -3033,10 +4155,6 @@
                     playerCoverImg.onerror = null;
                 };
             }
-            playerCover.addEventListener('click', function(e) {
-                e.stopPropagation();
-                togglePlay();
-            });
 
             const playerTouchDivs = document.querySelectorAll('.player-joystick .touch > div');
             playerTouchDivs.forEach(div => {
@@ -3083,13 +4201,46 @@
             }
 
             let playerVisible = false;
+
             document.addEventListener('dblclick', function(e) {
-                if (e.target.closest('.modal-overlay') || e.target.closest('#modeSwitch') ||
-                    e.target.closest('#rope-container') || e.target.closest('.player-joystick') ||
-                    e.target.closest('#wallpaperSettings') || e.target.closest('.settings-panel') ||
-                    e.target.closest('.settings-toggle') || e.target.closest('.player-cover') ||
-                    e.target.closest('.quote-area') || e.target.closest('.wallpaper-quote-display')) {
+                const interactiveSelectors = [
+                    'button', 'a', 'input', 'textarea', 'select',
+                    '.link-item', '.add-link-btn', '.glass-link', '.glass-add',
+                    '.settings-toggle', '.settings-panel', '.modal-overlay',
+                    '.player-cover', '.player-joystick', '.quote-area',
+                    '.wallpaper-quote-display', '.clock-area', '.draggable-item',
+                    '#rope-container', '#settingsPanelWrapper', '.search-box',
+                    '.glass-search-wrapper', '.search-btn', '.glass-search-btn',
+                    '.mode-switch-big', '.type-btn', '.wp-preview-item',
+                    '.elem-toggle', '.elem-opacity input', '.settings-module-header',
+                    '.quote-item .q-actions button', '#addQuoteBtn', '#modalSave',
+                    '#modalCancel', '#modalDelete', '.settings-toggle'
+                ];
+                for (const sel of interactiveSelectors) {
+                    if (e.target.closest(sel)) return;
+                }
+                const target = e.target;
+                if (target === document.body || target === document.documentElement) {
+                    togglePlayerVisibility();
                     return;
+                }
+                if (target.closest('.wallpaper-container') && !target.closest('.draggable-item')) {
+                    togglePlayerVisibility();
+                    return;
+                }
+                if (target.closest('.simple-mode') && !target.closest('.simple-draggable')) {
+                    togglePlayerVisibility();
+                    return;
+                }
+            });
+
+            function togglePlayerVisibility() {
+                const state = elemState['musicPlayer'];
+                if (!state) return;
+                if (!state.visible) {
+                    elemState['musicPlayer'].visible = true;
+                    saveElemState();
+                    applyElemState();
                 }
                 if (!playerVisible) {
                     musicPlayer.classList.add('active');
@@ -3105,16 +4256,22 @@
                     updatePlayerCover();
                     initAudio();
                     if (!isPlaying) playSong(currentSongIndex);
+                    elemState['musicPlayer'].visible = true;
+                    saveElemState();
+                    applyElemState();
                 } else {
                     musicPlayer.classList.remove('active');
                     playerVisible = false;
+                    elemState['musicPlayer'].visible = false;
+                    saveElemState();
+                    applyElemState();
                 }
-            });
+            }
 
             let isDraggingPlayer = false;
             let dragOffsetX, dragOffsetY;
             musicPlayer.addEventListener('mousedown', function(e) {
-                if (e.target.closest('.player-joystick') || e.target.closest('.player-cover')) return;
+                if (e.target.closest('.player-cover') || e.target.closest('.player-joystick')) return;
                 isDraggingPlayer = true;
                 const rect = musicPlayer.getBoundingClientRect();
                 dragOffsetX = e.clientX - rect.left;
@@ -3130,15 +4287,17 @@
                 y = Math.max(0, Math.min(window.innerHeight - musicPlayer.offsetHeight, y));
                 musicPlayer.style.left = x + 'px';
                 musicPlayer.style.top = y + 'px';
+                saveMusicPlayerPos();
             });
             window.addEventListener('mouseup', function(e) {
                 if (isDraggingPlayer) {
                     isDraggingPlayer = false;
                     musicPlayer.style.cursor = 'grab';
+                    saveMusicPlayerPos();
                 }
             });
             musicPlayer.addEventListener('touchstart', function(e) {
-                if (e.target.closest('.player-joystick') || e.target.closest('.player-cover')) return;
+                if (e.target.closest('.player-cover') || e.target.closest('.player-joystick')) return;
                 const touch = e.touches[0];
                 const rect = musicPlayer.getBoundingClientRect();
                 dragOffsetX = touch.clientX - rect.left;
@@ -3155,25 +4314,47 @@
                 y = Math.max(0, Math.min(window.innerHeight - musicPlayer.offsetHeight, y));
                 musicPlayer.style.left = x + 'px';
                 musicPlayer.style.top = y + 'px';
+                saveMusicPlayerPos();
             }, { passive: true });
             window.addEventListener('touchend', function(e) {
-                if (isDraggingPlayer) isDraggingPlayer = false;
+                if (isDraggingPlayer) {
+                    isDraggingPlayer = false;
+                    saveMusicPlayerPos();
+                }
             }, { passive: true });
             window.addEventListener('touchcancel', function(e) {
-                if (isDraggingPlayer) isDraggingPlayer = false;
+                if (isDraggingPlayer) {
+                    isDraggingPlayer = false;
+                    saveMusicPlayerPos();
+                }
             }, { passive: true });
+
+            function saveMusicPlayerPos() {
+                const pos = {
+                    left: musicPlayer.style.left,
+                    top: musicPlayer.style.top
+                };
+                try { localStorage.setItem('musicPlayerPos', JSON.stringify(pos)); } catch (e) {}
+            }
+
+            function loadMusicPlayerPos() {
+                try {
+                    const raw = localStorage.getItem('musicPlayerPos');
+                    if (raw) {
+                        const pos = JSON.parse(raw);
+                        if (pos.left) musicPlayer.style.left = pos.left;
+                        if (pos.top) musicPlayer.style.top = pos.top;
+                    }
+                } catch (e) {}
+            }
+            loadMusicPlayerPos();
             updatePlayerCover();
 
             // ================================================================
-            // 9. 模式切换 (简洁 ↔ 壁纸)
+            // 9. 修仙模式拖拽系统
             // ================================================================
-            const modeSwitch = document.getElementById('modeSwitch');
-            const modeLabel = document.getElementById('modeLabel');
-            let isWallpaperMode = false;
-            const positions = {};
             const draggableItems = document.querySelectorAll('.draggable-item');
-
-            // ---------- 全局拖拽状态 ----------
+            const positions = {};
             let dragJustHappened = false;
             let dragJustResetTimer = null;
             let currentDraggingItem = null;
@@ -3182,9 +4363,6 @@
                 draggableItems.forEach(item => {
                     if (item._forceEnd) item._forceEnd();
                 });
-                if (simpleDragState && simpleDragState.dragging) {
-                    endSimpleDrag(null);
-                }
                 if (dragJustResetTimer) {
                     clearTimeout(dragJustResetTimer);
                     dragJustResetTimer = null;
@@ -3193,11 +4371,11 @@
                 currentDraggingItem = null;
             }
 
-            // ---------- 初始化可拖拽元素（壁纸模式） ----------
             function initDraggable(item) {
                 let startX, startY, origX, origY;
                 let dragging = false;
                 let locked = false;
+                let dragRafId = null;
 
                 function forceEnd() {
                     if (dragging) {
@@ -3210,15 +4388,17 @@
                             dragJustResetTimer = null;
                         }
                         dragJustHappened = false;
+                        if (dragRafId) {
+                            cancelAnimationFrame(dragRafId);
+                            dragRafId = null;
+                        }
                     }
                 }
                 item._forceEnd = forceEnd;
 
-                function toggleLock(e) {
-                    e.stopPropagation();
-                    if (dragging) {
-                        forceEnd();
-                    }
+                item.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    if (dragging) forceEnd();
                     locked = !locked;
                     if (locked) {
                         item.classList.add('locked');
@@ -3229,11 +4409,14 @@
                     }
                     if (currentDraggingItem === item) currentDraggingItem = null;
                     dragJustHappened = false;
+                    saveWallpaperLock(item.id, locked);
                     return false;
-                }
-                item.addEventListener('dblclick', toggleLock);
+                });
 
                 function onStart(e) {
+                    if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) {
+                        return;
+                    }
                     if (locked) {
                         e.preventDefault();
                         return;
@@ -3241,8 +4424,6 @@
                     if (currentDraggingItem && currentDraggingItem !== item) {
                         if (currentDraggingItem._forceEnd) currentDraggingItem._forceEnd();
                     }
-                    if (e.target.closest('input, textarea')) return;
-                    if (e.target.closest('a') && item.id !== 'glassLinks') return;
                     const ev = e.touches ? e.touches[0] : e;
                     const rect = item.getBoundingClientRect();
                     let left = parseFloat(item.style.left) || rect.left;
@@ -3272,7 +4453,7 @@
                     const dx = ev.clientX - startX;
                     const dy = ev.clientY - startY;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist > 10) {
+                    if (dist > 8) {
                         if (!dragging) {
                             dragging = true;
                             e.preventDefault();
@@ -3289,8 +4470,48 @@
                         const h = item.offsetHeight;
                         newX = Math.max(0, Math.min(window.innerWidth - w, newX));
                         newY = Math.max(0, Math.min(window.innerHeight - h, newY));
-                        item.style.left = newX + 'px';
-                        item.style.top = newY + 'px';
+
+                        if (dragRafId) cancelAnimationFrame(dragRafId);
+                        dragRafId = requestAnimationFrame(() => {
+                            item.style.left = newX + 'px';
+                            item.style.top = newY + 'px';
+                            if (item.id === 'wallpaperQuoteDisplay') {
+                                const rect = item.getBoundingClientRect();
+                                const leftDist = rect.left;
+                                const rightDist = window.innerWidth - rect.right;
+                                const topDist = rect.top;
+                                const bottomDist = window.innerHeight - rect.bottom;
+                                let maxWidth = 420;
+                                let minWidth = 180;
+                                let availWidth = Math.min(maxWidth, Math.max(minWidth, window.innerWidth -
+                                    leftDist - 24));
+                                if (rightDist < 60) {
+                                    availWidth = Math.min(availWidth, window.innerWidth - leftDist - 24);
+                                }
+                                availWidth = Math.max(minWidth, availWidth);
+                                if (leftDist < 30) {
+                                    availWidth = Math.min(availWidth, window.innerWidth - leftDist - 12);
+                                }
+                                item.style.maxWidth = availWidth + 'px';
+                                const baseSize = 1.2;
+                                let fontSize = baseSize;
+                                if (topDist < 60) {
+                                    fontSize = Math.max(0.7, baseSize - (60 - topDist) / 150);
+                                }
+                                if (bottomDist < 60) {
+                                    fontSize = Math.max(0.7, baseSize - (60 - bottomDist) / 150);
+                                }
+                                if (availWidth < 250) {
+                                    fontSize = Math.min(fontSize, 0.9);
+                                }
+                                const wqText = item.querySelector('.wq-text');
+                                if (wqText) {
+                                    wqText.style.fontSize = fontSize + 'rem';
+                                }
+                            }
+                            dragRafId = null;
+                        });
+
                         e.preventDefault();
                     } else {
                         if (e.cancelable) e.preventDefault();
@@ -3308,6 +4529,7 @@
                                 left: parseFloat(item.style.left),
                                 top: parseFloat(item.style.top)
                             };
+                            saveWallpaperPositions();
                         }
                         if (currentDraggingItem === item) currentDraggingItem = null;
                         if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
@@ -3315,6 +4537,10 @@
                             dragJustHappened = false;
                             dragJustResetTimer = null;
                         }, 300);
+                        if (dragRafId) {
+                            cancelAnimationFrame(dragRafId);
+                            dragRafId = null;
+                        }
                     } else {
                         if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
                         dragJustResetTimer = setTimeout(() => {
@@ -3343,140 +4569,72 @@
                     item.removeEventListener('mousedown', onStart);
                     item.removeEventListener('touchstart', onStart);
                     item.removeEventListener('dragstart', function(e) { e.preventDefault(); });
-                    item.removeEventListener('dblclick', toggleLock);
+                    item.removeEventListener('contextmenu', function() {});
                 };
             }
 
             draggableItems.forEach(item => initDraggable(item));
 
-            document.addEventListener('click', function(e) {
-                if (dragJustHappened) {
-                    if (e.target.closest('a')) {
-                        dragJustHappened = false;
-                        if (dragJustResetTimer) {
-                            clearTimeout(dragJustResetTimer);
-                            dragJustResetTimer = null;
-                        }
-                        return;
-                    }
-                    e.stopPropagation();
-                    e.preventDefault();
-                    return false;
-                }
-            }, true);
-
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) {
-                    forceEndAllDrags();
-                } else {
-                    setTimeout(forceEndAllDrags, 50);
-                }
-            });
-
-            window.addEventListener('beforeunload', function() {
-                forceEndAllDrags();
-            });
-
-            window.addEventListener('load', function() {
-                setTimeout(forceEndAllDrags, 100);
-            });
-
-            function setDefaultPositions() {
-                const w = window.innerWidth,
-                    h = window.innerHeight;
-                const timeEl = document.getElementById('wallpaperTimeDisplay');
-                if (timeEl && !positions['wallpaperTimeDisplay']) {
-                    const tw = timeEl.offsetWidth || 200,
-                        th = timeEl.offsetHeight || 100;
-                    positions['wallpaperTimeDisplay'] = { left: (w - tw) / 2, top: h * 0.08 };
-                }
-                const quoteEl = document.getElementById('wallpaperQuoteDisplay');
-                if (quoteEl && !positions['wallpaperQuoteDisplay']) {
-                    const qw = quoteEl.offsetWidth || 300,
-                        qh = quoteEl.offsetHeight || 80;
-                    positions['wallpaperQuoteDisplay'] = { left: w - qw - 30, top: h - qh - 80 };
-                }
-                const searchEl = document.getElementById('glassSearch');
-                if (searchEl && !positions['glassSearch']) {
-                    const sw = searchEl.offsetWidth || 400,
-                        sh = searchEl.offsetHeight || 52;
-                    positions['glassSearch'] = { left: (w - sw) / 2, top: h * 0.72 };
-                }
-                const linksEl = document.getElementById('glassLinks');
-                if (linksEl && !positions['glassLinks']) {
-                    const lw = linksEl.offsetWidth || 120,
-                        lh = linksEl.offsetHeight || 200;
-                    positions['glassLinks'] = { left: 20, top: h * 0.15 };
-                }
-            }
-
-            function applyPositions() {
+            function saveWallpaperPositions() {
+                const data = {};
                 draggableItems.forEach(item => {
                     const id = item.id;
-                    if (positions[id]) {
-                        item.style.left = positions[id].left + 'px';
-                        item.style.top = positions[id].top + 'px';
+                    if (id && item.style.left && item.style.top) {
+                        data[id] = {
+                            left: parseFloat(item.style.left),
+                            top: parseFloat(item.style.top)
+                        };
                     }
                 });
+                const key = getStorageKey('wallpaperPositions');
+                try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
             }
 
-            // ---------- 模式切换 ----------
-            modeSwitch.addEventListener('click', function() {
-                isWallpaperMode = !isWallpaperMode;
-                this.classList.toggle('active', isWallpaperMode);
-                modeLabel.textContent = isWallpaperMode ? '壁纸' : '简洁';
-                if (isWallpaperMode) {
-                    body.classList.add('wallpaper-mode');
-                    if (!currentWallpaperType || !currentWallpaperId) applyWallpaper('static', 's1');
-                    else applyWallpaper(currentWallpaperType, currentWallpaperId);
-                    renderWallpaperPreview();
-                    document.querySelectorAll('.type-btn').forEach(b => {
-                        b.classList.toggle('active', b.dataset.type === currentWallpaperType);
-                    });
-                    updateGlassOpacity(glassRange.value);
+            function loadWallpaperPositions() {
+                const key = getStorageKey('wallpaperPositions');
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        const data = JSON.parse(raw);
+                        draggableItems.forEach(item => {
+                            const id = item.id;
+                            if (id && data[id]) {
+                                item.style.left = data[id].left + 'px';
+                                item.style.top = data[id].top + 'px';
+                                positions[id] = data[id];
+                            }
+                        });
+                    }
+                } catch (e) {}
+            }
+
+            function saveWallpaperLock(id, locked) {
+                const key = getStorageKey('wallpaperLocks');
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    data[id] = locked;
+                    localStorage.setItem(key, JSON.stringify(data));
+                } catch (e) {}
+            }
+
+            function loadWallpaperLocks() {
+                const key = getStorageKey('wallpaperLocks');
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
                     draggableItems.forEach(item => {
-                        if (item.id === 'glassSearch') item.style.display = 'flex';
-                        else if (item.id === 'glassLinks') item.style.display = 'flex';
-                        else item.style.display = 'block';
+                        const id = item.id;
+                        if (id && data[id]) {
+                            item.classList.add('locked');
+                            item.style.cursor = 'default';
+                        }
                     });
-                    setDefaultPositions();
-                    applyPositions();
-                } else {
-                    body.classList.remove('wallpaper-mode');
-                    videoEl.classList.remove('active', 'fade-out');
-                    imgEl.classList.remove('active', 'fade-out');
-                    setDayNight(currentMode);
-                    body.removeAttribute('data-brightness');
-                    draggableItems.forEach(item => { item.style.display = 'none'; });
-                    settingsPanel.classList.remove('open');
-                    settingsOpen = false;
-                }
-            });
-
-            window.addEventListener('resize', function() {
-                if (!isWallpaperMode) return;
-                draggableItems.forEach(item => {
-                    const rect = item.getBoundingClientRect();
-                    const w = window.innerWidth,
-                        h = window.innerHeight;
-                    let left = parseFloat(item.style.left) || rect.left;
-                    let top = parseFloat(item.style.top) || rect.top;
-                    if (left + rect.width > w) left = w - rect.width - 10;
-                    if (top + rect.height > h) top = h - rect.height - 10;
-                    if (left < 0) left = 0;
-                    if (top < 0) top = 0;
-                    item.style.left = left + 'px';
-                    item.style.top = top + 'px';
-                    const id = item.id;
-                    if (id) positions[id] = { left, top };
-                });
-            });
+                } catch (e) {}
+            }
 
             // ================================================================
-            // 10. 简洁模式拖拽（彻底重写，零抖动，全屏范围，跟手）
+            // 10. 阴阳模式拖拽
             // ================================================================
             const simpleDragTargets = document.querySelectorAll('.simple-draggable');
-
             const dragStateMap = new WeakMap();
             let activeSimpleDrag = null;
 
@@ -3498,9 +4656,8 @@
                 };
                 dragStateMap.set(el, state);
 
-                // --- 切换锁定（双击） ---
-                el.addEventListener('dblclick', function(e) {
-                    e.stopPropagation();
+                el.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
                     if (state.isDragging) return;
                     state.locked = !state.locked;
                     if (state.locked) {
@@ -3511,6 +4668,7 @@
                         el.classList.remove('locked');
                         el.style.cursor = 'grab';
                     }
+                    saveSimpleLockState(el.id, state.locked);
                 });
 
                 el.addEventListener('pointerdown', function(e) {
@@ -3524,9 +4682,7 @@
                     if (isWallpaperMode) return;
                     if (state.locked) return;
 
-                    if (activeSimpleDrag) {
-                        endSimpleDrag(activeSimpleDrag);
-                    }
+                    if (activeSimpleDrag) endSimpleDrag(activeSimpleDrag);
 
                     const rect = el.getBoundingClientRect();
                     const transform = getElementTransform(el);
@@ -3544,7 +4700,6 @@
                     el.setPointerCapture(e.pointerId);
                     el.style.cursor = 'grabbing';
                     activeSimpleDrag = el;
-
                     e.preventDefault();
                 });
 
@@ -3583,17 +4738,15 @@
                         newTX = Math.max(minX, Math.min(maxX, newTX));
                         newTY = Math.max(minY, Math.min(maxY, newTY));
 
-                        // ===== 动态调整名言框宽度，实现实时换行 =====
-                        // 仅当元素为 quoteArea 时执行
                         if (el.id === 'quoteArea') {
                             const rectNow = el.getBoundingClientRect();
                             const leftEdge = rectNow.left;
-                            // 最大宽度 420px，最小 200px，右侧留边距 32px
                             const availWidth = Math.min(420, Math.max(200, window.innerWidth - leftEdge - 32));
                             el.style.maxWidth = availWidth + 'px';
                         }
 
                         applyTransformRAF(el, newTX, newTY, state);
+                        saveSimplePosition(el.id, newTX, newTY);
                         e.preventDefault();
                     } else {
                         e.preventDefault();
@@ -3609,6 +4762,13 @@
                 el.addEventListener('pointercancel', function(e) {
                     if (activeSimpleDrag === el) endSimpleDrag(el);
                 });
+
+                const lockState = loadSimpleLockState(el.id);
+                if (lockState) {
+                    state.locked = true;
+                    el.classList.add('locked');
+                    el.style.cursor = 'default';
+                }
             }
 
             function getElementTransform(el) {
@@ -3667,15 +4827,76 @@
                 state.fixedTop = rect.top - transform.y;
             }
 
-            simpleDragTargets.forEach(el => {
-                initSimpleDrag(el);
-            });
+            function saveSimplePosition(id, x, y) {
+                const key = getStorageKey('simplePositions');
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    data[id] = { x, y };
+                    localStorage.setItem(key, JSON.stringify(data));
+                } catch (e) {}
+            }
 
-            document.addEventListener('pointerup', function(e) {
-                if (activeSimpleDrag) {
-                    endSimpleDrag(activeSimpleDrag);
-                }
-            });
+            function loadSimplePositions() {
+                const key = getStorageKey('simplePositions');
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    simpleDragTargets.forEach(el => {
+                        const id = el.id;
+                        let tx, ty;
+                        if (id && data[id]) {
+                            tx = data[id].x;
+                            ty = data[id].y;
+                        } else {
+                            const isMobile = window.innerWidth <= 768;
+                            if (id === 'clockArea') {
+                                tx = 0;
+                                ty = isMobile ? -8 : -12;
+                                ty = ty * window.innerHeight / 100;
+                            } else if (id === 'quoteArea') {
+                                tx = 0;
+                                ty = 0;
+                                el.style.maxWidth = isMobile ? (window.innerWidth * 0.88) + 'px' : '420px';
+                            } else if (id === 'bottomArea') {
+                                tx = 0;
+                                ty = isMobile ? 8 : 12;
+                                ty = ty * window.innerHeight / 100;
+                            } else {
+                                tx = 0;
+                                ty = 0;
+                            }
+                        }
+                        el.style.transform = `translate(${tx}px, ${ty}px)`;
+                        const state = dragStateMap.get(el);
+                        if (state) {
+                            state.baseTX = tx;
+                            state.baseTY = ty;
+                            const rect = el.getBoundingClientRect();
+                            state.fixedLeft = rect.left - state.baseTX;
+                            state.fixedTop = rect.top - state.baseTY;
+                        }
+                    });
+                } catch (e) {}
+            }
+
+            function saveSimpleLockState(id, locked) {
+                const key = getStorageKey('simpleLocks');
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    data[id] = locked;
+                    localStorage.setItem(key, JSON.stringify(data));
+                } catch (e) {}
+            }
+
+            function loadSimpleLockState(id) {
+                const key = getStorageKey('simpleLocks');
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    return data[id] || false;
+                } catch (e) { return false; }
+            }
+
+            simpleDragTargets.forEach(el => initSimpleDrag(el));
+            loadSimplePositions();
 
             // ================================================================
             // 11. 时钟
@@ -3701,7 +4922,7 @@
             updateClock();
 
             // ================================================================
-            // 12. 资源预加载 (背景图优先)
+            // 12. 资源预加载
             // ================================================================
             const preloaded = { blobs: {} };
             let loadedCount = 0;
@@ -3713,19 +4934,15 @@
                 const loadingEl = document.querySelector('.start-loading span');
                 if (loadingEl) loadingEl.textContent = `加载中 ... ${loadedCount}/${totalCount}${failedCount ? ` (失败 ${failedCount})` : ''}`;
                 if (loadedCount >= totalCount) {
-                    console.log('✅ 所有资源预加载完成！');
                     if (loadingEl) loadingEl.textContent = '加载完成 ✦ 点击进入';
                 }
             }
 
             async function preloadAllResources() {
                 totalCount = songs.length + albumImages.length + wallpapers.static.length + wallpapers.dynamic.length + 2;
-                console.log(`🎯 预加载启动，共 ${totalCount} 个资源（背景图优先）`);
-
                 await new Promise((resolve) => {
                     const bgImg = new Image();
                     bgImg.onload = function() {
-                        console.log('🖼️ 开始页背景图加载完成！');
                         startPage.style.backgroundImage = 'url(images/background.png)';
                         startPage.classList.remove('loading');
                         startPageReady = true;
@@ -3734,7 +4951,6 @@
                         resolve();
                     };
                     bgImg.onerror = function() {
-                        console.warn('⚠️ 背景图加载失败，使用纯色后备');
                         startPage.classList.remove('loading');
                         startPageReady = true;
                         const loadingEl = document.querySelector('.start-loading span');
@@ -3770,10 +4986,8 @@
                         if (!resp.ok) throw new Error('HTTP ' + resp.status);
                         const blob = await resp.blob();
                         preloaded.blobs[song.file] = URL.createObjectURL(blob);
-                        console.log(`🎵 歌曲已缓存: ${song.file}`);
                     } catch (e) {
                         failedCount++;
-                        console.warn('⚠️ 预加载歌曲失败:', song.file, e);
                     }
                     updateProgress();
                 }
@@ -3812,81 +5026,177 @@
                         if (!resp.ok) throw new Error('HTTP ' + resp.status);
                         const blob = await resp.blob();
                         preloaded.blobs[wp.id] = URL.createObjectURL(blob);
-                        console.log(`📹 视频已缓存: ${wp.file}`);
                     } catch (e) {
                         failedCount++;
-                        console.warn('⚠️ 预加载视频失败:', wp.file, e);
                     }
                     updateProgress();
                 }
-
-                console.log('🎉 全部资源预加载完成！');
             }
 
             if (document.readyState === 'complete') setTimeout(preloadAllResources, 100);
             else window.addEventListener('load', function() { setTimeout(preloadAllResources, 100); });
 
             // ================================================================
-            // 13. 设置简洁模式默认初始位置（左上、右下、左下）
+            // 13. 综合保存/加载
             // ================================================================
-            function setDefaultSimplePositions() {
-                const clockArea = document.getElementById('clockArea');
-                const quoteArea = document.getElementById('quoteArea');
-                const bottomArea = document.getElementById('bottomArea');
-
-                // 时间在左上方: 向左移动约 18vw
-                if (clockArea) {
-                    clockArea.style.transform = 'translate(-18vw, 0)';
-                }
-                // 名言在右下角: 向右移动 12vw，向下移动 2vh
-                if (quoteArea) {
-                    quoteArea.style.transform = 'translate(12vw, 2vh)';
-                    // 初始设置 max-width
-                    quoteArea.style.maxWidth = '420px';
-                }
-                // 链接在左下角: 向左移动 18vw
-                if (bottomArea) {
-                    bottomArea.style.transform = 'translate(-18vw, 0)';
-                }
-
-                // 更新各区域的 dragState 中的 baseTX/baseTY，防止拖拽时跳变
-                [clockArea, quoteArea, bottomArea].forEach(el => {
-                    if (!el) return;
-                    const state = dragStateMap.get(el);
-                    if (!state) return;
-                    const t = getElementTransform(el);
-                    state.baseTX = t.x;
-                    state.baseTY = t.y;
-                    const rect = el.getBoundingClientRect();
-                    state.fixedLeft = rect.left - state.baseTX;
-                    state.fixedTop = rect.top - state.baseTY;
-                });
+            function saveAllSettings() {
+                try { localStorage.setItem('nightMode', JSON.stringify(currentMode === 'night')); } catch (e) {}
+                try {
+                    localStorage.setItem('wallpaperType', currentWallpaperType);
+                    localStorage.setItem('wallpaperId', currentWallpaperId);
+                } catch (e) {}
+                try { localStorage.setItem('isWallpaperMode', JSON.stringify(isWallpaperMode)); } catch (e) {}
+                try { localStorage.setItem('quoteLocked', JSON.stringify(quoteLocked)); } catch (e) {}
+                try { localStorage.setItem('searchVisible', JSON.stringify(searchVisible)); } catch (e) {}
+                saveElemState();
+                saveLinksToStorage();
+                saveQuotes();
+                saveInterval();
+                saveModuleStates();
             }
 
-            if (document.readyState === 'complete') {
-                setTimeout(setDefaultSimplePositions, 50);
-            } else {
-                window.addEventListener('load', function() {
-                    setTimeout(setDefaultSimplePositions, 50);
-                });
+            function loadAllSettings() {
+                try {
+                    const night = JSON.parse(localStorage.getItem('nightMode'));
+                    if (night) setDayNight('night');
+                    else setDayNight('day');
+                } catch (e) { setDayNight('day'); }
+                try {
+                    const type = localStorage.getItem('wallpaperType');
+                    const id = localStorage.getItem('wallpaperId');
+                    if (type && id) {
+                        currentWallpaperType = type;
+                        currentWallpaperId = id;
+                    }
+                } catch (e) {}
+                try {
+                    const mode = JSON.parse(localStorage.getItem('isWallpaperMode'));
+                    if (mode) {
+                        isWallpaperMode = true;
+                        setTimeout(() => {
+                            body.classList.add('wallpaper-mode');
+                            if (!currentWallpaperType || !currentWallpaperId) applyWallpaper('static', 's1');
+                            else applyWallpaper(currentWallpaperType, currentWallpaperId);
+                            draggableItems.forEach(item => {
+                                if (item.id === 'glassSearch') item.style.display = 'flex';
+                                else if (item.id === 'glassLinks') item.style.display = 'flex';
+                                else item.style.display = 'block';
+                            });
+                            loadWallpaperPositions();
+                            loadWallpaperLocks();
+                            applyElemState();
+                            renderSettings();
+                            updateModeSwitchUI();
+                        }, 300);
+                    }
+                } catch (e) {}
+                try {
+                    const locked = JSON.parse(localStorage.getItem('quoteLocked'));
+                    if (locked) {
+                        quoteLocked = true;
+                        quoteArea.classList.add('locked');
+                        quoteArea.style.cursor = 'default';
+                        wqDisplay.classList.add('locked');
+                    }
+                } catch (e) {}
+                try {
+                    const vis = JSON.parse(localStorage.getItem('searchVisible'));
+                    if (vis !== null) {
+                        searchVisible = vis;
+                        if (!searchVisible) {
+                            searchWrapper.classList.add('hidden');
+                            if (searchWrapper.contains(searchBtn)) searchWrapper.removeChild(searchBtn);
+                            renderAllLinks();
+                        }
+                    }
+                } catch (e) {}
+                loadElemState();
+                applyElemState();
+                loadLinksFromStorage();
+                renderAllLinks();
+                loadSimplePositions();
+                loadWallpaperPositions();
+                loadWallpaperLocks();
+                loadMusicPlayerPos();
+                loadQuotes();
+                loadInterval();
+                loadModuleStates();
+                if (quotes.length === 0) {
+                    quotes = DEFAULT_QUOTES.map(q => ({ ...q }));
+                    saveQuotes();
+                }
+                showQuote(0);
+                restartInterval();
+                renderSettings();
+                updateModeSwitchUI();
+                if (elemState['musicPlayer']) {
+                    elemState['musicPlayer'].visible = false;
+                    saveElemState();
+                    applyElemState();
+                }
+                if (!isWallpaperMode) {
+                    draggableItems.forEach(item => { item.style.display = 'none'; });
+                }
             }
 
             // ================================================================
             // 14. 初始化
             // ================================================================
-            setDayNight('day');
-            body.classList.remove('wallpaper-mode');
-            document.getElementById('modeSwitch').classList.remove('active');
-            document.getElementById('modeLabel').textContent = '简洁';
-            draggableItems.forEach(item => { item.style.display = 'none'; });
-            updateGlassOpacity(0.7);
+            loadAllSettings();
 
-            console.log('✅ 新拟态 · 简洁/壁纸模式 · 拖拽彻底修复');
-            console.log('🖱️ 简洁模式：全屏跟手拖拽，边界停稳不弹回');
-            console.log('🖱️ 壁纸模式：双击锁定/解锁，解锁即释放所有拖拽状态，不再粘手');
-            console.log('📐 默认位置：时间左上，名言右下，链接左下');
-            console.log('📐 名言 & 链接左对齐');
-            console.log('📐 简洁名言拖拽时宽度随位置实时变化，自动换行');
+            if (!isWallpaperMode) {
+                draggableItems.forEach(item => { item.style.display = 'none'; });
+            }
+
+            document.getElementById('rope-container').addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+
+            window.addEventListener('resize', function() {
+                draggableItems.forEach(item => {
+                    if (item.style.display !== 'none') {
+                        const rect = item.getBoundingClientRect();
+                        const w = item.offsetWidth;
+                        const h = item.offsetHeight;
+                        let left = parseFloat(item.style.left) || rect.left;
+                        let top = parseFloat(item.style.top) || rect.top;
+                        left = Math.max(0, Math.min(window.innerWidth - w, left));
+                        top = Math.max(0, Math.min(window.innerHeight - h, top));
+                        item.style.left = left + 'px';
+                        item.style.top = top + 'px';
+                    }
+                });
+                simpleDragTargets.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    const transform = getElementTransform(el);
+                    const tx = transform.x;
+                    const ty = transform.y;
+                    const w = el.offsetWidth || rect.width;
+                    const h = el.offsetHeight || rect.height;
+                    const fixedLeft = rect.left - tx;
+                    const fixedTop = rect.top - ty;
+                    const maxX = window.innerWidth - w - fixedLeft;
+                    const minX = -fixedLeft;
+                    const maxY = window.innerHeight - h - fixedTop;
+                    const minY = -fixedTop;
+                    let newTX = Math.max(minX, Math.min(maxX, tx));
+                    let newTY = Math.max(minY, Math.min(maxY, ty));
+                    if (newTX !== tx || newTY !== ty) {
+                        el.style.transform = `translate(${newTX}px, ${newTY}px)`;
+                        saveSimplePosition(el.id, newTX, newTY);
+                    }
+                });
+            });
+
+            console.log('✅ 小永子首页 - 修仙/阴阳版');
+            console.log('🖱️ 右键锁定/解锁所有元素（锁定时仍可搜索）');
+            console.log('⚙️ 点击齿轮打开设置 (模块化可折叠)');
+            console.log('📱 移动端独立位置存储，不干扰PC');
+            console.log('🎵 双击屏幕空白处切换播放器');
+            console.log('🖼️ 切换壁纸类型不自动换壁纸，点击预览才换');
+            console.log('💾 所有设置自动保存到 localStorage');
+            console.log('🌧️ 雨丝效果独立于开始页，进入首页后继续显示2秒');
+
         })();
     </script>
 </body>
