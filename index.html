@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>小永子の首页</title>
     <style>
         /* ===== 全局重置 & 变量 ===== */
@@ -73,384 +73,47 @@
             background-color: #000;
         }
 
-        /* ===== 简洁模式 - 毛玻璃风格 ===== */
-        .simple-draggable {
-            position: fixed;
-            z-index: 15;
-            cursor: grab;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.3s ease,
-                opacity 0.3s ease;
-            background: rgba(255, 255, 255, 0.06) !important;
-            backdrop-filter: blur(24px) !important;
-            -webkit-backdrop-filter: blur(24px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.06) !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04) !important;
-            border-radius: 20px;
-            padding: 14px 24px;
-            will-change: transform, opacity;
-        }
-        body.night-mode .simple-draggable {
-            background: rgba(0, 0, 0, 0.15) !important;
-            border-color: rgba(255, 255, 255, 0.03) !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-        }
-        .simple-draggable:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.06) !important;
-        }
-        body.night-mode .simple-draggable:hover {
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18) !important;
-        }
-        .simple-draggable.dragging {
-            cursor: grabbing;
-            z-index: 30;
-            transform: scale(1.02) !important;
-            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.10) !important;
-            transition: none !important;
-        }
-        .simple-draggable.dragging * {
-            pointer-events: none !important;
-        }
-
-        /* —— 时钟 (左上) —— */
-        .simple-draggable.clock {
-            text-align: left;
-            padding: 16px 24px;
-            border-radius: 24px;
-            min-width: 160px;
-            background: rgba(255, 255, 255, 0.04) !important;
-            backdrop-filter: blur(32px) !important;
-            -webkit-backdrop-filter: blur(32px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.04) !important;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.02) !important;
-        }
-        body.night-mode .simple-draggable.clock {
-            background: rgba(0, 0, 0, 0.08) !important;
-            border-color: rgba(255, 255, 255, 0.02) !important;
-        }
-        .simple-draggable.clock #time {
-            font-size: 4.2rem;
-            font-weight: 300;
-            letter-spacing: 4px;
-            line-height: 1.1;
-            color: var(--text-day);
-            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.02);
-            font-family: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
-            transition: color 1.0s ease;
-        }
-        body.night-mode .simple-draggable.clock #time {
-            color: var(--text-night);
-            text-shadow: 0 2px 30px rgba(255, 255, 255, 0.02);
-        }
-        .simple-draggable.clock #date {
-            font-size: 1rem;
-            font-weight: 300;
-            letter-spacing: 2px;
-            opacity: 0.5;
-            margin-top: 2px;
-            color: var(--text-day);
-            transition: color 1.0s ease;
-        }
-        body.night-mode .simple-draggable.clock #date {
+        body.night-mode .simple-mode .clock #time,
+        body.night-mode .simple-mode .clock #date {
             color: var(--text-night);
         }
-
-        /* —— 名言 (右下) —— */
-        .simple-draggable.quote-area {
-            text-align: left;
-            padding: 14px 24px;
-            border-radius: 20px;
-            max-width: 480px;
-            background: rgba(255, 255, 255, 0.03) !important;
-            backdrop-filter: blur(28px) !important;
-            -webkit-backdrop-filter: blur(28px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.03) !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02) !important;
-            transition: opacity 0.3s ease;
+        body.night-mode .simple-mode .search-box {
+            background: #2a2c2e;
+            box-shadow: inset 6px 6px 12px #0a0c0e, inset -6px -6px 12px #3a3c3e;
         }
-        body.night-mode .simple-draggable.quote-area {
-            background: rgba(0, 0, 0, 0.06) !important;
-            border-color: rgba(255, 255, 255, 0.02) !important;
+        body.night-mode .simple-mode .search-box input {
+            color: #eaeaea;
         }
-        .simple-draggable.quote-area .quote-text {
-            font-size: 1.1rem;
-            font-weight: 300;
-            line-height: 1.7;
-            letter-spacing: 0.5px;
-            color: var(--text-day);
-            font-family: '华文行楷', 'STXingkai', 'KaiTi', '楷体', serif;
-            transition: color 1.0s ease;
-            opacity: 0.85;
+        body.night-mode .simple-mode .search-btn,
+        body.night-mode .simple-mode .link-item,
+        body.night-mode .simple-mode .add-link-btn {
+            background: #2a2c2e;
+            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
+            color: #eaeaea;
         }
-        body.night-mode .simple-draggable.quote-area .quote-text {
-            color: var(--text-night);
-            opacity: 0.8;
+        body.night-mode .simple-mode .search-btn:active,
+        body.night-mode .simple-mode .link-item.pressed,
+        body.night-mode .simple-mode .add-link-btn.pressed {
+            box-shadow: inset 6px 6px 12px #0a0c0e, inset -6px -6px 12px #3a3c3e;
         }
-        .simple-draggable.quote-area .quote-author {
-            font-size: 0.8rem;
-            font-weight: 300;
-            opacity: 0.4;
-            margin-top: 4px;
-            letter-spacing: 1px;
-            color: var(--text-day);
-            transition: color 1.0s ease;
+        body.night-mode .simple-mode .link-item:hover,
+        body.night-mode .simple-mode .add-link-btn:hover {
+            box-shadow: 8px 8px 16px #0a0c0e, -8px -8px 16px #3a3c3e;
         }
-        body.night-mode .simple-draggable.quote-area .quote-author {
-            color: var(--text-night);
+        body.night-mode #modeSwitch {
+            background: rgba(42, 44, 46, 0.85);
+            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
         }
-        .simple-draggable.quote-area .quote-text::before {
-            content: '「';
-            opacity: 0.2;
-            margin-right: 2px;
+        body.night-mode #modeSwitch span {
+            color: #eaeaea;
         }
-        .simple-draggable.quote-area .quote-text::after {
-            content: '」';
-            opacity: 0.2;
-            margin-left: 2px;
+        body.night-mode #modeSwitch .toggle-track {
+            background: #2a2c2e;
+            box-shadow: inset 3px 3px 6px #0a0c0e, inset -3px -3px 6px #3a3c3e;
         }
-
-        /* —— 搜索框 (默认隐藏，带细边框) —— */
-        .simple-draggable.search-wrapper {
-            display: none;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 4px 4px 18px;
-            border-radius: 50px;
-            max-width: 420px;
-            min-width: 220px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.05) !important;
-            backdrop-filter: blur(32px) !important;
-            -webkit-backdrop-filter: blur(32px) !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02) !important;
-            border: 1px solid rgba(0, 0, 0, 0.15);
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        body.night-mode .simple-draggable.search-wrapper {
-            background: rgba(0, 0, 0, 0.08) !important;
-            border-color: rgba(255, 255, 255, 0.25);
-        }
-        .simple-draggable.search-wrapper:focus-within {
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.04) !important;
-        }
-        body.night-mode .simple-draggable.search-wrapper:focus-within {
-            border-color: rgba(255, 255, 255, 0.4);
-        }
-        .simple-draggable.search-wrapper .search-box {
-            flex: 1;
-            height: 100%;
-            display: flex;
-            align-items: center;
-        }
-        .simple-draggable.search-wrapper .search-box input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            outline: none;
-            font-size: 0.95rem;
-            color: var(--text-day);
-            font-weight: 300;
-            letter-spacing: 0.5px;
-            font-family: inherit;
-            padding: 0;
-            user-select: text;
-            -webkit-user-select: text;
-            transition: color 1.0s ease;
-        }
-        body.night-mode .simple-draggable.search-wrapper .search-box input {
-            color: var(--text-night);
-        }
-        .simple-draggable.search-wrapper .search-box input::placeholder {
-            color: var(--text-day);
-            opacity: 0.2;
-            transition: color 1.0s ease;
-        }
-        body.night-mode .simple-draggable.search-wrapper .search-box input::placeholder {
-            color: var(--text-night);
-            opacity: 0.25;
-        }
-        .simple-draggable.search-wrapper .search-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: none;
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            cursor: pointer;
-            color: var(--text-day);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.25s ease, color 1.0s ease;
-            flex-shrink: 0;
-        }
-        body.night-mode .simple-draggable.search-wrapper .search-btn {
-            background: rgba(0, 0, 0, 0.06);
-            color: var(--text-night);
-        }
-        .simple-draggable.search-wrapper .search-btn:hover {
-            background: rgba(255, 255, 255, 0.10);
-            transform: scale(1.04);
-        }
-        body.night-mode .simple-draggable.search-wrapper .search-btn:hover {
-            background: rgba(255, 255, 255, 0.04);
-        }
-        .simple-draggable.search-wrapper .search-btn:active {
-            transform: scale(0.92);
-        }
-        .simple-draggable.search-wrapper .search-btn svg {
-            width: 20px;
-            height: 20px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-        .simple-draggable.search-wrapper .search-close {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            color: var(--text-day);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            line-height: 1;
-            opacity: 0.3;
-            transition: opacity 0.2s, transform 0.2s;
-            flex-shrink: 0;
-            padding: 0;
-        }
-        body.night-mode .simple-draggable.search-wrapper .search-close {
-            color: var(--text-night);
-        }
-        .simple-draggable.search-wrapper .search-close:hover {
-            opacity: 0.8;
-            transform: rotate(90deg);
-        }
-
-        /* —— 链接网格 (左下) —— */
-        .simple-draggable.links-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 12px 18px;
-            border-radius: 20px;
-            max-width: 560px;
-            min-width: 200px;
-            background: rgba(255, 255, 255, 0.03) !important;
-            backdrop-filter: blur(28px) !important;
-            -webkit-backdrop-filter: blur(28px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.03) !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02) !important;
-        }
-        body.night-mode .simple-draggable.links-grid {
-            background: rgba(0, 0, 0, 0.06) !important;
-            border-color: rgba(255, 255, 255, 0.02) !important;
-        }
-
-        .simple-draggable.links-grid .link-item,
-        .simple-draggable.links-grid .add-link-btn,
-        .simple-draggable.links-grid .search-toggle-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6px 16px;
-            border-radius: 40px;
-            font-size: 0.82rem;
-            font-weight: 400;
-            color: var(--text-day);
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.02);
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-                color 1.0s ease,
-                background 1.0s ease;
-            font-family: inherit;
-            min-height: 34px;
-            white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
-            letter-spacing: 0.3px;
-        }
-        body.night-mode .simple-draggable.links-grid .link-item,
-        body.night-mode .simple-draggable.links-grid .add-link-btn,
-        body.night-mode .simple-draggable.links-grid .search-toggle-btn {
-            color: var(--text-night);
-            background: rgba(255, 255, 255, 0.02);
-            border-color: rgba(255, 255, 255, 0.01);
-        }
-        .simple-draggable.links-grid .link-item:hover {
-            transform: translateY(-2px) scale(1.02);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02);
-        }
-        body.night-mode .simple-draggable.links-grid .link-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-        }
-        .simple-draggable.links-grid .link-item:active,
-        .simple-draggable.links-grid .link-item.pressed {
-            transform: scale(0.94);
-        }
-        .simple-draggable.links-grid .add-link-btn {
-            font-size: 1.1rem;
-            font-weight: 300;
-            min-width: 34px;
-            padding: 6px 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed rgba(128, 128, 128, 0.08);
-        }
-        body.night-mode .simple-draggable.links-grid .add-link-btn {
-            border-color: rgba(255, 255, 255, 0.03);
-        }
-        .simple-draggable.links-grid .add-link-btn:hover {
-            background: rgba(255, 255, 255, 0.06);
-            transform: translateY(-2px) scale(1.02);
-        }
-        .simple-draggable.links-grid .add-link-btn:active {
-            transform: scale(0.94);
-        }
-        .simple-draggable.links-grid .search-toggle-btn {
-            padding: 6px 12px;
-            min-width: 34px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(128, 128, 128, 0.04);
-            font-size: 0;
-        }
-        body.night-mode .simple-draggable.links-grid .search-toggle-btn {
-            border-color: rgba(255, 255, 255, 0.02);
-        }
-        .simple-draggable.links-grid .search-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.06);
-            transform: translateY(-2px) scale(1.02);
-        }
-        .simple-draggable.links-grid .search-toggle-btn:active {
-            transform: scale(0.94);
-        }
-        .simple-draggable.links-grid .search-toggle-btn svg {
-            width: 18px;
-            height: 18px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-        .simple-draggable.links-grid .search-toggle-btn.hidden {
-            display: none;
+        body.night-mode #modeSwitch .toggle-thumb {
+            background: #3a3c3e;
+            box-shadow: 3px 3px 6px #0a0c0e, -3px -3px 6px #4a4c4e;
         }
 
         /* ===== 壁纸容器 ===== */
@@ -494,7 +157,7 @@
             transform: scale(1.04);
         }
 
-        /* ===== 拉绳 ===== */
+        /* ===== 简洁模式拉绳 ===== */
         #rope-container {
             position: fixed;
             top: 0;
@@ -575,14 +238,12 @@
             height: 34px;
             background: var(--handle-bg);
             border-radius: 50%;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), inset 0 -4px 10px rgba(0, 0, 0, 0.05), inset 0 4px 10px rgba(255,
-                    255, 255, 0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), inset 0 -4px 10px rgba(0, 0, 0, 0.05), inset 0 4px 10px rgba(255, 255, 255, 0.3);
             cursor: grab;
             pointer-events: auto;
             z-index: 3;
             border: 2px solid var(--handle-border);
-            transition: background 0.6s, border-color 0.6s, box-shadow 0.2s, top 0.5s cubic-bezier(0.34, 1.56, 0.64,
-                    1);
+            transition: background 0.6s, border-color 0.6s, box-shadow 0.2s, top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -664,14 +325,6 @@
         body.wallpaper-mode.night-mode #modeSwitch span {
             color: var(--text-night);
         }
-        /* 壁纸模式 "壁纸" 文字始终白色 */
-        body.wallpaper-mode #modeLabel {
-            color: #fff !important;
-        }
-        body.wallpaper-mode.night-mode #modeLabel {
-            color: #fff !important;
-        }
-
         #modeSwitch .toggle-track {
             width: 44px;
             height: 24px;
@@ -713,11 +366,355 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
-        /* ===== 壁纸模式元素 ===== */
+        /* ================================================================
+           简洁模式 — 新布局：时钟（独立） + 名言（独立） + 底部（搜索+链接）
+           ================================================================ */
+        .simple-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10vh 24px 8vh;
+            pointer-events: none;
+            gap: 0;
+            overflow: visible;
+        }
+        .simple-mode>* {
+            pointer-events: auto;
+        }
+
+        /* --- 时钟区域（独立拖拽） --- */
+        .simple-mode .clock-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            cursor: grab;
+            will-change: transform;
+            touch-action: none;
+            opacity: 1 !important;
+        }
+        .simple-mode .clock-area:active {
+            cursor: grabbing;
+        }
+        .simple-mode .clock-area.dragging-simple {
+            cursor: grabbing;
+            z-index: 50;
+            position: relative;
+            opacity: 1 !important;
+        }
+        .simple-mode .clock-area.dragging-simple * {
+            pointer-events: none !important;
+        }
+
+        .simple-mode .clock {
+            text-align: center;
+            width: 100%;
+        }
+        .simple-mode #time {
+            font-size: 4rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
+            color: var(--text-day);
+        }
+        body.night-mode .simple-mode #time {
+            color: var(--text-night);
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        .simple-mode #date {
+            font-size: 1rem;
+            letter-spacing: 2px;
+            opacity: 0.5;
+            margin-top: 2px;
+            color: var(--text-day);
+        }
+        body.night-mode .simple-mode #date {
+            color: var(--text-night);
+            opacity: 0.6;
+        }
+
+        /* --- 名言区域（独立拖拽）— 左对齐，宽度由内容决定，max-width 由 JS 动态控制 --- */
+        .simple-mode .quote-area {
+            width: auto;
+            flex: 0 0 auto;
+            text-align: left;
+            padding: 8px 16px;
+            cursor: grab;
+            will-change: transform;
+            touch-action: none;
+            min-height: 56px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            margin-top: 6px;
+            opacity: 1 !important;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            box-sizing: border-box;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            /* max-width 由 JS 动态设置，初始为 420px */
+        }
+        .simple-mode .quote-area:active {
+            cursor: grabbing;
+        }
+        .simple-mode .quote-area.dragging-simple {
+            cursor: grabbing;
+            z-index: 50;
+            position: relative;
+            opacity: 1 !important;
+        }
+        .simple-mode .quote-area.dragging-simple * {
+            pointer-events: none !important;
+        }
+
+        .simple-mode .quote-area .quote-text {
+            font-size: 1.3rem;
+            font-family: '华文行楷', 'STXingkai', 'KaiTi', '楷体', serif;
+            letter-spacing: 2px;
+            line-height: 1.7;
+            color: var(--text-day);
+            opacity: 0.75;
+            transition: opacity 0.5s ease;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.04);
+            text-align: left;
+        }
+        body.night-mode .simple-mode .quote-area .quote-text {
+            color: var(--text-night);
+            opacity: 0.7;
+            text-shadow: 1px 1px 8px rgba(0, 0, 0, 0.4);
+        }
+        .simple-mode .quote-area .quote-text.fade {
+            opacity: 0;
+        }
+        .simple-mode .quote-area .quote-author {
+            font-size: 0.85rem;
+            opacity: 0.4;
+            margin-top: 4px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            letter-spacing: 1px;
+            text-align: left;
+        }
+        body.night-mode .simple-mode .quote-area .quote-author {
+            opacity: 0.35;
+        }
+
+        /* --- 底部区域（独立拖拽）— 左对齐 --- */
+        .simple-mode .bottom-area {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-end;
+            flex: 0 0 auto;
+            gap: 10px;
+            padding-bottom: 2vh;
+            cursor: grab;
+            will-change: transform;
+            touch-action: none;
+            opacity: 1 !important;
+        }
+        .simple-mode .bottom-area:active {
+            cursor: grabbing;
+        }
+        .simple-mode .bottom-area.dragging-simple {
+            cursor: grabbing;
+            z-index: 50;
+            position: relative;
+            opacity: 1 !important;
+        }
+        .simple-mode .bottom-area.dragging-simple * {
+            pointer-events: none !important;
+        }
+
+        .simple-mode .search-wrapper {
+            display: flex !important;
+            width: 100%;
+            max-width: 420px;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.4s ease;
+            overflow: hidden;
+            padding: 0 6px;
+        }
+        .simple-mode .search-wrapper.hidden {
+            width: 0;
+            margin: 0;
+            padding: 0;
+            opacity: 0;
+            pointer-events: none;
+            flex: 0 0 0;
+        }
+        .simple-mode .search-box {
+            flex: 1;
+            height: 48px;
+            border-radius: 50px;
+            background: var(--input-bg);
+            box-shadow: inset 6px 6px 12px var(--shadow-dark-day), inset -6px -6px 12px var(--shadow-light-day);
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            transition: background 0.4s, box-shadow 0.3s;
+        }
+        body.night-mode .simple-mode .search-box {
+            background: #2a2c2e;
+            box-shadow: inset 6px 6px 12px #0a0c0e, inset -6px -6px 12px #3a3c3e;
+        }
+        .simple-mode .search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            color: var(--text-day);
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        body.night-mode .simple-mode .search-box input {
+            color: var(--text-night);
+        }
+        .simple-mode .search-box input::placeholder {
+            color: transparent;
+        }
+        .simple-mode .search-btn {
+            background: var(--link-bg);
+            border: none;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            box-shadow: none;
+            cursor: pointer;
+            color: var(--text-day);
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        body.night-mode .simple-mode .search-btn {
+            background: #2a2c2e;
+            color: var(--text-night);
+        }
+        .simple-mode .search-btn:active {
+            transform: scale(0.96);
+        }
+        .simple-mode .search-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .simple-mode .search-btn-mobile {
+            display: none;
+            background: var(--link-bg);
+            border: none;
+            min-width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            box-shadow: 6px 6px 12px var(--link-shadow-dark), -6px -6px 12px var(--link-shadow-light);
+            cursor: pointer;
+            color: var(--text-day);
+            transition: all 0.15s ease;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+        }
+        body.night-mode .simple-mode .search-btn-mobile {
+            background: #2a2c2e;
+            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
+            color: var(--text-night);
+        }
+        .simple-mode .search-btn-mobile:active {
+            box-shadow: inset 6px 6px 12px var(--link-shadow-dark), inset -6px -6px 12px var(--link-shadow-light);
+            transform: scale(0.96);
+        }
+        .simple-mode .search-btn-mobile svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* 链接网格 — 左对齐 */
+        .simple-mode .links-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-start;
+            width: 100%;
+            max-width: 540px;
+            margin-top: 2px;
+            min-height: 44px;
+            align-items: center;
+        }
+        .simple-mode .link-item,
+        .simple-mode .add-link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 56px;
+            height: 44px;
+            padding: 0 12px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-day);
+            text-decoration: none;
+            cursor: pointer;
+            transition: box-shadow 0.25s ease, background 0.25s ease, transform 0.1s;
+            background: var(--link-bg);
+            box-shadow: 6px 6px 12px var(--link-shadow-dark), -6px -6px 12px var(--link-shadow-light);
+            border: none;
+            font-family: inherit;
+            text-align: center;
+            word-break: break-word;
+        }
+        body.night-mode .simple-mode .link-item,
+        body.night-mode .simple-mode .add-link-btn {
+            background: #2a2c2e;
+            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
+            color: var(--text-night);
+        }
+        .simple-mode .link-item.pressed,
+        .simple-mode .add-link-btn.pressed {
+            box-shadow: inset 6px 6px 12px var(--link-shadow-dark), inset -6px -6px 12px var(--link-shadow-light);
+            transform: scale(0.96);
+        }
+        .simple-mode .link-item:hover,
+        .simple-mode .add-link-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 8px 8px 16px var(--link-shadow-dark), -8px -8px 16px var(--link-shadow-light);
+        }
+        .simple-mode .add-link-btn {
+            min-width: 44px;
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        body.wallpaper-mode .simple-mode {
+            display: none !important;
+        }
+
+        /* ===== 壁纸模式 - 可拖动元素 ===== */
         .draggable-item {
             position: fixed;
             display: none;
-            z-index: 5;
+            z-index: 3;
             cursor: grab;
             touch-action: none;
             transition: none;
@@ -734,8 +731,15 @@
         .draggable-item.dragging {
             cursor: grabbing;
         }
+        .draggable-item.locked {
+            opacity: 0.5;
+            cursor: default;
+            filter: grayscale(0.3);
+        }
+        .draggable-item.locked:active {
+            cursor: default;
+        }
 
-        /* 壁纸模式各元素透明度由JS控制，但保留基础样式 */
         #wallpaperTimeDisplay {
             padding: 4px 16px;
             border-radius: 40px;
@@ -745,7 +749,6 @@
             text-align: center;
             border: none;
             box-shadow: none;
-            transition: opacity 0.4s ease;
         }
         #wallpaperTimeDisplay .wp-time {
             font-size: 4.8rem;
@@ -772,7 +775,6 @@
             box-shadow: none;
             max-width: 420px;
             cursor: pointer;
-            transition: opacity 0.4s ease;
         }
         #wallpaperQuoteDisplay .wq-text {
             font-size: 1.2rem;
@@ -878,14 +880,13 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            gap: 6px;
+            gap: 8px;
             width: auto;
             padding: 0;
             background: transparent !important;
             backdrop-filter: none !important;
             border: none !important;
             box-shadow: none !important;
-            transition: opacity 0.4s ease;
         }
         .glass-links .glass-link {
             display: flex;
@@ -951,7 +952,7 @@
             background: rgba(255, 255, 255, 0.18);
         }
 
-        /* ===== 壁纸设置 ===== */
+        /* ===== 壁纸模式设置 (右上角) ===== */
         #wallpaperSettings {
             position: fixed;
             top: 20px;
@@ -965,7 +966,6 @@
         body.wallpaper-mode #wallpaperSettings {
             display: flex;
         }
-
         .settings-toggle {
             width: 42px;
             height: 42px;
@@ -998,52 +998,21 @@
             padding: 16px 18px 18px;
             border: 1px solid rgba(255, 255, 255, 0.04);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-            min-width: 180px;
-            max-width: 28vw;
+            min-width: 160px;
+            max-width: 25vw;
             display: none;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
             transition: color 0.6s ease;
-            max-height: 75vh;
+            max-height: 70vh;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.15) rgba(255, 255, 255, 0.05);
         }
-        /* 夜间模式：黑底白字 */
         body.night-mode .settings-panel {
-            background: rgba(0, 0, 0, 0.65) !important;
-            border-color: rgba(255, 255, 255, 0.06) !important;
-            color: #ffffff !important;
+            background: rgba(0, 0, 0, 0.20);
+            border-color: rgba(255, 255, 255, 0.02);
         }
-        body.night-mode .settings-panel .setting-row label {
-            color: #ffffff !important;
-        }
-        body.night-mode .settings-panel .setting-row .type-btn {
-            color: #ffffff !important;
-            background: rgba(255, 255, 255, 0.06) !important;
-        }
-        body.night-mode .settings-panel .setting-row .type-btn.active {
-            background: rgba(255, 255, 255, 0.18) !important;
-            color: #ffffff !important;
-        }
-        body.night-mode .settings-panel .setting-row .range-value {
-            color: #ffffff !important;
-        }
-        body.night-mode .settings-panel .setting-row input[type="range"] {
-            background: rgba(255, 255, 255, 0.15) !important;
-        }
-        body.night-mode .settings-panel .setting-row input[type="range"]::-webkit-slider-thumb {
-            background: #5a5c5e !important;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.1) !important;
-        }
-        body.night-mode .settings-panel .setting-row .wp-preview-item.active {
-            border-color: rgba(255, 255, 255, 0.5) !important;
-        }
-        body.night-mode .settings-panel .setting-row .wp-preview-item .check-mark {
-            background: rgba(255, 255, 255, 0.9) !important;
-            color: #000 !important;
-        }
-
         .settings-panel::-webkit-scrollbar {
             width: 6px;
         }
@@ -1061,10 +1030,10 @@
             background: rgba(255, 255, 255, 0.25);
         }
         body.night-mode .settings-panel::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.1);
         }
         body.night-mode .settings-panel::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .settings-panel.open {
@@ -1077,15 +1046,11 @@
         }
         .settings-panel .setting-row label {
             font-size: 0.7rem;
-            opacity: 0.6;
+            opacity: 0.5;
             letter-spacing: 0.5px;
             color: var(--wallpaper-text);
             transition: color 0.6s ease;
         }
-        body.wallpaper-mode .settings-panel .setting-row label {
-            color: var(--wallpaper-text);
-        }
-
         .settings-panel .setting-row .type-btns {
             display: flex;
             gap: 4px;
@@ -1113,6 +1078,7 @@
         body.night-mode .settings-panel .setting-row .type-btn.active {
             background: rgba(255, 255, 255, 0.04);
         }
+
         .settings-panel .setting-row .wallpaper-preview {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -1121,9 +1087,19 @@
             max-height: none;
             overflow: visible;
         }
+        .settings-panel .setting-row .wallpaper-preview::-webkit-scrollbar {
+            width: 4px;
+        }
+        .settings-panel .setting-row .wallpaper-preview::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .settings-panel .setting-row .wallpaper-preview::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
         .settings-panel .setting-row .wp-preview-item {
             width: 100%;
-            aspect-ratio: 4/3;
+            aspect-ratio: 4 / 3;
             border-radius: 8px;
             overflow: hidden;
             cursor: pointer;
@@ -1181,6 +1157,7 @@
         .settings-panel .setting-row .wp-preview-item.active .check-mark {
             display: flex;
         }
+
         .settings-panel .setting-row input[type="range"] {
             width: 100%;
             -webkit-appearance: none;
@@ -1201,7 +1178,7 @@
             cursor: pointer;
         }
         body.night-mode .settings-panel .setting-row input[type="range"]::-webkit-slider-thumb {
-            background: #5a5c5e;
+            background: #3a3c3e;
         }
         .settings-panel .setting-row input[type="range"]::-moz-range-thumb {
             width: 16px;
@@ -1214,7 +1191,7 @@
         }
         .settings-panel .setting-row .range-value {
             font-size: 0.75rem;
-            opacity: 0.5;
+            opacity: 0.4;
             text-align: right;
             color: var(--wallpaper-text);
             transition: color 0.6s ease;
@@ -1297,16 +1274,22 @@
             align-items: center;
             border-radius: 50%;
             background: #c5d1da;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.30), 0 10px 10px rgba(0, 0, 0, 0.10),
-                inset 0 0 16px rgba(0, 0, 0, 0.70), inset 0 0 24px rgba(0, 0, 0, 0.50),
+            box-shadow:
+                0 0 10px rgba(0, 0, 0, 0.30),
+                0 10px 10px rgba(0, 0, 0, 0.10),
+                inset 0 0 16px rgba(0, 0, 0, 0.70),
+                inset 0 0 24px rgba(0, 0, 0, 0.50),
                 inset 0 0 48px rgba(0, 0, 0, 0.06);
             perspective: 300px;
             transition: all 0.15s;
         }
         body.night-mode .player-joystick .handle {
             background: #3a3c3e;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.40), 0 10px 10px rgba(0, 0, 0, 0.20),
-                inset 0 0 16px rgba(0, 0, 0, 0.70), inset 0 0 24px rgba(0, 0, 0, 0.50),
+            box-shadow:
+                0 0 10px rgba(0, 0, 0, 0.40),
+                0 10px 10px rgba(0, 0, 0, 0.20),
+                inset 0 0 16px rgba(0, 0, 0, 0.70),
+                inset 0 0 24px rgba(0, 0, 0, 0.50),
                 inset 0 0 48px rgba(0, 0, 0, 0.12);
         }
         .player-joystick .button-wrapper {
@@ -1317,16 +1300,24 @@
             align-items: center;
             border-radius: 50%;
             background-image: linear-gradient(0deg, #86969c, #eff1f1);
-            box-shadow: 0 9px 14px rgba(0, 0, 0, 0.30), 0 19px 8px -2px rgba(0, 0, 0, 0.10),
-                0 33px 8px rgba(0, 0, 0, 0.20), 0 -12px 10px rgba(255, 255, 255, 0.30),
-                inset 0 3px 3px rgba(255, 255, 255, 0.40), inset 0 -3px 3px rgba(89, 91, 92, 0.40);
+            box-shadow:
+                0 9px 14px rgba(0, 0, 0, 0.30),
+                0 19px 8px -2px rgba(0, 0, 0, 0.10),
+                0 33px 8px rgba(0, 0, 0, 0.20),
+                0 -12px 10px rgba(255, 255, 255, 0.30),
+                inset 0 3px 3px rgba(255, 255, 255, 0.40),
+                inset 0 -3px 3px rgba(89, 91, 92, 0.40);
             transition: 0.25s ease-out;
         }
         body.night-mode .player-joystick .button-wrapper {
             background-image: linear-gradient(0deg, #4a4c4e, #5a5c5e);
-            box-shadow: 0 9px 14px rgba(0, 0, 0, 0.40), 0 19px 8px -2px rgba(0, 0, 0, 0.20),
-                0 33px 8px rgba(0, 0, 0, 0.30), 0 -12px 10px rgba(255, 255, 255, 0.02),
-                inset 0 3px 3px rgba(255, 255, 255, 0.04), inset 0 -3px 3px rgba(0, 0, 0, 0.30);
+            box-shadow:
+                0 9px 14px rgba(0, 0, 0, 0.40),
+                0 19px 8px -2px rgba(0, 0, 0, 0.20),
+                0 33px 8px rgba(0, 0, 0, 0.30),
+                0 -12px 10px rgba(255, 255, 255, 0.02),
+                inset 0 3px 3px rgba(255, 255, 255, 0.04),
+                inset 0 -3px 3px rgba(0, 0, 0, 0.30);
         }
         .player-joystick .inside {
             position: relative;
@@ -1334,11 +1325,15 @@
             height: 66px;
             border-radius: 50%;
             background-image: linear-gradient(180deg, #adb9bf, #d4dbdd);
-            box-shadow: inset 0 3px 6px rgba(152, 160, 163, 0.20), inset 0 -3px 6px rgba(238, 244, 246, 0.20);
+            box-shadow:
+                inset 0 3px 6px rgba(152, 160, 163, 0.20),
+                inset 0 -3px 6px rgba(238, 244, 246, 0.20);
         }
         body.night-mode .player-joystick .inside {
             background-image: linear-gradient(180deg, #4a5055, #5a6065);
-            box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.20), inset 0 -3px 6px rgba(100, 110, 120, 0.10);
+            box-shadow:
+                inset 0 3px 6px rgba(0, 0, 0, 0.20),
+                inset 0 -3px 6px rgba(100, 110, 120, 0.10);
         }
         .player-joystick .dot {
             position: absolute;
@@ -1368,6 +1363,7 @@
             left: 10%;
             top: 50%;
         }
+
         .player-joystick .touch {
             position: absolute;
             display: flex;
@@ -1414,11 +1410,12 @@
         .player-joystick .touch>div:active {
             background: rgba(128, 128, 128, 0.18);
         }
+
         .player-joystick .button-wrapper.dir-up {
             transform-style: preserve-3d;
             transform: translate(0, -8px) rotateX(12deg);
-            box-shadow: 0 7px 14px rgba(0, 0, 0, 0.30), 0 14px 8px -5px rgba(0, 0, 0, 0.18), 0 24px 8px rgba(0, 0, 0,
-                    0.22), 0 -6px 10px rgba(255, 255, 255, 0.30), inset 0 3px 3px rgba(255, 255, 255, 0.40),
+            box-shadow: 0 7px 14px rgba(0, 0, 0, 0.30), 0 14px 8px -5px rgba(0, 0, 0, 0.18), 0 24px 8px rgba(0, 0, 0, 0.22),
+                0 -6px 10px rgba(255, 255, 255, 0.30), inset 0 3px 3px rgba(255, 255, 255, 0.40),
                 inset 0 -3px 3px rgba(89, 91, 92, 0.40) !important;
         }
         .player-joystick .button-wrapper.dir-right {
@@ -1431,8 +1428,8 @@
         .player-joystick .button-wrapper.dir-down {
             transform-style: preserve-3d;
             transform: translate(0, 8px) rotateX(-12deg);
-            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.40), 0 19px 8px -2px rgba(0, 0, 0, 0.20), 0 34px 8px rgba(0, 0, 0,
-                    0.28), 0 -14px 10px rgba(255, 255, 255, 0.45), inset 0 3px 3px rgba(255, 255, 255, 0.40),
+            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.40), 0 19px 8px -2px rgba(0, 0, 0, 0.20), 0 34px 8px rgba(0, 0, 0, 0.28),
+                0 -14px 10px rgba(255, 255, 255, 0.45), inset 0 3px 3px rgba(255, 255, 255, 0.40),
                 inset 0 -3px 3px rgba(89, 91, 92, 0.40) !important;
         }
         .player-joystick .button-wrapper.dir-left {
@@ -1567,7 +1564,303 @@
             color: #ccc;
         }
 
-        /* ===== 开始页 ===== */
+        /* ===== 响应式 ===== */
+        @media (max-width: 600px) {
+            .simple-mode {
+                padding: 8vh 16px 6vh;
+            }
+            .simple-mode #time {
+                font-size: 3rem;
+            }
+            .simple-mode .search-box {
+                height: 42px;
+            }
+            .simple-mode .search-btn {
+                width: 40px;
+                height: 40px;
+            }
+            .simple-mode .link-item,
+            .simple-mode .add-link-btn {
+                min-width: 44px;
+                height: 38px;
+                padding: 0 8px;
+                font-size: 0.75rem;
+            }
+            .simple-mode .quote-area .quote-text {
+                font-size: 1rem;
+            }
+            .glass-search-wrapper {
+                max-width: 92%;
+                padding: 0 4px 0 12px;
+                height: 46px;
+            }
+            .glass-search-input {
+                font-size: 0.85rem;
+            }
+            .glass-search-btn {
+                width: 36px;
+                height: 36px;
+            }
+            .glass-search-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+            .glass-links {
+                gap: 6px;
+            }
+            .glass-links .glass-link {
+                font-size: 0.75rem;
+                padding: 4px 10px;
+            }
+            .glass-links .glass-add {
+                font-size: 1rem;
+                padding: 4px 10px;
+            }
+            #musicPlayer {
+                width: 230px;
+            }
+            .player-cover {
+                border-radius: 20px 20px 0 0;
+            }
+            .player-joystick {
+                width: 140px;
+                height: 140px;
+            }
+            .player-joystick .around {
+                width: 140px;
+                height: 140px;
+            }
+            .player-joystick .handle {
+                width: 108px;
+                height: 108px;
+            }
+            .player-joystick .button-wrapper {
+                width: 72px;
+                height: 72px;
+            }
+            .player-joystick .inside {
+                width: 58px;
+                height: 58px;
+            }
+            .player-joystick .touch {
+                width: 140px;
+                height: 140px;
+            }
+            .player-joystick .touch>div {
+                width: 48px;
+                height: 48px;
+            }
+            #wallpaperSettings {
+                top: 14px;
+                right: 14px;
+            }
+            .settings-toggle {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
+            }
+            .settings-panel {
+                min-width: 140px;
+                padding: 12px 14px;
+                max-height: 60vh;
+            }
+            .settings-panel .setting-row .wp-preview-item {
+                aspect-ratio: 4/3;
+            }
+            #modeSwitch {
+                top: 14px;
+                left: 14px;
+                padding: 4px 8px 4px 12px;
+            }
+            #modeSwitch span {
+                font-size: 0.7rem;
+            }
+            #wallpaperTimeDisplay .wp-time {
+                font-size: 3.4rem;
+            }
+            #wallpaperTimeDisplay .wp-date {
+                font-size: 1rem;
+            }
+            #wallpaperQuoteDisplay {
+                max-width: 300px;
+            }
+            #wallpaperQuoteDisplay .wq-text {
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 400px) {
+            .simple-mode {
+                padding: 6vh 12px 4vh;
+            }
+            .simple-mode #time {
+                font-size: 2.4rem;
+            }
+            .simple-mode .search-box {
+                height: 36px;
+                padding: 0 10px;
+            }
+            .simple-mode .search-btn {
+                width: 34px;
+                height: 34px;
+            }
+            .simple-mode .search-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+            .simple-mode .link-item,
+            .simple-mode .add-link-btn {
+                min-width: 38px;
+                height: 32px;
+                padding: 0 6px;
+                font-size: 0.65rem;
+            }
+            .simple-mode .quote-area .quote-text {
+                font-size: 0.85rem;
+            }
+            .player-cover {
+                border-radius: 16px 16px 0 0;
+            }
+            .player-joystick {
+                width: 120px;
+                height: 120px;
+            }
+            .player-joystick .around {
+                width: 120px;
+                height: 120px;
+            }
+            .player-joystick .handle {
+                width: 92px;
+                height: 92px;
+            }
+            .player-joystick .button-wrapper {
+                width: 62px;
+                height: 62px;
+            }
+            .player-joystick .inside {
+                width: 50px;
+                height: 50px;
+            }
+            .player-joystick .touch {
+                width: 120px;
+                height: 120px;
+            }
+            .player-joystick .touch>div {
+                width: 40px;
+                height: 40px;
+            }
+            #musicPlayer {
+                width: 200px;
+            }
+            .glass-links .glass-link {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+            }
+            .glass-links .glass-add {
+                font-size: 0.9rem;
+                padding: 3px 8px;
+            }
+            .glass-search-wrapper {
+                height: 40px;
+                padding: 0 4px 0 10px;
+            }
+            .glass-search-input {
+                font-size: 0.8rem;
+            }
+            .glass-search-btn {
+                width: 32px;
+                height: 32px;
+            }
+            .glass-search-btn svg {
+                width: 16px;
+                height: 16px;
+            }
+            .settings-panel .setting-row .wp-preview-item {
+                aspect-ratio: 4/3;
+            }
+            #wallpaperTimeDisplay .wp-time {
+                font-size: 2.6rem;
+            }
+            #wallpaperTimeDisplay .wp-date {
+                font-size: 0.8rem;
+            }
+            #wallpaperQuoteDisplay .wq-text {
+                font-size: 0.85rem;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== 壁纸模式 - 文字颜色自适应 ===== */
+        body.wallpaper-mode[data-brightness="dark"] {
+            --wallpaper-text: #ffffff;
+            --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
+        }
+        body.wallpaper-mode[data-brightness="light"] {
+            --wallpaper-text: #1a1a1a;
+            --wallpaper-text-secondary: rgba(26, 26, 26, 0.65);
+        }
+        body.wallpaper-mode {
+            --wallpaper-text: #ffffff;
+            --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-toggle {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-wrapper {
+            background: rgba(255, 255, 255, 0.20);
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-input {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-input::placeholder {
+            color: rgba(26, 26, 26, 0.4);
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-btn {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-links .glass-link {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-links .glass-add {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row label {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row .type-btn {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row .range-value {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #modeSwitch span {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-time {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-date {
+            color: rgba(26, 26, 26, 0.6);
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperQuoteDisplay .wq-text {
+            color: #1a1a1a;
+        }
+        body.wallpaper-mode[data-brightness="light"] #wallpaperQuoteDisplay .wq-author {
+            color: rgba(26, 26, 26, 0.4);
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-wrapper {
+            background: rgba(255, 255, 255, 0.20);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        body.wallpaper-mode[data-brightness="light"] .glass-search-btn {
+            background: rgba(255, 255, 255, 0.20);
+        }
+
+        /* ================================================================
+           开始页 — 纯文字 + 呼吸灯，无毛玻璃卡片
+           ================================================================ */
         #startPage {
             position: fixed;
             top: 0;
@@ -1710,339 +2003,54 @@
             }
         }
 
-        /* ===== 响应式 ===== */
-        @media (max-width: 600px) {
-            .simple-draggable {
-                padding: 10px 16px;
-                border-radius: 16px;
-            }
-            .simple-draggable.clock {
-                padding: 12px 18px;
-                min-width: 120px;
-            }
-            .simple-draggable.clock #time {
-                font-size: 2.8rem;
-                letter-spacing: 2px;
-            }
-            .simple-draggable.clock #date {
-                font-size: 0.8rem;
-                letter-spacing: 1px;
-            }
-            .simple-draggable.quote-area {
-                padding: 10px 16px;
-                max-width: 90%;
-            }
-            .simple-draggable.quote-area .quote-text {
-                font-size: 0.95rem;
-            }
-            .simple-draggable.quote-area .quote-author {
-                font-size: 0.7rem;
-            }
-            .simple-draggable.search-wrapper {
-                height: 44px;
-                padding: 2px 2px 2px 14px;
-                min-width: 180px;
-                max-width: 92%;
-            }
-            .simple-draggable.search-wrapper .search-box input {
-                font-size: 0.85rem;
-            }
-            .simple-draggable.search-wrapper .search-btn {
-                width: 36px;
-                height: 36px;
-            }
-            .simple-draggable.search-wrapper .search-btn svg {
-                width: 18px;
-                height: 18px;
-            }
-            .simple-draggable.links-grid {
-                padding: 10px 14px;
-                gap: 6px;
-                max-width: 92%;
-                min-width: 160px;
-            }
-            .simple-draggable.links-grid .link-item,
-            .simple-draggable.links-grid .add-link-btn,
-            .simple-draggable.links-grid .search-toggle-btn {
-                font-size: 0.7rem;
-                padding: 4px 12px;
-                min-height: 30px;
-            }
-            .settings-panel {
-                min-width: 140px;
-                max-width: 80vw !important;
-                padding: 12px 14px;
-                max-height: 60vh;
-            }
-            .settings-panel .setting-row .wp-preview-item {
-                aspect-ratio: 4/3;
-            }
-            #modeSwitch {
-                top: 14px;
-                left: 14px;
-                padding: 4px 8px 4px 12px;
-            }
-            #modeSwitch span {
-                font-size: 0.7rem;
-            }
-            #wallpaperTimeDisplay .wp-time {
-                font-size: 3.4rem;
-            }
-            #wallpaperTimeDisplay .wp-date {
-                font-size: 1rem;
-            }
-            #wallpaperQuoteDisplay {
-                max-width: 300px;
-            }
-            #wallpaperQuoteDisplay .wq-text {
-                font-size: 1rem;
-            }
-            .glass-search-wrapper {
-                max-width: 92%;
-                padding: 0 4px 0 12px;
-                height: 46px;
-            }
-            .glass-search-input {
-                font-size: 0.85rem;
-            }
-            .glass-search-btn {
-                width: 36px;
-                height: 36px;
-            }
-            .glass-search-btn svg {
-                width: 18px;
-                height: 18px;
-            }
-            .glass-links {
-                gap: 6px;
-            }
-            .glass-links .glass-link {
-                font-size: 0.75rem;
-                padding: 4px 10px;
-            }
-            .glass-links .glass-add {
-                font-size: 1rem;
-                padding: 4px 10px;
-            }
-            #musicPlayer {
-                width: 230px;
-            }
-            .player-cover {
-                border-radius: 20px 20px 0 0;
-            }
-            .player-joystick {
-                width: 140px;
-                height: 140px;
-            }
-            .player-joystick .around {
-                width: 140px;
-                height: 140px;
-            }
-            .player-joystick .handle {
-                width: 108px;
-                height: 108px;
-            }
-            .player-joystick .button-wrapper {
-                width: 72px;
-                height: 72px;
-            }
-            .player-joystick .inside {
-                width: 58px;
-                height: 58px;
-            }
-            .player-joystick .touch {
-                width: 140px;
-                height: 140px;
-            }
-            .player-joystick .touch>div {
-                width: 48px;
-                height: 48px;
-            }
-            #wallpaperSettings {
-                top: 14px;
-                right: 14px;
-            }
-            .settings-toggle {
-                width: 36px;
-                height: 36px;
-                font-size: 1.1rem;
-            }
+        /* ===== 简洁模式拖拽 - 无变淡 ===== */
+        .simple-mode .clock-area.dragging-simple,
+        .simple-mode .quote-area.dragging-simple,
+        .simple-mode .bottom-area.dragging-simple {
+            z-index: 50;
+            position: relative;
+            opacity: 1 !important;
         }
-        @media (max-width: 400px) {
-            .simple-draggable.clock #time {
-                font-size: 2.2rem;
-                letter-spacing: 1px;
-            }
-            .simple-draggable.clock #date {
-                font-size: 0.7rem;
-            }
-            .simple-draggable.quote-area .quote-text {
-                font-size: 0.8rem;
-            }
-            .simple-draggable.search-wrapper {
-                height: 40px;
-                padding: 2px 2px 2px 10px;
-                min-width: 140px;
-            }
-            .simple-draggable.search-wrapper .search-box input {
-                font-size: 0.8rem;
-            }
-            .simple-draggable.search-wrapper .search-btn {
-                width: 32px;
-                height: 32px;
-            }
-            .simple-draggable.search-wrapper .search-btn svg {
-                width: 16px;
-                height: 16px;
-            }
-            .simple-draggable.links-grid {
-                padding: 8px 10px;
-                gap: 4px;
-            }
-            .simple-draggable.links-grid .link-item,
-            .simple-draggable.links-grid .add-link-btn,
-            .simple-draggable.links-grid .search-toggle-btn {
-                font-size: 0.6rem;
-                padding: 3px 8px;
-                min-height: 26px;
-            }
-            .settings-panel {
-                min-width: 120px;
-                max-width: 90vw !important;
-            }
-            .player-cover {
-                border-radius: 16px 16px 0 0;
-            }
-            .player-joystick {
-                width: 120px;
-                height: 120px;
-            }
-            .player-joystick .around {
-                width: 120px;
-                height: 120px;
-            }
-            .player-joystick .handle {
-                width: 92px;
-                height: 92px;
-            }
-            .player-joystick .button-wrapper {
-                width: 62px;
-                height: 62px;
-            }
-            .player-joystick .inside {
-                width: 50px;
-                height: 50px;
-            }
-            .player-joystick .touch {
-                width: 120px;
-                height: 120px;
-            }
-            .player-joystick .touch>div {
-                width: 40px;
-                height: 40px;
-            }
-            #musicPlayer {
-                width: 200px;
-            }
-            .glass-links .glass-link {
-                font-size: 0.7rem;
-                padding: 3px 8px;
-            }
-            .glass-links .glass-add {
-                font-size: 0.9rem;
-                padding: 3px 8px;
-            }
-            .glass-search-wrapper {
-                height: 40px;
-                padding: 0 4px 0 10px;
-            }
-            .glass-search-input {
-                font-size: 0.8rem;
-            }
-            .glass-search-btn {
-                width: 32px;
-                height: 32px;
-            }
-            .glass-search-btn svg {
-                width: 16px;
-                height: 16px;
-            }
-            #wallpaperTimeDisplay .wp-time {
-                font-size: 2.6rem;
-            }
-            #wallpaperTimeDisplay .wp-date {
-                font-size: 0.8rem;
-            }
-            #wallpaperQuoteDisplay .wq-text {
-                font-size: 0.85rem;
-            }
+        .simple-mode .clock-area.dragging-simple *,
+        .simple-mode .quote-area.dragging-simple *,
+        .simple-mode .bottom-area.dragging-simple * {
+            pointer-events: none !important;
         }
 
-        .hidden {
-            display: none !important;
+        /* ===== 搜索按钮在链接末尾 ===== */
+        .simple-mode .links-grid .search-btn-end {
+            min-width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: var(--link-bg);
+            box-shadow: 6px 6px 12px var(--link-shadow-dark), -6px -6px 12px var(--link-shadow-light);
+            border: none;
+            color: var(--text-day);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            font-size: 1.1rem;
+            padding: 0 12px;
         }
-
-        /* ===== 壁纸模式文字颜色自适应 ===== */
-        body.wallpaper-mode[data-brightness="dark"] {
-            --wallpaper-text: #ffffff;
-            --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
+        body.night-mode .simple-mode .links-grid .search-btn-end {
+            background: #2a2c2e;
+            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
+            color: var(--text-night);
         }
-        body.wallpaper-mode[data-brightness="light"] {
-            --wallpaper-text: #1a1a1a;
-            --wallpaper-text-secondary: rgba(26, 26, 26, 0.65);
+        .simple-mode .links-grid .search-btn-end:active {
+            box-shadow: inset 6px 6px 12px var(--link-shadow-dark), inset -6px -6px 12px var(--link-shadow-light);
+            transform: scale(0.96);
         }
-        body.wallpaper-mode {
-            --wallpaper-text: #ffffff;
-            --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
-        }
-        body.wallpaper-mode[data-brightness="light"] .settings-toggle {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-wrapper {
-            background: rgba(255, 255, 255, 0.20);
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-input {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-input::placeholder {
-            color: rgba(26, 26, 26, 0.4);
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-btn {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-links .glass-link {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-links .glass-add {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row label {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row .type-btn {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] .settings-panel .setting-row .range-value {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-time {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] #wallpaperTimeDisplay .wp-date {
-            color: rgba(26, 26, 26, 0.6);
-        }
-        body.wallpaper-mode[data-brightness="light"] #wallpaperQuoteDisplay .wq-text {
-            color: #1a1a1a;
-        }
-        body.wallpaper-mode[data-brightness="light"] #wallpaperQuoteDisplay .wq-author {
-            color: rgba(26, 26, 26, 0.4);
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-wrapper {
-            background: rgba(255, 255, 255, 0.20);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-        body.wallpaper-mode[data-brightness="light"] .glass-search-btn {
-            background: rgba(255, 255, 255, 0.20);
+        .simple-mode .links-grid .search-btn-end svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
     </style>
 </head>
@@ -2094,30 +2102,36 @@
         </div>
     </div>
 
-    <!-- 简洁模式元素（可拖动） -->
-    <div id="simpleMode" class="simple-mode" style="display:contents;">
-        <!-- 时钟 (左上) -->
-        <div id="clock" class="simple-draggable clock">
-            <div id="time">00:00:00</div>
-            <div id="date">加载中...</div>
-        </div>
-        <!-- 名言 (右下) -->
-        <div id="quoteArea" class="simple-draggable quote-area">
-            <div id="quoteText" class="quote-text">学而不思则罔，思而不学则殆。</div>
-            <div id="quoteAuthor" class="quote-author">— 孔子</div>
-        </div>
-        <!-- 搜索框 (默认隐藏) -->
-        <div id="searchWrapper" class="simple-draggable search-wrapper">
-            <div class="search-box">
-                <input type="text" id="searchInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="搜索..." />
+    <!-- ============================================================
+    简洁模式 — 三个独立拖拽区域：时钟、名言、底部（搜索+链接）
+    ============================================================ -->
+    <div class="simple-mode" id="simpleMode">
+        <!-- 时钟区域（独立拖拽） -->
+        <div class="clock-area simple-draggable" id="clockArea">
+            <div class="clock">
+                <div id="time">00:00</div>
+                <div id="date">加载中...</div>
             </div>
-            <button class="search-btn" id="searchBtn">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            </button>
-            <button class="search-close" id="searchCloseBtn">✕</button>
         </div>
-        <!-- 链接网格 (左下) -->
-        <div id="linksGrid" class="simple-draggable links-grid"></div>
+
+        <!-- 名言区域（独立拖拽） -->
+        <div class="quote-area simple-draggable" id="quoteArea">
+            <div class="quote-text" id="quoteText">学而不思则罔，思而不学则殆。</div>
+            <div class="quote-author" id="quoteAuthor">— 孔子</div>
+        </div>
+
+        <!-- 底部区域（独立拖拽） -->
+        <div class="bottom-area simple-draggable" id="bottomArea">
+            <div class="search-wrapper" id="searchWrapper">
+                <div class="search-box">
+                    <input type="text" id="searchInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+                </div>
+                <button class="search-btn" id="searchBtn">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                </button>
+            </div>
+            <div class="links-grid" id="linksGrid"></div>
+        </div>
     </div>
 
     <!-- 壁纸模式 - 可拖动元素 -->
@@ -2155,29 +2169,9 @@
                 <div class="wallpaper-preview" id="wallpaperPreview"></div>
             </div>
             <div class="setting-row">
-                <label>毛玻璃透明度</label>
+                <label>播放器透明度</label>
                 <input type="range" id="glassOpacityRange" min="0.1" max="1" step="0.05" value="0.7" />
                 <div class="range-value" id="glassOpacityValue">70%</div>
-            </div>
-            <div class="setting-row">
-                <label>🔍 搜索框透明度</label>
-                <input type="range" id="searchOpacityRange" min="0.1" max="1" step="0.05" value="1" />
-                <div class="range-value" id="searchOpacityValue">100%</div>
-            </div>
-            <div class="setting-row">
-                <label>📎 链接透明度</label>
-                <input type="range" id="linksOpacityRange" min="0.1" max="1" step="0.05" value="1" />
-                <div class="range-value" id="linksOpacityValue">100%</div>
-            </div>
-            <div class="setting-row">
-                <label>🕐 时间透明度</label>
-                <input type="range" id="timeOpacityRange" min="0.1" max="1" step="0.05" value="1" />
-                <div class="range-value" id="timeOpacityValue">100%</div>
-            </div>
-            <div class="setting-row">
-                <label>💬 名言透明度</label>
-                <input type="range" id="quoteOpacityRange" min="0.1" max="1" step="0.05" value="1" />
-                <div class="range-value" id="quoteOpacityValue">100%</div>
             </div>
         </div>
     </div>
@@ -2570,8 +2564,7 @@
             const quotes = [
                 { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。', author: '孙孙浩' },
                 { text: '杀人放火厉飞雨，万人敬仰韩天尊', author: '阿青' },
-                { text: '你倒是个有情有义之人。可惜在这乱世之中，最不值钱的便是情义。且看我那两个逆徒，本座养育他们两百年，却轻易背叛。',
-                    author: '玄骨上人' },
+                { text: '你倒是个有情有义之人。可惜在这乱世之中，最不值钱的便是情义。且看我那两个逆徒，本座养育他们两百年，却轻易背叛。', author: '玄骨上人' },
                 { text: '立哥哥,立giegie', author: '小佳乐' },
                 { text: '什么不会抹杀我的存在？没有了自主意识后的我，还会是我吗？和从这世间消失，有什么区别。', author: '小二黑' },
                 { text: '到头来,无非是求个念头通达罢liao。', author: '李化元' },
@@ -2658,7 +2651,7 @@
             showQuote(0);
 
             // ================================================================
-            // 6. 快捷链接 & 搜索控制
+            // 6. 快捷链接
             // ================================================================
             const linksGrid = document.getElementById('linksGrid');
             const glassLinks = document.getElementById('glassLinks');
@@ -2672,41 +2665,20 @@
             const searchWrapper = document.getElementById('searchWrapper');
             const searchBtn = document.getElementById('searchBtn');
             const searchInput = document.getElementById('searchInput');
-            const searchCloseBtn = document.getElementById('searchCloseBtn');
             const glassSearchInput = document.getElementById('glassSearchInput');
             const glassSearchBtn = document.getElementById('glassSearchBtn');
 
             let editingIndex = -1;
-            let searchActive = false;
+            let searchVisible = true;
+            let searchBtnEndExists = false;
 
-            // ----- 搜索切换 -----
-            function showSearchBox() {
-                if (searchActive) return;
-                searchActive = true;
-                searchWrapper.style.display = 'flex';
-                const linksRect = linksGrid.getBoundingClientRect();
-                const left = linksRect.left;
-                const top = linksRect.top - searchWrapper.offsetHeight - 12;
-                searchWrapper.style.left = Math.max(10, left) + 'px';
-                searchWrapper.style.top = Math.max(10, top) + 'px';
-                document.querySelector('.search-toggle-btn').classList.add('hidden');
-                setTimeout(() => searchInput.focus(), 50);
-                simplePositions['searchWrapper'] = {
-                    left: parseFloat(searchWrapper.style.left),
-                    top: parseFloat(searchWrapper.style.top)
-                };
-            }
-
-            function hideSearchBox() {
-                if (!searchActive) return;
-                searchActive = false;
-                searchWrapper.style.display = 'none';
-                document.querySelector('.search-toggle-btn').classList.remove('hidden');
-                searchInput.value = '';
-            }
-
-            // ----- 渲染链接网格 -----
             function renderAllLinks() {
+                const existingMobile = document.getElementById('searchBtnMobile');
+                if (existingMobile) existingMobile.remove();
+                const existingEnd = document.querySelector('.search-btn-end');
+                if (existingEnd) existingEnd.remove();
+                searchBtnEndExists = false;
+
                 linksGrid.innerHTML = '';
                 links.forEach((link, index) => {
                     const a = document.createElement('a');
@@ -2730,7 +2702,6 @@
                     });
                     linksGrid.appendChild(a);
                 });
-
                 const addBtn = document.createElement('button');
                 addBtn.className = 'add-link-btn';
                 addBtn.textContent = '＋';
@@ -2743,23 +2714,18 @@
                 addBtn.addEventListener('mouseleave', function() { this.classList.remove('pressed'); });
                 linksGrid.appendChild(addBtn);
 
-                const toggleBtn = document.createElement('button');
-                toggleBtn.className = 'search-toggle-btn';
-                toggleBtn.innerHTML =
-                    `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>`;
-                toggleBtn.addEventListener('mousedown', function(e) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                });
-                toggleBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    if (searchActive) {
-                        hideSearchBox();
-                    } else {
-                        showSearchBox();
-                    }
-                });
-                linksGrid.appendChild(toggleBtn);
+                if (!searchVisible) {
+                    const endBtn = document.createElement('button');
+                    endBtn.className = 'search-btn-end';
+                    endBtn.innerHTML =
+                        `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>`;
+                    endBtn.addEventListener('click', toggleSearch);
+                    endBtn.addEventListener('mousedown', function() { this.classList.add('pressed'); });
+                    endBtn.addEventListener('mouseup', function() { this.classList.remove('pressed'); });
+                    endBtn.addEventListener('mouseleave', function() { this.classList.remove('pressed'); });
+                    linksGrid.appendChild(endBtn);
+                    searchBtnEndExists = true;
+                }
 
                 glassLinks.innerHTML = '';
                 links.forEach((link, index) => {
@@ -2783,30 +2749,29 @@
                     openEditor(-1);
                 });
                 glassLinks.appendChild(glassAdd);
-            }
 
-            // ----- 搜索功能 -----
-            function performSearch() {
-                const query = searchInput.value.trim();
-                if (query) window.location.href = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
-                else hideSearchBox();
-            }
-            searchBtn.addEventListener('click', performSearch);
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') performSearch();
-                if (e.key === 'Escape') hideSearchBox();
-            });
-            searchCloseBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                hideSearchBox();
-            });
-            document.addEventListener('click', function(e) {
-                if (searchActive && !searchWrapper.contains(e.target) && !e.target.closest('.search-toggle-btn')) {
-                    hideSearchBox();
+                if (searchVisible) {
+                    const wrapper = document.getElementById('searchWrapper');
+                    const existingBtn = wrapper.querySelector('.search-btn');
+                    if (!existingBtn) wrapper.appendChild(searchBtn);
                 }
-            });
+            }
 
-            // ----- 编辑器 -----
+            function toggleSearch() {
+                searchVisible = !searchVisible;
+                if (searchVisible) {
+                    searchWrapper.classList.remove('hidden');
+                    const endBtn = document.querySelector('.search-btn-end');
+                    if (endBtn) endBtn.remove();
+                    searchBtnEndExists = false;
+                    if (!searchWrapper.contains(searchBtn)) searchWrapper.appendChild(searchBtn);
+                } else {
+                    searchWrapper.classList.add('hidden');
+                    if (searchWrapper.contains(searchBtn)) searchWrapper.removeChild(searchBtn);
+                    renderAllLinks();
+                }
+            }
+
             function openEditor(index) {
                 editingIndex = index;
                 if (index === -1) {
@@ -2898,7 +2863,17 @@
             loadLinksFromStorage();
             renderAllLinks();
 
-            // 玻璃搜索（壁纸模式）
+            // 搜索
+            function search() {
+                const query = searchInput.value.trim();
+                if (query) window.location.href = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
+                else if (searchVisible) toggleSearch();
+            }
+            searchBtn.addEventListener('click', search);
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') search();
+            });
+
             function glassSearch() {
                 const query = glassSearchInput.value.trim();
                 if (query) window.location.href = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
@@ -2909,63 +2884,12 @@
             });
 
             // ================================================================
-            // 7. 壁纸设置 — 透明度控制 + 壁纸预览
+            // 7. 壁纸模式设置
             // ================================================================
             const settingsToggle = document.getElementById('settingsToggle');
             const settingsPanel = document.getElementById('settingsPanel');
             const wallpaperPreview = document.getElementById('wallpaperPreview');
             let settingsOpen = false;
-
-            // 透明度控制
-            const glassRange = document.getElementById('glassOpacityRange');
-            const glassValue = document.getElementById('glassOpacityValue');
-            const searchOpacityRange = document.getElementById('searchOpacityRange');
-            const searchOpacityValue = document.getElementById('searchOpacityValue');
-            const linksOpacityRange = document.getElementById('linksOpacityRange');
-            const linksOpacityValue = document.getElementById('linksOpacityValue');
-            const timeOpacityRange = document.getElementById('timeOpacityRange');
-            const timeOpacityValue = document.getElementById('timeOpacityValue');
-            const quoteOpacityRange = document.getElementById('quoteOpacityRange');
-            const quoteOpacityValue = document.getElementById('quoteOpacityValue');
-
-            const glassSearchEl = document.getElementById('glassSearch');
-            const glassLinksEl = document.getElementById('glassLinks');
-            const wallpaperTimeEl = document.getElementById('wallpaperTimeDisplay');
-            const wallpaperQuoteEl = document.getElementById('wallpaperQuoteDisplay');
-
-            function updateElementOpacity(el, val) {
-                if (el) el.style.opacity = parseFloat(val);
-            }
-
-            glassRange.addEventListener('input', function() {
-                const v = this.value;
-                glassValue.textContent = Math.round(parseFloat(v) * 100) + '%';
-                document.querySelector('#musicPlayer').style.opacity = v;
-            });
-
-            searchOpacityRange.addEventListener('input', function() {
-                const v = this.value;
-                searchOpacityValue.textContent = Math.round(parseFloat(v) * 100) + '%';
-                updateElementOpacity(glassSearchEl, v);
-            });
-
-            linksOpacityRange.addEventListener('input', function() {
-                const v = this.value;
-                linksOpacityValue.textContent = Math.round(parseFloat(v) * 100) + '%';
-                updateElementOpacity(glassLinksEl, v);
-            });
-
-            timeOpacityRange.addEventListener('input', function() {
-                const v = this.value;
-                timeOpacityValue.textContent = Math.round(parseFloat(v) * 100) + '%';
-                updateElementOpacity(wallpaperTimeEl, v);
-            });
-
-            quoteOpacityRange.addEventListener('input', function() {
-                const v = this.value;
-                quoteOpacityValue.textContent = Math.round(parseFloat(v) * 100) + '%';
-                updateElementOpacity(wallpaperQuoteEl, v);
-            });
 
             settingsToggle.addEventListener('click', function() {
                 settingsOpen = !settingsOpen;
@@ -3024,6 +2948,18 @@
                 });
             }
 
+            const glassRange = document.getElementById('glassOpacityRange');
+            const glassValue = document.getElementById('glassOpacityValue');
+
+            function updateGlassOpacity(val) {
+                const v = parseFloat(val);
+                glassValue.textContent = Math.round(v * 100) + '%';
+                document.querySelector('#musicPlayer').style.opacity = v;
+            }
+            glassRange.addEventListener('input', function() {
+                updateGlassOpacity(this.value);
+            });
+
             // ================================================================
             // 8. 音乐播放器
             // ================================================================
@@ -3038,9 +2974,9 @@
                 albumImages.push(`images/cover_${num}.png`);
             }
             const songs = [
-                { name: '星尘', file: 'song_01.mp3' },
-                { name: '夜航', file: 'song_02.mp3' },
-                { name: '晨光', file: 'song_03.mp3' },
+                { name: '凡人', file: 'song_01.mp3' },
+                { name: '归期', file: 'song_02.mp3' },
+                { name: '旅人', file: 'song_03.mp3' },
             ];
             let currentSongIndex = 0;
             let currentImageIndex = 0;
@@ -3229,7 +3165,7 @@
             updatePlayerCover();
 
             // ================================================================
-            // 9. 模式切换 (简洁 ↔ 壁纸) — 彻底隔离 + 防粘手
+            // 9. 模式切换 (简洁 ↔ 壁纸)
             // ================================================================
             const modeSwitch = document.getElementById('modeSwitch');
             const modeLabel = document.getElementById('modeLabel');
@@ -3237,10 +3173,7 @@
             const positions = {};
             const draggableItems = document.querySelectorAll('.draggable-item');
 
-            const simplePositions = {};
-            const simpleDraggables = document.querySelectorAll('.simple-draggable');
-
-            // ---------- 全局拖拽防粘手 ----------
+            // ---------- 全局拖拽状态 ----------
             let dragJustHappened = false;
             let dragJustResetTimer = null;
             let currentDraggingItem = null;
@@ -3249,9 +3182,9 @@
                 draggableItems.forEach(item => {
                     if (item._forceEnd) item._forceEnd();
                 });
-                simpleDraggables.forEach(item => {
-                    if (item._forceEndSimple) item._forceEndSimple();
-                });
+                if (simpleDragState && simpleDragState.dragging) {
+                    endSimpleDrag(null);
+                }
                 if (dragJustResetTimer) {
                     clearTimeout(dragJustResetTimer);
                     dragJustResetTimer = null;
@@ -3260,15 +3193,16 @@
                 currentDraggingItem = null;
             }
 
-            // ---------- 壁纸拖拽 ----------
+            // ---------- 初始化可拖拽元素（壁纸模式） ----------
             function initDraggable(item) {
                 let startX, startY, origX, origY;
                 let dragging = false;
+                let locked = false;
 
                 function forceEnd() {
                     if (dragging) {
                         dragging = false;
-                        item.style.cursor = 'grab';
+                        item.style.cursor = locked ? 'default' : 'grab';
                         item.classList.remove('dragging');
                         if (currentDraggingItem === item) currentDraggingItem = null;
                         if (dragJustResetTimer) {
@@ -3280,7 +3214,30 @@
                 }
                 item._forceEnd = forceEnd;
 
+                function toggleLock(e) {
+                    e.stopPropagation();
+                    if (dragging) {
+                        forceEnd();
+                    }
+                    locked = !locked;
+                    if (locked) {
+                        item.classList.add('locked');
+                        item.style.cursor = 'default';
+                    } else {
+                        item.classList.remove('locked');
+                        item.style.cursor = 'grab';
+                    }
+                    if (currentDraggingItem === item) currentDraggingItem = null;
+                    dragJustHappened = false;
+                    return false;
+                }
+                item.addEventListener('dblclick', toggleLock);
+
                 function onStart(e) {
+                    if (locked) {
+                        e.preventDefault();
+                        return;
+                    }
                     if (currentDraggingItem && currentDraggingItem !== item) {
                         if (currentDraggingItem._forceEnd) currentDraggingItem._forceEnd();
                     }
@@ -3309,13 +3266,13 @@
                 }
 
                 function onMove(e) {
+                    if (locked) return;
                     if (!currentDraggingItem || currentDraggingItem !== item) return;
                     const ev = e.touches ? e.touches[0] : e;
                     const dx = ev.clientX - startX;
                     const dy = ev.clientY - startY;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist > 8) {
+                    if (dist > 10) {
                         if (!dragging) {
                             dragging = true;
                             e.preventDefault();
@@ -3343,7 +3300,7 @@
                 function onEnd(e) {
                     if (dragging) {
                         dragging = false;
-                        item.style.cursor = 'grab';
+                        item.style.cursor = locked ? 'default' : 'grab';
                         item.classList.remove('dragging');
                         const id = item.id;
                         if (id) {
@@ -3357,13 +3314,13 @@
                         dragJustResetTimer = setTimeout(() => {
                             dragJustHappened = false;
                             dragJustResetTimer = null;
-                        }, 350);
+                        }, 300);
                     } else {
                         if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
                         dragJustResetTimer = setTimeout(() => {
                             dragJustHappened = false;
                             dragJustResetTimer = null;
-                        }, 60);
+                        }, 50);
                     }
                 }
 
@@ -3386,145 +3343,12 @@
                     item.removeEventListener('mousedown', onStart);
                     item.removeEventListener('touchstart', onStart);
                     item.removeEventListener('dragstart', function(e) { e.preventDefault(); });
+                    item.removeEventListener('dblclick', toggleLock);
                 };
             }
 
             draggableItems.forEach(item => initDraggable(item));
 
-            // ---------- 简洁模式拖拽 ----------
-            function initSimpleDraggable(item) {
-                let startX, startY, origX, origY;
-                let dragging = false;
-
-                function forceEndSimple() {
-                    if (dragging) {
-                        dragging = false;
-                        item.style.cursor = 'grab';
-                        item.classList.remove('dragging');
-                        if (currentDraggingItem === item) currentDraggingItem = null;
-                        if (dragJustResetTimer) {
-                            clearTimeout(dragJustResetTimer);
-                            dragJustResetTimer = null;
-                        }
-                        dragJustHappened = false;
-                    }
-                }
-                item._forceEndSimple = forceEndSimple;
-
-                function onStart(e) {
-                    if (currentDraggingItem && currentDraggingItem !== item) {
-                        if (currentDraggingItem._forceEnd) currentDraggingItem._forceEnd();
-                        if (currentDraggingItem._forceEndSimple) currentDraggingItem._forceEndSimple();
-                    }
-                    if (e.target.closest('input, textarea')) return;
-                    if (item.id === 'linksGrid' && (e.target.closest('a') || e.target.closest('.search-toggle-btn')))
-                    return;
-                    const ev = e.touches ? e.touches[0] : e;
-                    const rect = item.getBoundingClientRect();
-                    let left = parseFloat(item.style.left) || rect.left;
-                    let top = parseFloat(item.style.top) || rect.top;
-                    if (!item.style.left) {
-                        left = rect.left;
-                        item.style.left = left + 'px';
-                    }
-                    if (!item.style.top) {
-                        top = rect.top;
-                        item.style.top = top + 'px';
-                    }
-                    origX = left;
-                    origY = top;
-                    startX = ev.clientX;
-                    startY = ev.clientY;
-                    dragging = false;
-                    item.style.cursor = 'grabbing';
-                    currentDraggingItem = item;
-                    if (e.target.closest('a')) e.preventDefault();
-                }
-
-                function onMove(e) {
-                    if (!currentDraggingItem || currentDraggingItem !== item) return;
-                    const ev = e.touches ? e.touches[0] : e;
-                    const dx = ev.clientX - startX;
-                    const dy = ev.clientY - startY;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist > 8) {
-                        if (!dragging) {
-                            dragging = true;
-                            e.preventDefault();
-                            dragJustHappened = true;
-                            if (dragJustResetTimer) {
-                                clearTimeout(dragJustResetTimer);
-                                dragJustResetTimer = null;
-                            }
-                            item.classList.add('dragging');
-                        }
-                        let newX = origX + dx;
-                        let newY = origY + dy;
-                        const w = item.offsetWidth;
-                        const h = item.offsetHeight;
-                        newX = Math.max(0, Math.min(window.innerWidth - w, newX));
-                        newY = Math.max(0, Math.min(window.innerHeight - h, newY));
-                        item.style.left = newX + 'px';
-                        item.style.top = newY + 'px';
-                        e.preventDefault();
-                    } else {
-                        if (e.cancelable) e.preventDefault();
-                    }
-                }
-
-                function onEnd(e) {
-                    if (dragging) {
-                        dragging = false;
-                        item.style.cursor = 'grab';
-                        item.classList.remove('dragging');
-                        const id = item.id;
-                        if (id) {
-                            simplePositions[id] = {
-                                left: parseFloat(item.style.left),
-                                top: parseFloat(item.style.top)
-                            };
-                        }
-                        if (currentDraggingItem === item) currentDraggingItem = null;
-                        if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
-                        dragJustResetTimer = setTimeout(() => {
-                            dragJustHappened = false;
-                            dragJustResetTimer = null;
-                        }, 350);
-                    } else {
-                        if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
-                        dragJustResetTimer = setTimeout(() => {
-                            dragJustHappened = false;
-                            dragJustResetTimer = null;
-                        }, 60);
-                    }
-                }
-
-                item.addEventListener('mousedown', onStart);
-                window.addEventListener('mousemove', onMove);
-                window.addEventListener('mouseup', onEnd);
-                item.addEventListener('touchstart', onStart, { passive: false });
-                window.addEventListener('touchmove', onMove, { passive: false });
-                window.addEventListener('touchend', onEnd, { passive: false });
-                window.addEventListener('touchcancel', onEnd, { passive: false });
-
-                item.addEventListener('dragstart', function(e) { e.preventDefault(); }, false);
-
-                item._destroyDrag = function() {
-                    window.removeEventListener('mousemove', onMove);
-                    window.removeEventListener('mouseup', onEnd);
-                    window.removeEventListener('touchmove', onMove);
-                    window.removeEventListener('touchend', onEnd);
-                    window.removeEventListener('touchcancel', onEnd);
-                    item.removeEventListener('mousedown', onStart);
-                    item.removeEventListener('touchstart', onStart);
-                    item.removeEventListener('dragstart', function(e) { e.preventDefault(); });
-                };
-            }
-
-            simpleDraggables.forEach(item => initSimpleDraggable(item));
-
-            // 全局点击拦截：拖拽导致的点击放行链接，其余阻止
             document.addEventListener('click', function(e) {
                 if (dragJustHappened) {
                     if (e.target.closest('a')) {
@@ -3542,12 +3366,21 @@
             }, true);
 
             document.addEventListener('visibilitychange', function() {
-                if (document.hidden) { forceEndAllDrags(); } else { setTimeout(forceEndAllDrags, 50); }
+                if (document.hidden) {
+                    forceEndAllDrags();
+                } else {
+                    setTimeout(forceEndAllDrags, 50);
+                }
             });
-            window.addEventListener('beforeunload', forceEndAllDrags);
-            window.addEventListener('load', function() { setTimeout(forceEndAllDrags, 100); });
 
-            // ---------- 布局预设 ----------
+            window.addEventListener('beforeunload', function() {
+                forceEndAllDrags();
+            });
+
+            window.addEventListener('load', function() {
+                setTimeout(forceEndAllDrags, 100);
+            });
+
             function setDefaultPositions() {
                 const w = window.innerWidth,
                     h = window.innerHeight;
@@ -3587,73 +3420,12 @@
                 });
             }
 
-            function setDefaultSimplePositions() {
-                const w = window.innerWidth,
-                    h = window.innerHeight;
-                const clock = document.getElementById('clock');
-                if (clock && !simplePositions['clock']) {
-                    const tw = clock.offsetWidth || 180,
-                        th = clock.offsetHeight || 100;
-                    simplePositions['clock'] = { left: 24, top: 80 };
-                }
-                const quote = document.getElementById('quoteArea');
-                if (quote && !simplePositions['quoteArea']) {
-                    const qw = quote.offsetWidth || 380,
-                        qh = quote.offsetHeight || 90;
-                    simplePositions['quoteArea'] = { left: w - qw - 24, top: h - qh - 24 };
-                }
-                const links = document.getElementById('linksGrid');
-                if (links && !simplePositions['linksGrid']) {
-                    const lw = links.offsetWidth || 440,
-                        lh = links.offsetHeight || 90;
-                    simplePositions['linksGrid'] = { left: 24, top: h - lh - 24 };
-                }
-            }
-
-            function applySimplePositions() {
-                simpleDraggables.forEach(item => {
-                    const id = item.id;
-                    if (simplePositions[id]) {
-                        item.style.left = simplePositions[id].left + 'px';
-                        item.style.top = simplePositions[id].top + 'px';
-                    }
-                });
-            }
-
-            function showSimpleElements() {
-                const clock = document.getElementById('clock');
-                const quote = document.getElementById('quoteArea');
-                const search = document.getElementById('searchWrapper');
-                const links = document.getElementById('linksGrid');
-                if (clock) clock.style.display = 'block';
-                if (quote) quote.style.display = 'block';
-                if (search) search.style.display = 'none';
-                if (links) links.style.display = 'flex';
-                const toggleBtn = document.querySelector('.search-toggle-btn');
-                if (toggleBtn) toggleBtn.classList.remove('hidden');
-                searchActive = false;
-            }
-
-            function hideSimpleElements() {
-                const clock = document.getElementById('clock');
-                const quote = document.getElementById('quoteArea');
-                const search = document.getElementById('searchWrapper');
-                const links = document.getElementById('linksGrid');
-                if (clock) clock.style.display = 'none';
-                if (quote) quote.style.display = 'none';
-                if (search) search.style.display = 'none';
-                if (links) links.style.display = 'none';
-                searchActive = false;
-            }
-
             // ---------- 模式切换 ----------
             modeSwitch.addEventListener('click', function() {
                 isWallpaperMode = !isWallpaperMode;
                 this.classList.toggle('active', isWallpaperMode);
                 modeLabel.textContent = isWallpaperMode ? '壁纸' : '简洁';
-                forceEndAllDrags();
                 if (isWallpaperMode) {
-                    hideSimpleElements();
                     body.classList.add('wallpaper-mode');
                     if (!currentWallpaperType || !currentWallpaperId) applyWallpaper('static', 's1');
                     else applyWallpaper(currentWallpaperType, currentWallpaperId);
@@ -3661,11 +3433,7 @@
                     document.querySelectorAll('.type-btn').forEach(b => {
                         b.classList.toggle('active', b.dataset.type === currentWallpaperType);
                     });
-                    // 应用透明度
-                    updateElementOpacity(glassSearchEl, searchOpacityRange.value);
-                    updateElementOpacity(glassLinksEl, linksOpacityRange.value);
-                    updateElementOpacity(wallpaperTimeEl, timeOpacityRange.value);
-                    updateElementOpacity(wallpaperQuoteEl, quoteOpacityRange.value);
+                    updateGlassOpacity(glassRange.value);
                     draggableItems.forEach(item => {
                         if (item.id === 'glassSearch') item.style.display = 'flex';
                         else if (item.id === 'glassLinks') item.style.display = 'flex';
@@ -3682,50 +3450,235 @@
                     draggableItems.forEach(item => { item.style.display = 'none'; });
                     settingsPanel.classList.remove('open');
                     settingsOpen = false;
-                    showSimpleElements();
-                    setDefaultSimplePositions();
-                    applySimplePositions();
                 }
             });
 
             window.addEventListener('resize', function() {
-                if (isWallpaperMode) {
-                    draggableItems.forEach(item => {
-                        const rect = item.getBoundingClientRect();
-                        const w = window.innerWidth,
-                            h = window.innerHeight;
-                        let left = parseFloat(item.style.left) || rect.left;
-                        let top = parseFloat(item.style.top) || rect.top;
-                        if (left + rect.width > w) left = w - rect.width - 10;
-                        if (top + rect.height > h) top = h - rect.height - 10;
-                        if (left < 0) left = 0;
-                        if (top < 0) top = 0;
-                        item.style.left = left + 'px';
-                        item.style.top = top + 'px';
-                        const id = item.id;
-                        if (id) positions[id] = { left, top };
-                    });
-                } else {
-                    simpleDraggables.forEach(item => {
-                        const rect = item.getBoundingClientRect();
-                        const w = window.innerWidth,
-                            h = window.innerHeight;
-                        let left = parseFloat(item.style.left) || rect.left;
-                        let top = parseFloat(item.style.top) || rect.top;
-                        if (left + rect.width > w) left = w - rect.width - 10;
-                        if (top + rect.height > h) top = h - rect.height - 10;
-                        if (left < 0) left = 0;
-                        if (top < 0) top = 0;
-                        item.style.left = left + 'px';
-                        item.style.top = top + 'px';
-                        const id = item.id;
-                        if (id) simplePositions[id] = { left, top };
-                    });
+                if (!isWallpaperMode) return;
+                draggableItems.forEach(item => {
+                    const rect = item.getBoundingClientRect();
+                    const w = window.innerWidth,
+                        h = window.innerHeight;
+                    let left = parseFloat(item.style.left) || rect.left;
+                    let top = parseFloat(item.style.top) || rect.top;
+                    if (left + rect.width > w) left = w - rect.width - 10;
+                    if (top + rect.height > h) top = h - rect.height - 10;
+                    if (left < 0) left = 0;
+                    if (top < 0) top = 0;
+                    item.style.left = left + 'px';
+                    item.style.top = top + 'px';
+                    const id = item.id;
+                    if (id) positions[id] = { left, top };
+                });
+            });
+
+            // ================================================================
+            // 10. 简洁模式拖拽（彻底重写，零抖动，全屏范围，跟手）
+            // ================================================================
+            const simpleDragTargets = document.querySelectorAll('.simple-draggable');
+
+            const dragStateMap = new WeakMap();
+            let activeSimpleDrag = null;
+
+            function initSimpleDrag(el) {
+                const state = {
+                    isDragging: false,
+                    startX: 0,
+                    startY: 0,
+                    baseTX: 0,
+                    baseTY: 0,
+                    fixedLeft: 0,
+                    fixedTop: 0,
+                    width: 0,
+                    height: 0,
+                    rafId: null,
+                    pendingX: 0,
+                    pendingY: 0,
+                    locked: false,
+                };
+                dragStateMap.set(el, state);
+
+                // --- 切换锁定（双击） ---
+                el.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
+                    if (state.isDragging) return;
+                    state.locked = !state.locked;
+                    if (state.locked) {
+                        el.classList.add('locked');
+                        el.style.cursor = 'default';
+                        if (activeSimpleDrag === el) endSimpleDrag(el);
+                    } else {
+                        el.classList.remove('locked');
+                        el.style.cursor = 'grab';
+                    }
+                });
+
+                el.addEventListener('pointerdown', function(e) {
+                    if (e.target.closest('input') || e.target.closest('textarea') ||
+                        e.target.closest('a') || e.target.closest('button') ||
+                        e.target.closest('.link-item') || e.target.closest('.add-link-btn') ||
+                        e.target.closest('.search-btn') || e.target.closest('.search-btn-mobile') ||
+                        e.target.closest('.search-btn-end')) {
+                        return;
+                    }
+                    if (isWallpaperMode) return;
+                    if (state.locked) return;
+
+                    if (activeSimpleDrag) {
+                        endSimpleDrag(activeSimpleDrag);
+                    }
+
+                    const rect = el.getBoundingClientRect();
+                    const transform = getElementTransform(el);
+
+                    state.isDragging = false;
+                    state.startX = e.clientX;
+                    state.startY = e.clientY;
+                    state.baseTX = transform.x;
+                    state.baseTY = transform.y;
+                    state.fixedLeft = rect.left - state.baseTX;
+                    state.fixedTop = rect.top - state.baseTY;
+                    state.width = el.offsetWidth || rect.width;
+                    state.height = el.offsetHeight || rect.height;
+
+                    el.setPointerCapture(e.pointerId);
+                    el.style.cursor = 'grabbing';
+                    activeSimpleDrag = el;
+
+                    e.preventDefault();
+                });
+
+                el.addEventListener('pointermove', function(e) {
+                    if (activeSimpleDrag !== el) return;
+                    if (state.locked) return;
+
+                    const dx = e.clientX - state.startX;
+                    const dy = e.clientY - state.startY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist > 6) {
+                        if (!state.isDragging) {
+                            state.isDragging = true;
+                            el.classList.add('dragging-simple');
+                            const rect = el.getBoundingClientRect();
+                            const transform = getElementTransform(el);
+                            state.baseTX = transform.x;
+                            state.baseTY = transform.y;
+                            state.fixedLeft = rect.left - state.baseTX;
+                            state.fixedTop = rect.top - state.baseTY;
+                            state.startX = e.clientX;
+                            state.startY = e.clientY;
+                            e.preventDefault();
+                            return;
+                        }
+
+                        let newTX = state.baseTX + (e.clientX - state.startX);
+                        let newTY = state.baseTY + (e.clientY - state.startY);
+
+                        const maxX = window.innerWidth - state.width - state.fixedLeft;
+                        const minX = -state.fixedLeft;
+                        const maxY = window.innerHeight - state.height - state.fixedTop;
+                        const minY = -state.fixedTop;
+
+                        newTX = Math.max(minX, Math.min(maxX, newTX));
+                        newTY = Math.max(minY, Math.min(maxY, newTY));
+
+                        // ===== 动态调整名言框宽度，实现实时换行 =====
+                        // 仅当元素为 quoteArea 时执行
+                        if (el.id === 'quoteArea') {
+                            const rectNow = el.getBoundingClientRect();
+                            const leftEdge = rectNow.left;
+                            // 最大宽度 420px，最小 200px，右侧留边距 32px
+                            const availWidth = Math.min(420, Math.max(200, window.innerWidth - leftEdge - 32));
+                            el.style.maxWidth = availWidth + 'px';
+                        }
+
+                        applyTransformRAF(el, newTX, newTY, state);
+                        e.preventDefault();
+                    } else {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                el.addEventListener('pointerup', function(e) {
+                    if (activeSimpleDrag !== el) return;
+                    endSimpleDrag(el);
+                    e.preventDefault();
+                });
+
+                el.addEventListener('pointercancel', function(e) {
+                    if (activeSimpleDrag === el) endSimpleDrag(el);
+                });
+            }
+
+            function getElementTransform(el) {
+                let tx = 0,
+                    ty = 0;
+                const style = window.getComputedStyle(el);
+                const transform = style.transform;
+                if (transform && transform !== 'none') {
+                    const matrix = transform.match(/matrix.*\((.+)\)/);
+                    if (matrix) {
+                        const values = matrix[1].split(', ').map(Number);
+                        if (values.length === 6) {
+                            tx = values[4] || 0;
+                            ty = values[5] || 0;
+                        } else if (values.length === 16) {
+                            tx = values[12] || 0;
+                            ty = values[13] || 0;
+                        }
+                    }
+                }
+                return { x: tx, y: ty };
+            }
+
+            function applyTransformRAF(el, x, y, state) {
+                if (state.rafId) {
+                    cancelAnimationFrame(state.rafId);
+                    state.rafId = null;
+                }
+                state.pendingX = x;
+                state.pendingY = y;
+                state.rafId = requestAnimationFrame(() => {
+                    if (el) {
+                        el.style.transform = `translate(${state.pendingX}px, ${state.pendingY}px)`;
+                    }
+                    state.rafId = null;
+                });
+            }
+
+            function endSimpleDrag(el) {
+                if (!el) return;
+                const state = dragStateMap.get(el);
+                if (!state) return;
+                if (state.rafId) {
+                    cancelAnimationFrame(state.rafId);
+                    state.rafId = null;
+                }
+                if (state.isDragging) {
+                    el.classList.remove('dragging-simple');
+                    el.style.cursor = state.locked ? 'default' : 'grab';
+                    state.isDragging = false;
+                }
+                if (activeSimpleDrag === el) activeSimpleDrag = null;
+                const rect = el.getBoundingClientRect();
+                const transform = getElementTransform(el);
+                state.fixedLeft = rect.left - transform.x;
+                state.fixedTop = rect.top - transform.y;
+            }
+
+            simpleDragTargets.forEach(el => {
+                initSimpleDrag(el);
+            });
+
+            document.addEventListener('pointerup', function(e) {
+                if (activeSimpleDrag) {
+                    endSimpleDrag(activeSimpleDrag);
                 }
             });
 
             // ================================================================
-            // 10. 时钟（含秒数）
+            // 11. 时钟
             // ================================================================
             const timeEl = document.getElementById('time');
             const dateEl = document.getElementById('date');
@@ -3736,8 +3689,7 @@
                 const now = new Date();
                 const h = String(now.getHours()).padStart(2, '0');
                 const m = String(now.getMinutes()).padStart(2, '0');
-                const s = String(now.getSeconds()).padStart(2, '0');
-                const timeStr = h + ':' + m + ':' + s;
+                const timeStr = h + ':' + m;
                 const dateStr =
                     `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${'日一二三四五六'[now.getDay()]}`;
                 timeEl.textContent = timeStr;
@@ -3749,7 +3701,7 @@
             updateClock();
 
             // ================================================================
-            // 11. 资源预加载
+            // 12. 资源预加载 (背景图优先)
             // ================================================================
             const preloaded = { blobs: {} };
             let loadedCount = 0;
@@ -3759,8 +3711,7 @@
             function updateProgress() {
                 loadedCount++;
                 const loadingEl = document.querySelector('.start-loading span');
-                if (loadingEl) loadingEl.textContent =
-                    `加载中 ... ${loadedCount}/${totalCount}${failedCount ? ` (失败 ${failedCount})` : ''}`;
+                if (loadingEl) loadingEl.textContent = `加载中 ... ${loadedCount}/${totalCount}${failedCount ? ` (失败 ${failedCount})` : ''}`;
                 if (loadedCount >= totalCount) {
                     console.log('✅ 所有资源预加载完成！');
                     if (loadingEl) loadingEl.textContent = '加载完成 ✦ 点击进入';
@@ -3876,26 +3827,66 @@
             else window.addEventListener('load', function() { setTimeout(preloadAllResources, 100); });
 
             // ================================================================
-            // 12. 初始化
+            // 13. 设置简洁模式默认初始位置（左上、右下、左下）
+            // ================================================================
+            function setDefaultSimplePositions() {
+                const clockArea = document.getElementById('clockArea');
+                const quoteArea = document.getElementById('quoteArea');
+                const bottomArea = document.getElementById('bottomArea');
+
+                // 时间在左上方: 向左移动约 18vw
+                if (clockArea) {
+                    clockArea.style.transform = 'translate(-18vw, 0)';
+                }
+                // 名言在右下角: 向右移动 12vw，向下移动 2vh
+                if (quoteArea) {
+                    quoteArea.style.transform = 'translate(12vw, 2vh)';
+                    // 初始设置 max-width
+                    quoteArea.style.maxWidth = '420px';
+                }
+                // 链接在左下角: 向左移动 18vw
+                if (bottomArea) {
+                    bottomArea.style.transform = 'translate(-18vw, 0)';
+                }
+
+                // 更新各区域的 dragState 中的 baseTX/baseTY，防止拖拽时跳变
+                [clockArea, quoteArea, bottomArea].forEach(el => {
+                    if (!el) return;
+                    const state = dragStateMap.get(el);
+                    if (!state) return;
+                    const t = getElementTransform(el);
+                    state.baseTX = t.x;
+                    state.baseTY = t.y;
+                    const rect = el.getBoundingClientRect();
+                    state.fixedLeft = rect.left - state.baseTX;
+                    state.fixedTop = rect.top - state.baseTY;
+                });
+            }
+
+            if (document.readyState === 'complete') {
+                setTimeout(setDefaultSimplePositions, 50);
+            } else {
+                window.addEventListener('load', function() {
+                    setTimeout(setDefaultSimplePositions, 50);
+                });
+            }
+
+            // ================================================================
+            // 14. 初始化
             // ================================================================
             setDayNight('day');
             body.classList.remove('wallpaper-mode');
             document.getElementById('modeSwitch').classList.remove('active');
             document.getElementById('modeLabel').textContent = '简洁';
             draggableItems.forEach(item => { item.style.display = 'none'; });
-            showSimpleElements();
-            setDefaultSimplePositions();
-            applySimplePositions();
+            updateGlassOpacity(0.7);
 
-            // 初始化透明度显示
-            glassValue.textContent = Math.round(parseFloat(glassRange.value) * 100) + '%';
-            searchOpacityValue.textContent = Math.round(parseFloat(searchOpacityRange.value) * 100) + '%';
-            linksOpacityValue.textContent = Math.round(parseFloat(linksOpacityRange.value) * 100) + '%';
-            timeOpacityValue.textContent = Math.round(parseFloat(timeOpacityRange.value) * 100) + '%';
-            quoteOpacityValue.textContent = Math.round(parseFloat(quoteOpacityRange.value) * 100) + '%';
-
-            console.log('✅ 所有问题已修复：防粘手、夜间壁纸面板黑底白字、壁纸文字白色、透明度调节');
-            console.log('✅ 搜索框拖拽不再粘手，各模式元素彻底隔离');
+            console.log('✅ 新拟态 · 简洁/壁纸模式 · 拖拽彻底修复');
+            console.log('🖱️ 简洁模式：全屏跟手拖拽，边界停稳不弹回');
+            console.log('🖱️ 壁纸模式：双击锁定/解锁，解锁即释放所有拖拽状态，不再粘手');
+            console.log('📐 默认位置：时间左上，名言右下，链接左下');
+            console.log('📐 名言 & 链接左对齐');
+            console.log('📐 简洁名言拖拽时宽度随位置实时变化，自动换行');
         })();
     </script>
 </body>
