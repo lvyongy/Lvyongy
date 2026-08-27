@@ -1956,7 +1956,7 @@
             }
         }
 
-        /* ===== 开始页 ===== */
+        /* ===== 开始页（含雨滴特效层） ===== */
         #startPage {
             position: fixed;
             top: 0;
@@ -1978,20 +1978,35 @@
                 transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             will-change: opacity, transform;
             cursor: pointer;
+            overflow: hidden;
         }
-        #startPage.loading .start-subtitle {
-            display: none;
+        /* 雨滴canvas容器 — 在背景之上，内容之下 */
+        #rainCanvasContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
         }
-        #startPage.loading .start-loading {
-            display: flex;
-        }
-        #startPage:not(.loading) .start-loading {
-            display: none;
-        }
-        #startPage:not(.loading) .start-subtitle {
+        #rainCanvasContainer canvas {
             display: block;
+            width: 100% !important;
+            height: 100% !important;
         }
-        .start-loading {
+        /* 纹理图片隐藏 */
+        #textureImage {
+            display: none;
+        }
+        /* 开始页内容层 (z-index高于canvas) */
+        .start-loading,
+        .start-subtitle {
+            position: relative;
+            z-index: 2;
+            pointer-events: none;
+        }
+        #startPage .start-loading {
             display: none;
             flex-direction: column;
             align-items: center;
@@ -2007,6 +2022,12 @@
             margin-top: auto;
             margin-bottom: 5%;
             pointer-events: none;
+        }
+        #startPage.loading .start-loading {
+            display: flex;
+        }
+        #startPage:not(.loading) .start-loading {
+            display: none;
         }
         .start-loading .spinner {
             width: 28px;
@@ -2052,6 +2073,9 @@
             margin-top: auto;
             margin-bottom: 5%;
             pointer-events: none;
+        }
+        #startPage:not(.loading) .start-subtitle {
+            display: block;
         }
         @keyframes breath {
             0% {
@@ -2377,6 +2401,10 @@
                 width: 16px;
                 height: 16px;
             }
+            #startPage .start-subtitle {
+                font-size: 1.4rem;
+                letter-spacing: 4px;
+            }
         }
         @media (max-width: 400px) {
             .simple-mode {
@@ -2514,6 +2542,10 @@
                 width: 14px;
                 height: 14px;
             }
+            #startPage .start-subtitle {
+                font-size: 1.2rem;
+                letter-spacing: 3px;
+            }
         }
 
         .hidden {
@@ -2529,12 +2561,18 @@
 
 <body>
 
-    <!-- 开始页（雨丝已独立移出，保留占位） -->
+    <!-- ===== 开始页（含雨滴玻璃特效） ===== -->
     <div id="startPage" class="loading">
+        <!-- 雨滴canvas容器（z-index:1，位于背景之上） -->
+        <div id="rainCanvasContainer"></div>
+        <!-- 纹理图片（隐藏，供Curtains使用） -->
+        <img id="textureImage" src="images/background.png" crossorigin="anonymous" style="display:none;" />
+        <!-- 加载动画（z-index:2） -->
         <div class="start-loading">
             <div class="spinner"></div>
             <span>加载中 ...</span>
         </div>
+        <!-- 点击进入文字（z-index:2） -->
         <div class="start-subtitle">✦ 点击任意处开启 ✦</div>
     </div>
 
@@ -2655,6 +2693,10 @@
     <!-- Toast -->
     <div id="toastContainer"></div>
 
+    <!-- 引入 Curtains.js -->
+    <script src="https://www.curtainsjs.com/build/curtains.min.js">
+    </script>
+
     <script>
         (function() {
             'use strict';
@@ -2692,9 +2734,7 @@
 
             // 在 rain-container 中生成雨滴（从 startPage 迁移过来）
             function buildRaindrops() {
-                // 清空
                 rainContainer.innerHTML = '';
-                // 从 startPage 取雨滴数据（硬编码，与之前一致）
                 const raindropConfigs = [
                     { left: 10, duration: 2.4, delay: 0.2, height: 60 },
                     { left: 22, duration: 3.0, delay: 0.8, height: 80 },
@@ -2721,27 +2761,248 @@
             }
             buildRaindrops();
 
-            function enterSite(e) {
-                if (startPageHidden) return;
-                if (!startPageReady) return;
-                startPageHidden = true;
-                // 开始页淡出
-                startPage.classList.add('fade-out');
-                // 雨丝容器继续显示，2秒后淡出移除
-                setTimeout(function() {
-                    startPage.classList.add('hide');
-                    // 雨丝淡出
-                    rainContainer.style.transition = 'opacity 1.2s ease';
-                    rainContainer.style.opacity = '0';
-                    setTimeout(function() {
-                        rainContainer.style.display = 'none';
-                    }, 1200);
-                }, 1200);
+            // ================================================================
+            // 0c. 雨滴玻璃特效 (Curtains.js) — 集成到 #startPage
+            // ================================================================
+            let rainCurtains = null;
+            let rainPlane = null;
+            let rainInitialized = false;
+
+            // 着色器代码 (修改版：雨量减少、速度减慢)
+            const rainVertexShader = `
+                #ifdef GL_ES
+                precision mediump float;
+                #endif
+
+                attribute vec3 aVertexPosition;
+                attribute vec2 aTextureCoord;
+
+                uniform mat4 uMVMatrix;
+                uniform mat4 uPMatrix;
+                uniform mat4 dispImageMatrix;
+
+                varying vec3 vVertexPosition;
+                varying vec2 vTextureCoord;
+
+                void main() {
+                    vec3 vertexPosition = aVertexPosition;
+                    gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+                    vTextureCoord = (dispImageMatrix * vec4(aTextureCoord, 0., 1.)).xy;
+                    vVertexPosition = vertexPosition;
+                }
+            `;
+
+            const rainFragmentShader = `
+                #ifdef GL_ES
+                precision mediump float;
+                #endif
+
+                #define PI2 6.28318530718
+                #define PI  3.14159265359
+                #define S(a,b,n) smoothstep(a,b,n)
+
+                varying vec3 vVertexPosition;
+                varying vec2 vTextureCoord;
+
+                uniform float uTime;
+                uniform vec2  uReso;
+
+                uniform sampler2D dispImage;
+
+                // ---- 噪声 ----
+                float N12(vec2 p) {
+                    p = fract(p * vec2(123.34, 345.45));
+                    p += dot(p, p + 34.345);
+                    return fract(p.x * p.y);
+                }
+
+                // ---- 单层雨滴 (密度调高 → 雨滴更稀疏) ----
+                vec3 Layer(vec2 uv0, float t) {
+                    vec2 asp = vec2(2., 1.);
+                    // 密度从 3.0 提高到 4.5，使雨滴更稀疏
+                    vec2 uv1 = uv0 * 4.5 * asp;
+                    uv1.y += t * 0.25;
+
+                    vec2 gv = fract(uv1) - 0.5;
+                    vec2 id = floor(uv1);
+
+                    float n = N12(id);
+                    t += n * PI2;
+
+                    float w = uv0.y * 10.0;
+                    float x = (n - 0.5) * 0.8;
+                    x += (0.4 - abs(x)) * sin(3.0 * w) * pow(sin(w), 6.0) * 0.45;
+
+                    float y = -sin(t + sin(t + sin(t) * 0.5)) * (0.5 - 0.06);
+                    y -= (gv.x - x) * (gv.x - x);
+
+                    // 雨滴大小阈值调小 → 雨滴更小更淡
+                    vec2 dropPos = (gv - vec2(x, y)) / asp;
+                    float drop = S(0.025, 0.015, length(dropPos));
+
+                    vec2 trailPos = (gv - vec2(x, t * 0.25)) / asp;
+                    trailPos.y = (fract(trailPos.y * 8.0) - 0.5) / 8.0;
+                    float trail = S(0.02, 0.015, length(trailPos));
+
+                    float fogTrail = S(-0.05, 0.05, dropPos.y);
+                    fogTrail *= S(0.5, y, gv.y);
+                    trail *= fogTrail;
+                    fogTrail *= S(0.03, 0.015, abs(dropPos.x));
+
+                    vec2 off = drop * dropPos + trail * trailPos;
+                    return vec3(off, fogTrail);
+                }
+
+                // ---- 主渲染 ----
+                void main() {
+                    float dist = 5.0;
+                    float blurSize = 5.0;
+                    // 速度从 0.03 降到 0.012，滑落更慢
+                    float t = mod(uTime * 0.012, 7200.0);
+
+                    vec2 uv = vTextureCoord;
+
+                    // 雨量从 4 层减到 2 层
+                    vec3 drops = Layer(uv, t);
+                    drops += Layer(uv * 1.35 + 1.54, t);
+
+                    float blur = blurSize * 7.0 * (1.0 - drops.z);
+                    vec4 col = vec4(0.0);
+
+                    // 采样数从 32 减到 20，提升性能
+                    int numSamples = 20;
+                    float a = N12(uv) * PI2;
+
+                    blur *= 0.0005;
+                    uv += drops.xy * dist;
+
+                    for (int n = 0; n < 20; n++) {
+                        vec2 off = vec2(sin(a), cos(a)) * blur;
+                        float d = fract(sin(float(n + 1) * 546.0) * 5424.0);
+                        d = sqrt(d);
+                        off *= d;
+                        col += texture2D(dispImage, uv + off);
+                        a++;
+                    }
+
+                    col /= float(numSamples);
+                    gl_FragColor = col;
+                }
+            `;
+
+            function initRainEffect() {
+                if (rainInitialized) return;
+                const container = document.getElementById('rainCanvasContainer');
+                const textureImg = document.getElementById('textureImage');
+                if (!container || !textureImg) return;
+
+                // 确保图片已加载
+                if (!textureImg.complete || textureImg.naturalWidth === 0) {
+                    // 图片尚未加载，等待
+                    textureImg.onload = function() {
+                        initRainEffect();
+                    };
+                    return;
+                }
+
+                try {
+                    // 创建 Curtains 实例，绑定到容器
+                    rainCurtains = new Curtains({
+                        container: 'rainCanvasContainer',
+                        watchScroll: false,
+                        pixelRatio: Math.min(window.devicePixelRatio || 1, 2), // 限制像素比提升性能
+                    });
+
+                    // 创建平面
+                    const planeParams = {
+                        vertexShader: rainVertexShader,
+                        fragmentShader: rainFragmentShader,
+                        widthSegments: 20,
+                        heightSegments: 20,
+                        uniforms: {
+                            time: {
+                                name: 'uTime',
+                                type: '1f',
+                                value: 0,
+                            },
+                            resolution: {
+                                name: 'uReso',
+                                type: '2f',
+                                value: [window.innerWidth, window.innerHeight],
+                            },
+                        },
+                        // 使用 data-sampler 自动绑定纹理
+                        // 但 Curtains 通过 data-sampler 属性查找，我们手动绑定
+                    };
+
+                    // 创建一个包含 img 的 plane 元素
+                    const planeEl = document.createElement('div');
+                    planeEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+                    planeEl.setAttribute('data-sampler', 'dispImage');
+                    // 将 textureImg 移动到 planeEl 中
+                    planeEl.appendChild(textureImg);
+                    container.appendChild(planeEl);
+
+                    rainPlane = rainCurtains.addPlane(planeEl, planeParams);
+
+                    if (rainPlane) {
+                        rainPlane.onRender(() => {
+                            rainPlane.uniforms.time.value++;
+                            rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
+                        });
+                        rainInitialized = true;
+                        console.log('🌧️ 雨滴玻璃特效已启动 (雨量减少, 速度减慢)');
+                    } else {
+                        console.warn('⚠️ 雨滴平面初始化失败');
+                        // 清理
+                        if (rainCurtains) {
+                            rainCurtains.dispose();
+                            rainCurtains = null;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('⚠️ 雨滴特效初始化异常:', e);
+                    if (rainCurtains) {
+                        rainCurtains.dispose();
+                        rainCurtains = null;
+                    }
+                }
             }
-            startPage.addEventListener('click', enterSite);
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !startPageHidden && startPageReady) enterSite(e);
-            });
+
+            // 销毁雨滴特效
+            function destroyRainEffect() {
+                if (rainPlane) {
+                    try {
+                        rainPlane.remove();
+                    } catch (e) {}
+                    rainPlane = null;
+                }
+                if (rainCurtains) {
+                    try {
+                        rainCurtains.dispose();
+                    } catch (e) {}
+                    rainCurtains = null;
+                }
+                rainInitialized = false;
+                // 清理容器
+                const container = document.getElementById('rainCanvasContainer');
+                if (container) {
+                    container.innerHTML = '';
+                    // 重新添加纹理图片（以便后续重新初始化）
+                    const img = document.getElementById('textureImage');
+                    if (img && !container.contains(img)) {
+                        container.appendChild(img);
+                    }
+                }
+                console.log('🌧️ 雨滴特效已销毁');
+            }
+
+            // 窗口 resize 时更新分辨率
+            function handleRainResize() {
+                if (rainPlane) {
+                    rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
+                }
+            }
 
             // ================================================================
             // 1. 预置链接
@@ -2928,7 +3189,6 @@
                             if (isWallpaperTransitioning) onLoaded();
                         }, 2000);
                     }
-                    // 更新预览高亮（仅当预览网格存在时）
                     document.querySelectorAll('.wp-preview-item').forEach(el => {
                         el.classList.toggle('active', el.dataset.id === id && el.dataset.type === type);
                     });
@@ -3479,7 +3739,7 @@
             });
 
             // ================================================================
-            // 7. 设置面板 - 模块化设计（修复：静态/动态切换不关闭面板）
+            // 7. 设置面板 - 模块化设计
             // ================================================================
             const settingsToggleBtn = document.getElementById('wallpaperSettingsBtn');
             const settingsPanel = document.getElementById('settingsPanel');
@@ -3603,7 +3863,6 @@
                     draggableItems.forEach(item => { item.style.display = 'none'; });
                 }
                 applyElemState();
-                // 重新渲染设置面板（保持打开状态）
                 const wasOpen = settingsOpen;
                 renderSettings();
                 if (wasOpen) {
@@ -3628,9 +3887,6 @@
                 }
             }
 
-            // ================================================================
-            // 独立的预览网格更新函数（用于类型切换，不重新渲染整个面板）
-            // ================================================================
             function updateWallpaperPreview(type, id) {
                 const previewGrid = document.getElementById('wallpaperPreviewGrid');
                 if (!previewGrid) return;
@@ -3666,150 +3922,137 @@
                     check.className = 'check-mark';
                     check.textContent = '✓';
                     el.appendChild(check);
-                    // 点击预览项切换壁纸
                     el.addEventListener('click', function() {
                         applyWallpaper(type, wp.id);
-                        // 更新类型按钮 active
                         document.querySelectorAll('.type-btn').forEach(b => {
                             b.classList.toggle('active', b.dataset.type === type);
                         });
-                        // 更新预览项高亮
                         document.querySelectorAll('.wp-preview-item').forEach(item => {
                             item.classList.toggle('active', item.dataset.id === wp.id &&
                                 item.dataset.type === type);
                         });
-                        // 不重新渲染整个面板
                     });
                     previewGrid.appendChild(el);
                 });
             }
 
-            // ================================================================
-            // 渲染设置面板
-            // ================================================================
             function renderSettings() {
                 const isWp = isWallpaperMode;
                 let html = '';
 
-                // ---- 模块1: 模式切换 ----
                 html += `
-                    <div class="settings-module" data-module="mode">
-                        <div class="settings-module-header" data-module-toggle="mode">
-                            <span>✦ 模式</span>
-                            <span class="arrow ${moduleStates.mode ? '' : 'collapsed'}">▾</span>
-                        </div>
-                        <div class="settings-module-body ${moduleStates.mode ? '' : 'collapsed'}">
-                            <div class="setting-row">
-                                <div class="mode-switch-container">
-                                    <div class="mode-switch-big ${isWp ? 'wallpaper' : ''}" id="modeSwitchBig">
-                                        <span class="mode-label-left ${!isWp ? 'active' : ''}">阴阳</span>
-                                        <span class="mode-label-right ${isWp ? 'active' : ''}">修仙</span>
-                                        <div class="slider-track"></div>
-                                    </div>
-                                </div>
+                        <div class="settings-module" data-module="mode">
+                            <div class="settings-module-header" data-module-toggle="mode">
+                                <span>✦ 模式</span>
+                                <span class="arrow ${moduleStates.mode ? '' : 'collapsed'}">▾</span>
                             </div>
-                        </div>
-                    </div>
-                `;
-
-                // ---- 模块2: 修仙 (仅修仙模式显示) ----
-                if (isWp) {
-                    html += `
-                        <div class="settings-module" data-module="wallpaper">
-                            <div class="settings-module-header" data-module-toggle="wallpaper">
-                                <span>🏔 修仙</span>
-                                <span class="arrow ${moduleStates.wallpaper ? '' : 'collapsed'}">▾</span>
-                            </div>
-                            <div class="settings-module-body ${moduleStates.wallpaper ? '' : 'collapsed'}">
+                            <div class="settings-module-body ${moduleStates.mode ? '' : 'collapsed'}">
                                 <div class="setting-row">
-                                    <label>类型</label>
-                                    <div class="type-btns">
-                                        <button class="type-btn ${currentWallpaperType === 'static' ? 'active' : ''}" data-type="static">静态</button>
-                                        <button class="type-btn ${currentWallpaperType === 'dynamic' ? 'active' : ''}" data-type="dynamic">动态</button>
-                                    </div>
-                                </div>
-                                <div class="setting-row">
-                                    <label>选择仙境</label>
-                                    <div class="wallpaper-scroll-container">
-                                        <div class="wp-grid" id="wallpaperPreviewGrid"></div>
+                                    <div class="mode-switch-container">
+                                        <div class="mode-switch-big ${isWp ? 'wallpaper' : ''}" id="modeSwitchBig">
+                                            <span class="mode-label-left ${!isWp ? 'active' : ''}">阴阳</span>
+                                            <span class="mode-label-right ${isWp ? 'active' : ''}">修仙</span>
+                                            <div class="slider-track"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     `;
+
+                if (isWp) {
+                    html += `
+                            <div class="settings-module" data-module="wallpaper">
+                                <div class="settings-module-header" data-module-toggle="wallpaper">
+                                    <span>🏔 修仙</span>
+                                    <span class="arrow ${moduleStates.wallpaper ? '' : 'collapsed'}">▾</span>
+                                </div>
+                                <div class="settings-module-body ${moduleStates.wallpaper ? '' : 'collapsed'}">
+                                    <div class="setting-row">
+                                        <label>类型</label>
+                                        <div class="type-btns">
+                                            <button class="type-btn ${currentWallpaperType === 'static' ? 'active' : ''}" data-type="static">静态</button>
+                                            <button class="type-btn ${currentWallpaperType === 'dynamic' ? 'active' : ''}" data-type="dynamic">动态</button>
+                                        </div>
+                                    </div>
+                                    <div class="setting-row">
+                                        <label>选择仙境</label>
+                                        <div class="wallpaper-scroll-container">
+                                            <div class="wp-grid" id="wallpaperPreviewGrid"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                 }
 
-                // ---- 模块3: 元素控制 ----
                 const defs = isWp ? elemDefs.wallpaper : elemDefs.simple;
                 let elemHtml = '';
                 defs.forEach(def => {
                     const state = elemState[def.id] || { visible: true, opacity: 1 };
                     elemHtml += `
-                        <div class="elem-control" data-elem-id="${def.id}">
-                            <span class="elem-name">${def.name}</span>
-                            <button class="elem-toggle ${state.visible ? 'active' : ''}"><span class="thumb"></span></button>
-                            <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${state.opacity}" /></div>
-                            <span class="elem-opacity-value">${Math.round(state.opacity*100)}%</span>
-                        </div>
-                    `;
+                            <div class="elem-control" data-elem-id="${def.id}">
+                                <span class="elem-name">${def.name}</span>
+                                <button class="elem-toggle ${state.visible ? 'active' : ''}"><span class="thumb"></span></button>
+                                <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${state.opacity}" /></div>
+                                <span class="elem-opacity-value">${Math.round(state.opacity*100)}%</span>
+                            </div>
+                        `;
                 });
                 html += `
-                    <div class="settings-module" data-module="elements">
-                        <div class="settings-module-header" data-module-toggle="elements">
-                            <span>⊞ 元素控制</span>
-                            <span class="arrow ${moduleStates.elements ? '' : 'collapsed'}">▾</span>
-                        </div>
-                        <div class="settings-module-body ${moduleStates.elements ? '' : 'collapsed'}">
-                            <div class="setting-row">
-                                <div id="elemControlList">${elemHtml}</div>
+                        <div class="settings-module" data-module="elements">
+                            <div class="settings-module-header" data-module-toggle="elements">
+                                <span>⊞ 元素控制</span>
+                                <span class="arrow ${moduleStates.elements ? '' : 'collapsed'}">▾</span>
+                            </div>
+                            <div class="settings-module-body ${moduleStates.elements ? '' : 'collapsed'}">
+                                <div class="setting-row">
+                                    <div id="elemControlList">${elemHtml}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    `;
 
-                // ---- 模块4: 经典语录管理 ----
                 let quoteHtml = '';
                 quotes.forEach((q, i) => {
                     quoteHtml += `
-                        <div class="quote-item" data-index="${i}">
-                            <span class="q-text">${q.text}</span>
-                            <span class="q-author">— ${q.author}</span>
-                            <div class="q-actions">
-                                <button class="edit-btn" data-index="${i}">✎</button>
-                                <button class="del-btn" data-index="${i}">✕</button>
+                            <div class="quote-item" data-index="${i}">
+                                <span class="q-text">${q.text}</span>
+                                <span class="q-author">— ${q.author}</span>
+                                <div class="q-actions">
+                                    <button class="edit-btn" data-index="${i}">✎</button>
+                                    <button class="del-btn" data-index="${i}">✕</button>
+                                </div>
+                            </div>
+                        `;
+                });
+                html += `
+                        <div class="settings-module" data-module="quotes">
+                            <div class="settings-module-header" data-module-toggle="quotes">
+                                <span>❝ 经典语录</span>
+                                <span class="arrow ${moduleStates.quotes ? '' : 'collapsed'}">▾</span>
+                            </div>
+                            <div class="settings-module-body ${moduleStates.quotes ? '' : 'collapsed'}">
+                                <div class="setting-row">
+                                    <div class="quote-manager" id="quoteManager">${quoteHtml}</div>
+                                    <div class="quote-add-form">
+                                        <input type="text" id="newQuoteText" placeholder="语录内容" />
+                                        <input type="text" id="newQuoteAuthor" placeholder="作者" />
+                                        <button id="addQuoteBtn">添加</button>
+                                    </div>
+                                </div>
+                                <div class="setting-row">
+                                    <div class="interval-control">
+                                        <label>切换间隔（秒）</label>
+                                        <input type="number" id="intervalInput" min="1" max="300" value="${Math.round(quoteInterval/1000)}" />
+                                        <span style="font-size:0.6rem;opacity:0.4;">秒</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `;
-                });
-                html += `
-                    <div class="settings-module" data-module="quotes">
-                        <div class="settings-module-header" data-module-toggle="quotes">
-                            <span>❝ 经典语录</span>
-                            <span class="arrow ${moduleStates.quotes ? '' : 'collapsed'}">▾</span>
-                        </div>
-                        <div class="settings-module-body ${moduleStates.quotes ? '' : 'collapsed'}">
-                            <div class="setting-row">
-                                <div class="quote-manager" id="quoteManager">${quoteHtml}</div>
-                                <div class="quote-add-form">
-                                    <input type="text" id="newQuoteText" placeholder="语录内容" />
-                                    <input type="text" id="newQuoteAuthor" placeholder="作者" />
-                                    <button id="addQuoteBtn">添加</button>
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <div class="interval-control">
-                                    <label>切换间隔（秒）</label>
-                                    <input type="number" id="intervalInput" min="1" max="300" value="${Math.round(quoteInterval/1000)}" />
-                                    <span style="font-size:0.6rem;opacity:0.4;">秒</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
 
                 settingsDynamic.innerHTML = html;
-
-                // ---- 绑定事件 ----
 
                 document.querySelectorAll('[data-module-toggle]').forEach(header => {
                     header.addEventListener('click', function(e) {
@@ -3818,7 +4061,7 @@
                         if (moduleStates[moduleName] !== undefined) {
                             moduleStates[moduleName] = !moduleStates[moduleName];
                             const body = this.closest('.settings-module').querySelector(
-                            '.settings-module-body');
+                                '.settings-module-body');
                             const arrow = this.querySelector('.arrow');
                             if (body) body.classList.toggle('collapsed', !moduleStates[moduleName]);
                             if (arrow) arrow.classList.toggle('collapsed', !moduleStates[moduleName]);
@@ -3835,10 +4078,9 @@
                     });
                 }
 
-                // ★★★ 核心修复：类型按钮点击 → 只更新预览网格，不重新渲染整个面板 ★★★
                 document.querySelectorAll('.type-btn').forEach(btn => {
                     btn.addEventListener('click', function(e) {
-                        e.stopPropagation(); // 阻止冒泡，防止外部点击关闭面板
+                        e.stopPropagation();
                         document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
                         this.classList.add('active');
                         const type = this.dataset.type;
@@ -3850,18 +4092,15 @@
                                 currentWallpaperId = items[0].id;
                             }
                         }
-                        // ★ 只更新预览网格，不调用 renderSettings()
                         updateWallpaperPreview(type, currentWallpaperId);
                         saveAllSettings();
                     });
                 });
 
-                // 预览网格初始化（仅当修仙模式且面板打开时）
                 if (isWp) {
                     updateWallpaperPreview(currentWallpaperType, currentWallpaperId);
                 }
 
-                // 元素控制事件
                 document.querySelectorAll('.elem-control').forEach(row => {
                     const id = row.dataset.elemId;
                     const state = elemState[id];
@@ -3888,7 +4127,6 @@
                     });
                 });
 
-                // 语录管理事件
                 const manager = document.getElementById('quoteManager');
                 if (manager) {
                     manager.querySelectorAll('.edit-btn').forEach(btn => {
@@ -4922,12 +5160,13 @@
             updateClock();
 
             // ================================================================
-            // 12. 资源预加载
+            // 12. 资源预加载 + 雨滴初始化
             // ================================================================
             const preloaded = { blobs: {} };
             let loadedCount = 0;
             let totalCount = 0;
             let failedCount = 0;
+            let rainInitAttempted = false;
 
             function updateProgress() {
                 loadedCount++;
@@ -4935,6 +5174,11 @@
                 if (loadingEl) loadingEl.textContent = `加载中 ... ${loadedCount}/${totalCount}${failedCount ? ` (失败 ${failedCount})` : ''}`;
                 if (loadedCount >= totalCount) {
                     if (loadingEl) loadingEl.textContent = '加载完成 ✦ 点击进入';
+                    // 所有资源加载完成，初始化雨滴特效
+                    if (!rainInitAttempted) {
+                        rainInitAttempted = true;
+                        setTimeout(initRainEffect, 300);
+                    }
                 }
             }
 
@@ -5031,13 +5275,44 @@
                     }
                     updateProgress();
                 }
+
+                // 如果某些原因没有触发初始化，兜底
+                if (!rainInitAttempted) {
+                    rainInitAttempted = true;
+                    setTimeout(initRainEffect, 500);
+                }
             }
 
-            if (document.readyState === 'complete') setTimeout(preloadAllResources, 100);
-            else window.addEventListener('load', function() { setTimeout(preloadAllResources, 100); });
+            // ================================================================
+            // 13. 开始页点击进入 + 雨滴销毁
+            // ================================================================
+            function enterSite(e) {
+                if (startPageHidden) return;
+                if (!startPageReady) return;
+                startPageHidden = true;
+                startPage.classList.add('fade-out');
+                // 销毁雨滴特效（释放资源）
+                setTimeout(function() {
+                    destroyRainEffect();
+                }, 300);
+                // 雨丝淡出
+                setTimeout(function() {
+                    startPage.classList.add('hide');
+                    rainContainer.style.transition = 'opacity 1.2s ease';
+                    rainContainer.style.opacity = '0';
+                    setTimeout(function() {
+                        rainContainer.style.display = 'none';
+                    }, 1200);
+                }, 1200);
+            }
+
+            startPage.addEventListener('click', enterSite);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !startPageHidden && startPageReady) enterSite(e);
+            });
 
             // ================================================================
-            // 13. 综合保存/加载
+            // 14. 综合保存/加载
             // ================================================================
             function saveAllSettings() {
                 try { localStorage.setItem('nightMode', JSON.stringify(currentMode === 'night')); } catch (e) {}
@@ -5140,8 +5415,11 @@
             }
 
             // ================================================================
-            // 14. 初始化
+            // 15. 初始化
             // ================================================================
+            if (document.readyState === 'complete') setTimeout(preloadAllResources, 100);
+            else window.addEventListener('load', function() { setTimeout(preloadAllResources, 100); });
+
             loadAllSettings();
 
             if (!isWallpaperMode) {
@@ -5153,6 +5431,7 @@
             });
 
             window.addEventListener('resize', function() {
+                handleRainResize();
                 draggableItems.forEach(item => {
                     if (item.style.display !== 'none') {
                         const rect = item.getBoundingClientRect();
@@ -5188,14 +5467,12 @@
                 });
             });
 
-            console.log('✅ 小永子首页 - 修仙/阴阳版');
-            console.log('🖱️ 右键锁定/解锁所有元素（锁定时仍可搜索）');
-            console.log('⚙️ 点击齿轮打开设置 (模块化可折叠)');
-            console.log('📱 移动端独立位置存储，不干扰PC');
+            console.log('✅ 小永子首页 - 修仙/阴阳版 + 雨滴玻璃特效');
+            console.log('🌧️ 雨量已减少 (2层, 密度4.5) · 速度已减慢 (0.012)');
+            console.log('🖱️ 右键锁定/解锁所有元素');
+            console.log('⚙️ 点击齿轮打开设置');
+            console.log('📱 移动端独立位置存储');
             console.log('🎵 双击屏幕空白处切换播放器');
-            console.log('🖼️ 切换壁纸类型不自动换壁纸，点击预览才换');
-            console.log('💾 所有设置自动保存到 localStorage');
-            console.log('🌧️ 雨丝效果独立于开始页，进入首页后继续显示2秒');
 
         })();
     </script>
