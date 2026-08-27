@@ -1981,15 +1981,15 @@
             overflow: hidden;
         }
         /* 雨滴canvas容器 — 在背景之上，内容之下 */
-        #rainCanvasContainer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
+#rainCanvasContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;   /* 必须显式设置高度，而非仅依赖 position */
+    z-index: 1;
+    pointer-events: none;
+}
         #rainCanvasContainer canvas {
             display: block;
             width: 100% !important;
@@ -2943,7 +2943,15 @@
                     planeEl.appendChild(textureImg);
                     container.appendChild(planeEl);
 
-                    rainPlane = rainCurtains.addPlane(planeEl, planeParams);
+                    rainPlane = new Plane(rainCurtains, planeEl, {
+    vertexShader: rainVertexShader,
+    fragmentShader: rainFragmentShader,
+    uniforms: {
+        uTime: { name: "uTime", type: "1f", value: 0 },
+        uReso: { name: "uReso", type: "2f", value: [window.innerWidth, window.innerHeight] },
+        uSampler0: { name: "uSampler0", type: "sampler2D" } // 纹理采样器需在uniforms中声明
+    }
+});
 
                     if (rainPlane) {
                         rainPlane.onRender(() => {
