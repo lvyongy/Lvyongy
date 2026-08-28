@@ -7,7 +7,7 @@
     <title>小永子 · 灵境</title>
     <style>
         /* ================================================================
-           1. 全局重置与变量 (移动端优先)
+           1. 全局重置与变量 (完整版)
            ================================================================ */
         *,
         *::before,
@@ -22,6 +22,8 @@
             --shadow-dark: #c8ccd0;
             --input-bg: #e8eaed;
             --link-bg: #e8eaed;
+            --link-shadow-light: #ffffff;
+            --link-shadow-dark: #c8ccd0;
             --rope-color: #333;
             --handle-bg: #f0f2f5;
             --handle-border: #b0b4b8;
@@ -39,7 +41,6 @@
             --wallpaper-text-secondary: rgba(255, 255, 255, 0.7);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-top: env(safe-area-inset-top, 0px);
-            /* 移动端触控优化 */
             --touch-size: 44px;
         }
         html,
@@ -89,10 +90,6 @@
             background-image: none !important;
             background-color: #000;
         }
-
-        /* ================================================================
-           2. 基础组件 & 工具类
-           ================================================================ */
         .hidden {
             display: none !important;
         }
@@ -100,9 +97,7 @@
             pointer-events: none !important;
         }
 
-        /* ================================================================
-           3. 开始页 (带雨滴特效)
-           ================================================================ */
+        /* ===== 开始页 & 雨滴 ===== */
         #startPage {
             position: fixed;
             top: 0;
@@ -176,8 +171,6 @@
                 transform: scale(1.02);
             }
         }
-
-        /* 独立雨丝 */
         #rain-container {
             position: fixed;
             top: 0;
@@ -220,9 +213,7 @@
             }
         }
 
-        /* ================================================================
-           4. 修仙模式壁纸容器
-           ================================================================ */
+        /* ===== 修仙壁纸容器 ===== */
         .wallpaper-container {
             position: fixed;
             top: 0;
@@ -263,9 +254,7 @@
             transform: scale(1.04);
         }
 
-        /* ================================================================
-           5. 拉绳 (日/夜切换)
-           ================================================================ */
+        /* ===== 拉绳 ===== */
         #rope-container {
             position: fixed;
             top: 0;
@@ -389,9 +378,7 @@
             display: inline-block;
         }
 
-        /* ================================================================
-           6. 阴阳模式 (简洁模式)
-           ================================================================ */
+        /* ===== 阴阳模式 ===== */
         .simple-mode {
             position: fixed;
             top: 0;
@@ -411,8 +398,6 @@
         .simple-mode>* {
             pointer-events: auto;
         }
-
-        /* 时钟区 */
         .clock-area {
             display: flex;
             flex-direction: column;
@@ -472,8 +457,6 @@
             color: var(--text-night);
             opacity: 0.6;
         }
-
-        /* 语录区 */
         .quote-area {
             width: auto;
             flex: 0 0 auto;
@@ -547,8 +530,6 @@
         body.night-mode .quote-author {
             opacity: 0.35;
         }
-
-        /* 底部区域 (搜索 + 链接) */
         .bottom-area {
             display: flex;
             flex-direction: column;
@@ -666,8 +647,6 @@
             stroke-linecap: round;
             stroke-linejoin: round;
         }
-
-        /* 链接网格 */
         .links-grid {
             display: flex;
             flex-wrap: wrap;
@@ -758,9 +737,7 @@
             display: none !important;
         }
 
-        /* ================================================================
-           7. 修仙模式可拖拽元素 (毛玻璃)
-           ================================================================ */
+        /* ===== 修仙模式可拖拽元素 ===== */
         .draggable-item {
             position: fixed;
             display: none;
@@ -790,7 +767,6 @@
         .draggable-item.locked:active {
             cursor: default;
         }
-
         #wallpaperTimeDisplay {
             padding: 4px 16px;
             border-radius: 40px;
@@ -818,7 +794,6 @@
             color: var(--wallpaper-text-secondary);
             text-shadow: 0 1px 12px rgba(0, 0, 0, 0.10);
         }
-
         #wallpaperQuoteDisplay {
             padding: 0;
             background: transparent;
@@ -853,7 +828,6 @@
         #wallpaperQuoteDisplay.locked {
             opacity: 0.6;
         }
-
         .glass-search-wrapper {
             display: flex;
             align-items: center;
@@ -928,7 +902,6 @@
             stroke-linecap: round;
             stroke-linejoin: round;
         }
-
         .glass-links {
             display: flex;
             flex-direction: column;
@@ -1005,8 +978,6 @@
             transform: scale(1.04);
             background: rgba(255, 255, 255, 0.18);
         }
-
-        /* 修仙模式文字颜色自适应 */
         body.wallpaper-mode[data-brightness="dark"] {
             --wallpaper-text: #ffffff;
             --wallpaper-text-secondary: rgba(255, 255, 255, 0.65);
@@ -1081,9 +1052,7 @@
             background: rgba(255, 255, 255, 0.06);
         }
 
-        /* ================================================================
-           8. 设置面板 (毛玻璃)
-           ================================================================ */
+        /* ===== 设置面板 ===== */
         #settingsPanelWrapper {
             position: fixed;
             top: clamp(14px, 3vh, 20px);
@@ -1126,7 +1095,6 @@
             color: var(--text-night);
             background: rgba(0, 0, 0, 0.12);
         }
-
         .settings-panel {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(24px);
@@ -1175,7 +1143,6 @@
         .settings-panel.open {
             display: flex;
         }
-
         .settings-module {
             border-radius: 14px;
             background: rgba(255, 255, 255, 0.04);
@@ -1229,8 +1196,6 @@
             max-height: 0 !important;
             padding: 0 12px !important;
         }
-
-        /* 模式切换大开关 */
         .mode-switch-container {
             display: flex;
             align-items: center;
@@ -1333,8 +1298,6 @@
         .mode-switch-big:not(.wallpaper) .mode-label-right {
             opacity: 0.3;
         }
-
-        /* 壁纸滚轮 */
         .wallpaper-scroll-container {
             max-height: 160px;
             overflow-y: auto;
@@ -1433,8 +1396,6 @@
         .wallpaper-scroll-container .wp-preview-item.active .check-mark {
             display: flex;
         }
-
-        /* 设置内通用 */
         .settings-module-body .setting-row {
             margin-bottom: 6px;
         }
@@ -1489,8 +1450,6 @@
         body.night-mode .settings-module-body .type-btn.active {
             background: rgba(255, 255, 255, 0.04);
         }
-
-        /* 元素控制 */
         .elem-control {
             display: flex;
             align-items: center;
@@ -1596,8 +1555,6 @@
         body:not(.wallpaper-mode).night-mode .elem-control .elem-opacity-value {
             color: var(--text-night);
         }
-
-        /* 语录管理 */
         .quote-manager {
             display: flex;
             flex-direction: column;
@@ -1742,9 +1699,7 @@
             background: rgba(255, 255, 255, 0.03);
         }
 
-        /* ================================================================
-           9. 音乐播放器
-           ================================================================ */
+        /* ===== 音乐播放器 ===== */
         #musicPlayer {
             position: fixed;
             z-index: 100;
@@ -1802,7 +1757,6 @@
         .player-cover.dragging-cover img {
             pointer-events: none;
         }
-
         .player-joystick {
             position: relative;
             width: clamp(120px, 35vw, 160px);
@@ -1974,9 +1928,7 @@
                 inset 0 3px 3px rgba(255, 255, 255, 0.40), inset 0 -3px 3px rgba(89, 91, 92, 0.40) !important;
         }
 
-        /* ================================================================
-           10. 模态框
-           ================================================================ */
+        /* ===== 模态框 ===== */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -2101,9 +2053,7 @@
             color: #ccc;
         }
 
-        /* ================================================================
-           11. Toast
-           ================================================================ */
+        /* ===== Toast ===== */
         #toastContainer {
             position: fixed;
             bottom: 30px;
@@ -2149,9 +2099,6 @@
             }
         }
 
-        /* ================================================================
-           12. 响应式微调
-           ================================================================ */
         @media (max-width: 480px) {
             .settings-panel {
                 max-height: 60dvh;
@@ -2320,11 +2267,7 @@
     <!-- Toast -->
     <div id="toastContainer"></div>
 
-    <!-- 引入 Curtains.js (延迟加载) -->
-    <script>
-        // 占位，由主脚本动态加载
-        window.Curtains = null;
-    </script>
+    <!-- 引入 Curtains.js -->
     <script src="https://www.curtainsjs.com/build/curtains.min.js">
     </script>
 
@@ -2333,10 +2276,9 @@
             'use strict';
 
             // ================================================================
-            // 0. 配置中心 (统一资源管理)
+            // 0. 配置中心
             // ================================================================
             const CONFIG = {
-                // 壁纸资源
                 wallpapers: {
                     dynamic: [
                         { id: 'd1', name: '老婆', file: 'dynamic_01.mp4' },
@@ -2357,15 +2299,12 @@
                         { id: 's12', name: '宋玉', file: 'static_12.png' },
                     ]
                 },
-                // 音乐资源
                 songs: [
                     { name: '凡人', file: 'song_01.mp3' },
                     { name: '归期', file: 'song_02.mp3' },
                     { name: '旅人', file: 'song_03.mp3' },
                 ],
-                // 封面图 (36张)
                 coverCount: 36,
-                // 默认链接
                 defaultLinks: [
                     { text: '我的简历', url: 'https://lvyyjianli.netlify.app/' },
                     { text: '中国色', url: 'https://zhongguose.com/' },
@@ -2383,7 +2322,6 @@
                     { text: '人造灵根', url: 'https://codernav.com/' },
                     { text: '全球电台', url: 'https://radiocast.co/' }
                 ],
-                // 默认名言
                 defaultQuotes: [
                     { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。',
                     author: '孙孙浩' },
@@ -2435,6 +2373,12 @@
                 return sanitizeUrl(url) !== '';
             }
 
+            function getSafeCSSVar(name, fallback = 0) {
+                const val = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+                const num = parseFloat(val);
+                return isNaN(num) ? fallback : num;
+            }
+
             // ================================================================
             // 2. 存储管理器
             // ================================================================
@@ -2454,39 +2398,29 @@
             };
 
             // ================================================================
-            // 3. 资源懒加载器 (仅预加载当前需要的内容)
+            // 3. 资源懒加载器
             // ================================================================
             const ResourceLoader = {
                 blobs: {},
                 _loaded: 0,
                 _total: 0,
 
-                // 获取资源路径
                 getPath(type, file) {
-                    const map = {
-                        song: 'songs/',
-                        cover: 'images/',
-                        static: 'images/',
-                        dynamic: 'videos/',
-                    };
+                    const map = { song: 'songs/', cover: 'images/', static: 'images/', dynamic: 'videos/' };
                     return (map[type] || '') + file;
                 },
 
-                // 预加载核心资源 (仅当前壁纸 + 当前歌曲 + 第一张封面)
                 preloadCore(currentWallpaperType, currentWallpaperId, currentSongIndex) {
                     const toLoad = [];
-                    // 当前壁纸
                     const list = CONFIG.wallpapers[currentWallpaperType];
                     const wp = list ? list.find(w => w.id === currentWallpaperId) : null;
                     if (wp) {
                         const type = currentWallpaperType === 'dynamic' ? 'dynamic' : 'static';
                         toLoad.push({ type, file: wp.file, id: wp.id });
                     }
-                    // 当前歌曲
                     const song = CONFIG.songs[currentSongIndex];
                     if (song) toLoad.push({ type: 'song', file: song.file, id: song.file });
-                    // 第一张封面
-                    toLoad.push({ type: 'cover', file: `cover_01.png`, id: 'cover_01' });
+                    toLoad.push({ type: 'cover', file: 'cover_01.png', id: 'cover_01' });
 
                     this._total = toLoad.length;
                     this._loaded = 0;
@@ -2494,19 +2428,14 @@
                 },
 
                 _loadItem(item) {
+                    if (this.blobs[item.id]) { this._loaded++; return; }
                     const url = this.getPath(item.type, item.file);
                     if (item.type === 'song' || item.type === 'dynamic') {
-                        fetch(url)
-                            .then(res => {
-                                if (!res.ok) throw new Error('HTTP ' + res.status);
-                                return res.blob();
-                            })
-                            .then(blob => {
-                                this.blobs[item.id] = URL.createObjectURL(blob);
-                                this._loaded++;
-                            })
-                            .catch(() => { this._loaded++; });
-                    } else if (item.type === 'static' || item.type === 'cover') {
+                        fetch(url).then(res => res.blob()).then(blob => {
+                            this.blobs[item.id] = URL.createObjectURL(blob);
+                            this._loaded++;
+                        }).catch(() => { this._loaded++; });
+                    } else {
                         const img = new Image();
                         img.onload = () => { this._loaded++; };
                         img.onerror = () => { this._loaded++; };
@@ -2514,18 +2443,14 @@
                     }
                 },
 
-                // 按需加载 (用于后续切换)
                 loadSong(file) {
                     return new Promise((resolve) => {
                         if (this.blobs[file]) return resolve(this.blobs[file]);
-                        fetch('songs/' + file)
-                            .then(r => r.blob())
-                            .then(blob => {
-                                const url = URL.createObjectURL(blob);
-                                this.blobs[file] = url;
-                                resolve(url);
-                            })
-                            .catch(() => resolve(null));
+                        fetch('songs/' + file).then(r => r.blob()).then(blob => {
+                            const url = URL.createObjectURL(blob);
+                            this.blobs[file] = url;
+                            resolve(url);
+                        }).catch(() => resolve(null));
                     });
                 },
 
@@ -2533,14 +2458,11 @@
                     return new Promise((resolve) => {
                         if (this.blobs[id]) return resolve(this.blobs[id]);
                         const path = type === 'dynamic' ? 'videos/' : 'images/';
-                        fetch(path + file)
-                            .then(r => r.blob())
-                            .then(blob => {
-                                const url = URL.createObjectURL(blob);
-                                this.blobs[id] = url;
-                                resolve(url);
-                            })
-                            .catch(() => resolve(null));
+                        fetch(path + file).then(r => r.blob()).then(blob => {
+                            const url = URL.createObjectURL(blob);
+                            this.blobs[id] = url;
+                            resolve(url);
+                        }).catch(() => resolve(null));
                     });
                 },
 
@@ -2557,41 +2479,25 @@
             // ================================================================
             const state = {
                 isWallpaperMode: false,
-                currentMode: 'day', // 'day' | 'night'
+                currentMode: 'day',
                 currentWallpaperType: 'static',
                 currentWallpaperId: 's1',
                 wallpaperBrightness: 'dark',
                 isWallpaperTransitioning: false,
-
-                // 链接
                 links: [],
-
-                // 名言
                 quotes: [],
                 quoteIndex: 0,
                 quoteLocked: false,
                 quoteInterval: 5000,
                 intervalTimer: null,
-
-                // 搜索
                 searchVisible: true,
-
-                // 音乐
                 currentSongIndex: 0,
                 currentImageIndex: 0,
                 isPlaying: false,
                 audioPlayer: null,
                 isCoverLoading: false,
-
-                // 元素可见性
                 elemState: {},
-
-                // 模块折叠
-                moduleStates: { mode: true, wallpaper: true, elements: true, quotes: true },
-
-                // 拖拽锁
-                simpleLocks: {},
-                wallpaperLocks: {},
+                moduleStates: { mode: true, wallpaper: true, elements: true, quotes: true, tools: true },
             };
 
             // ================================================================
@@ -2660,24 +2566,15 @@
 
                 show(index) {
                     const qs = this.quotes;
-                    if (qs.length === 0) {
-                        this._setDisplayText('暂无名言', '');
-                        return;
-                    }
+                    if (qs.length === 0) { this._setDisplayText('暂无名言', ''); return; }
                     const q = qs[index % qs.length];
                     this._setDisplayText(q.text, '— ' + q.author);
                     state.quoteIndex = index;
                 },
 
                 _setDisplayText(text, author) {
-                    const els = [
-                        document.getElementById('quoteText'),
-                        document.getElementById('wqText')
-                    ];
-                    const authEls = [
-                        document.getElementById('quoteAuthor'),
-                        document.getElementById('wqAuthor')
-                    ];
+                    const els = [document.getElementById('quoteText'), document.getElementById('wqText')];
+                    const authEls = [document.getElementById('quoteAuthor'), document.getElementById('wqAuthor')];
                     els.forEach(el => {
                         if (!el) return;
                         el.classList.add('fade');
@@ -2689,27 +2586,20 @@
 
                 next() {
                     if (!state.quoteLocked && this.quotes.length > 1) {
-                        const idx = (state.quoteIndex + 1) % this.quotes.length;
-                        this.show(idx);
+                        this.show((state.quoteIndex + 1) % this.quotes.length);
                     }
                 },
 
                 toggleLock() {
                     state.quoteLocked = !state.quoteLocked;
                     this._saveLocks();
-                    const els = [
-                        document.getElementById('quoteArea'),
-                        document.getElementById('wallpaperQuoteDisplay')
-                    ];
+                    const els = [document.getElementById('quoteArea'), document.getElementById(
+                    'wallpaperQuoteDisplay')];
                     els.forEach(el => {
                         if (!el) return;
-                        if (state.quoteLocked) {
-                            el.classList.add('locked');
-                            el.style.cursor = 'default';
-                        } else {
-                            el.classList.remove('locked');
-                            el.style.cursor = 'pointer';
-                        }
+                        if (state.quoteLocked) { el.classList.add('locked');
+                            el.style.cursor = 'default'; } else { el.classList.remove('locked');
+                            el.style.cursor = 'pointer'; }
                     });
                 },
 
@@ -2739,9 +2629,7 @@
                 remove(index) {
                     if (!this.quotes[index]) return false;
                     this.quotes.splice(index, 1);
-                    if (this.quotes.length === 0) {
-                        this.quotes = CONFIG.defaultQuotes.map(q => ({ ...q }));
-                    }
+                    if (this.quotes.length === 0) this.quotes = CONFIG.defaultQuotes.map(q => ({ ...q }));
                     this.save();
                     if (state.quoteIndex >= this.quotes.length) state.quoteIndex = 0;
                     this.show(state.quoteIndex);
@@ -2771,9 +2659,7 @@
                     this.render();
                 },
 
-                save() {
-                    Storage.set('quickLinks', state.links);
-                },
+                save() { Storage.set('quickLinks', state.links); },
 
                 render() {
                     const grid = document.getElementById('linksGrid');
@@ -2782,7 +2668,6 @@
                     glass.innerHTML = '';
 
                     state.links.forEach((link, index) => {
-                        // 阴阳模式链接
                         const a = document.createElement('a');
                         a.className = 'link-item';
                         a.href = link.url;
@@ -2795,7 +2680,6 @@
                         this._addPressEffect(a);
                         grid.appendChild(a);
 
-                        // 修仙模式链接
                         const ga = document.createElement('a');
                         ga.className = 'glass-link';
                         ga.href = link.url;
@@ -2808,7 +2692,6 @@
                         glass.appendChild(ga);
                     });
 
-                    // 添加按钮
                     const addBtn = document.createElement('button');
                     addBtn.className = 'add-link-btn';
                     addBtn.textContent = '＋';
@@ -2822,7 +2705,6 @@
                     glassAdd.addEventListener('click', () => this.openEditor(-1));
                     glass.appendChild(glassAdd);
 
-                    // 搜索按钮(仅当隐藏时)
                     if (!state.searchVisible) {
                         const endBtn = document.createElement('button');
                         endBtn.className = 'search-btn-end';
@@ -2833,7 +2715,6 @@
                         grid.appendChild(endBtn);
                     }
 
-                    // 搜索显示状态
                     const wrapper = document.getElementById('searchWrapper');
                     if (state.searchVisible) {
                         wrapper.classList.remove('hidden');
@@ -2933,26 +2814,46 @@
                     this.apply(savedType, savedId);
                 },
 
-                _detectBrightnessFromMedia(mediaEl) {
+                _detectBrightnessFromMedia(mediaEl, isVideo = false) {
                     return new Promise((resolve) => {
-                        try {
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            const w = 64,
-                                h = 64;
-                            canvas.width = w;
-                            canvas.height = h;
-                            ctx.drawImage(mediaEl, 0, 0, w, h);
-                            const data = ctx.getImageData(0, 0, w, h).data;
-                            let sum = 0,
-                                count = 0;
-                            for (let i = 0; i < data.length; i += 4) {
-                                const luma = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                                sum += luma;
-                                count++;
+                        const doDetect = () => {
+                            try {
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                const w = 64,
+                                    h = 64;
+                                canvas.width = w;
+                                canvas.height = h;
+                                ctx.drawImage(mediaEl, 0, 0, w, h);
+                                const data = ctx.getImageData(0, 0, w, h).data;
+                                let sum = 0,
+                                    count = 0;
+                                for (let i = 0; i < data.length; i += 4) {
+                                    const luma = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                                    sum += luma;
+                                    count++;
+                                }
+                                resolve(sum / count < 128 ? 'dark' : 'light');
+                            } catch (_) { resolve('dark'); }
+                        };
+                        if (isVideo) {
+                            if (mediaEl.readyState >= 2) { doDetect(); } else {
+                                const onReady = () => { mediaEl.removeEventListener('loadeddata', onReady);
+                                    mediaEl.removeEventListener('canplay', onReady);
+                                    doDetect(); };
+                                mediaEl.addEventListener('loadeddata', onReady);
+                                mediaEl.addEventListener('canplay', onReady);
+                                setTimeout(onReady, 2000);
                             }
-                            resolve(sum / count < 128 ? 'dark' : 'light');
-                        } catch (_) { resolve('dark'); }
+                        } else {
+                            if (mediaEl.complete && mediaEl.naturalWidth > 0) { doDetect(); } else {
+                                mediaEl.onload = () => { doDetect();
+                                    mediaEl.onload = null; };
+                                mediaEl.onerror = () => { resolve('dark');
+                                    mediaEl.onerror = null; };
+                                setTimeout(() => resolve('dark'), 2000);
+                            }
+                        }
                     });
                 },
 
@@ -2980,11 +2881,11 @@
                         const onLoaded = () => {
                             if (type === 'dynamic') {
                                 this.videoEl.classList.add('active');
-                                this._detectBrightnessFromMedia(this.videoEl).then(b =>
+                                this._detectBrightnessFromMedia(this.videoEl, true).then(b =>
                                     this._applyBrightness(b));
                             } else {
                                 this.imgEl.classList.add('active');
-                                this._detectBrightnessFromMedia(this.imgEl).then(b =>
+                                this._detectBrightnessFromMedia(this.imgEl, false).then(b =>
                                     this._applyBrightness(b));
                             }
                             state.isWallpaperTransitioning = false;
@@ -3015,7 +2916,8 @@
                                 this.videoEl.oncanplaythrough = null; };
                             setTimeout(onLoaded, 2000);
                         } else {
-                            this.imgEl.src = 'images/' + item.file;
+                            const src = item.file.startsWith('data:') ? item.file : 'images/' + item.file;
+                            this.imgEl.src = src;
                             this.imgEl.onload = () => { onLoaded();
                                 this.imgEl.onload = null; };
                             this.imgEl.onerror = () => { onLoaded();
@@ -3025,18 +2927,22 @@
                     }, 800);
                 },
 
-                // 自定义上传 (静态)
                 uploadCustom(file) {
-                    return new Promise((resolve) => {
+                    return new Promise((resolve, reject) => {
+                        if (file.size > 5 * 1024 * 1024) {
+                            showToast('图片过大，请控制在 5MB 以内');
+                            reject(new Error('File too large'));
+                            return;
+                        }
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             const dataUrl = e.target.result;
                             const id = 'custom_' + Date.now();
-                            // 添加到动态列表 (仅当前会话)
                             CONFIG.wallpapers.static.push({ id, name: file.name, file: dataUrl });
                             this.apply('static', id);
                             resolve(id);
                         };
+                        reader.onerror = () => reject(new Error('Read failed'));
                         reader.readAsDataURL(file);
                     });
                 }
@@ -3092,10 +2998,7 @@
 
                 togglePlay() {
                     const audio = this._initAudio();
-                    if (!audio.src) {
-                        this.play(state.currentSongIndex);
-                        return;
-                    }
+                    if (!audio.src) { this.play(state.currentSongIndex); return; }
                     if (state.isPlaying) {
                         audio.pause();
                         state.isPlaying = false;
@@ -3134,32 +3037,15 @@
                 },
 
                 prevSong() {
-                    const idx = (state.currentSongIndex - 1 + CONFIG.songs.length) % CONFIG.songs.length;
-                    this.play(idx);
+                    this.play((state.currentSongIndex - 1 + CONFIG.songs.length) % CONFIG.songs.length);
                 },
 
                 nextSong() {
-                    const idx = (state.currentSongIndex + 1) % CONFIG.songs.length;
-                    this.play(idx);
+                    this.play((state.currentSongIndex + 1) % CONFIG.songs.length);
                 },
 
                 toggleVisibility() {
-                    const stateKey = 'musicPlayer';
-                    const def = ELEM_DEFS.wallpaper.find(d => d.id === stateKey);
-                    if (!def) return;
-                    const cur = state.elemState[stateKey] || { visible: def.defaultVisible, opacity: def
-                            .defaultOpacity };
-                    cur.visible = !cur.visible;
-                    state.elemState[stateKey] = cur;
-                    ElemManager.apply();
-                    Storage.set('elemState', state.elemState);
-                    if (cur.visible) {
-                        this.player.classList.add('active');
-                        this.updateCover();
-                        if (!state.audioPlayer || !state.audioPlayer.src) this.play(state.currentSongIndex);
-                    } else {
-                        this.player.classList.remove('active');
-                    }
+                    ElemManager.toggle('musicPlayer');
                 },
 
                 _loadPos() {
@@ -3208,31 +3094,19 @@
                 apply() {
                     const all = [...ELEM_DEFS.simple, ...ELEM_DEFS.wallpaper];
                     all.forEach(def => {
-                        const st = state.elemState[def.id] || { visible: def.defaultVisible, opacity: def
+                        const st = state.elemState[def.id] || { visible: def.defaultOpacity, opacity: def
                                 .defaultOpacity };
                         const el = def.getEl();
                         if (!el) return;
                         if (st.visible) {
-                            if (def.id === 'musicPlayer') {
-                                if (!el.classList.contains('active')) el.classList.add('active');
-                            } else {
-                                el.classList.remove('hidden');
-                            }
+                            el.classList.remove('hidden');
+                            if (def.id === 'musicPlayer') el.classList.add('active');
                         } else {
-                            if (def.id === 'musicPlayer') {
-                                el.classList.remove('active');
-                            } else {
-                                el.classList.add('hidden');
-                            }
+                            el.classList.add('hidden');
+                            if (def.id === 'musicPlayer') el.classList.remove('active');
                         }
                         el.style.opacity = st.opacity;
                     });
-                    // 同步音乐播放器状态
-                    if (state.elemState['musicPlayer'] && state.elemState['musicPlayer'].visible) {
-                        document.getElementById('musicPlayer').classList.add('active');
-                    } else {
-                        document.getElementById('musicPlayer').classList.remove('active');
-                    }
                 },
 
                 toggle(id) {
@@ -3251,7 +3125,7 @@
             };
 
             // ================================================================
-            // 11. 核心模块: 模式切换 (阴阳/修仙)
+            // 11. 核心模块: 模式切换
             // ================================================================
             const ModeManager = {
                 init() {
@@ -3304,7 +3178,6 @@
                             else el.style.display = 'block';
                         });
                         this._loadWallpaperLocks();
-                        // 加载位置
                         this._loadWallpaperPositions();
                     } else {
                         document.body.classList.remove('wallpaper-mode');
@@ -3313,17 +3186,14 @@
                     }
                     ElemManager.apply();
                     this._updateUI();
-                    // 刷新设置面板
                     UIManager.renderSettings();
                 },
 
                 _loadWallpaperLocks() {
                     const locks = Storage.get(getStorageKey('wallpaperLocks'), {});
                     document.querySelectorAll('.draggable-item').forEach(el => {
-                        if (locks[el.id]) {
-                            el.classList.add('locked');
-                            el.style.cursor = 'default';
-                        }
+                        if (locks[el.id]) { el.classList.add('locked');
+                            el.style.cursor = 'default'; }
                     });
                 },
 
@@ -3350,7 +3220,7 @@
             };
 
             // ================================================================
-            // 12. 核心模块: UI设置面板 (完全安全DOM构建)
+            // 12. 核心模块: UI设置面板
             // ================================================================
             const UIManager = {
                 panel: document.getElementById('settingsPanel'),
@@ -3359,131 +3229,63 @@
                 isOpen: false,
 
                 init() {
-                    this.toggleBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.toggle();
-                    });
+                    this.toggleBtn.addEventListener('click', (e) => { e.stopPropagation();
+                        this.toggle(); });
                     document.addEventListener('click', (e) => {
                         if (this.isOpen && !this.panel.contains(e.target) && e.target !== this.toggleBtn) {
                             this.close();
                         }
                     });
-                    // 键盘关闭
                     document.addEventListener('keydown', (e) => {
                         if (e.key === 'Escape' && this.isOpen) this.close();
                     });
                     this.renderSettings();
                 },
 
-                toggle() {
-                    this.isOpen ? this.close() : this.open();
-                },
-
-                open() {
-                    this.isOpen = true;
+                toggle() { this.isOpen ? this.close() : this.open(); },
+                open() { this.isOpen = true;
                     this.panel.classList.add('open');
-                    this.renderSettings();
-                },
-
-                close() {
-                    this.isOpen = false;
-                    this.panel.classList.remove('open');
-                },
+                    this.renderSettings(); },
+                close() { this.isOpen = false;
+                    this.panel.classList.remove('open'); },
 
                 renderSettings() {
                     const content = this.content;
                     content.innerHTML = '';
 
-                    // ---- 模式模块 ----
-                    const modeMod = document.createElement('div');
-                    modeMod.className = 'settings-module';
-                    modeMod.dataset.module = 'mode';
-                    const mHeader = this._createHeader('✦ 模式', 'mode');
-                    modeMod.appendChild(mHeader);
-                    const mBody = document.createElement('div');
-                    mBody.className = 'settings-module-body' + (state.moduleStates.mode ? '' : ' collapsed');
-                    mBody.innerHTML = `
-                        <div class="setting-row">
-                            <div class="mode-switch-container">
-                                <div class="mode-switch-big ${state.isWallpaperMode ? 'wallpaper' : ''}" id="modeSwitchBig">
-                                    <span class="mode-label-left ${!state.isWallpaperMode ? 'active' : ''}">阴阳</span>
-                                    <span class="mode-label-right ${state.isWallpaperMode ? 'active' : ''}">修仙</span>
-                                    <div class="slider-track"></div>
-                                </div>
-                            </div>
-                        </div>
+                    // 模式
+                    const modeMod = this._createModule('✦ 模式', 'mode');
+                    modeMod.querySelector('.settings-module-body').innerHTML = `
+                        <div class="setting-row"><div class="mode-switch-container"><div class="mode-switch-big ${state.isWallpaperMode ? 'wallpaper' : ''}" id="modeSwitchBig"><span class="mode-label-left ${!state.isWallpaperMode ? 'active' : ''}">阴阳</span><span class="mode-label-right ${state.isWallpaperMode ? 'active' : ''}">修仙</span><div class="slider-track"></div></div></div></div>
                     `;
-                    modeMod.appendChild(mBody);
                     content.appendChild(modeMod);
 
-                    // ---- 修仙壁纸模块 ----
+                    // 壁纸
                     if (state.isWallpaperMode) {
-                        const wpMod = document.createElement('div');
-                        wpMod.className = 'settings-module';
-                        wpMod.dataset.module = 'wallpaper';
-                        const wHeader = this._createHeader('🏔 修仙', 'wallpaper');
-                        wpMod.appendChild(wHeader);
-                        const wBody = document.createElement('div');
-                        wBody.className = 'settings-module-body' + (state.moduleStates.wallpaper ? '' : ' collapsed');
+                        const wpMod = this._createModule('🏔 修仙', 'wallpaper');
                         const type = state.currentWallpaperType;
-                        wBody.innerHTML = `
-                            <div class="setting-row">
-                                <label>类型</label>
-                                <div class="type-btns">
-                                    <button class="type-btn ${type === 'static' ? 'active' : ''}" data-type="static">静态</button>
-                                    <button class="type-btn ${type === 'dynamic' ? 'active' : ''}" data-type="dynamic">动态</button>
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <label>选择仙境</label>
-                                <div class="wallpaper-scroll-container">
-                                    <div class="wp-grid" id="wallpaperPreviewGrid"></div>
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <label>上传自定义壁纸 (静态图片)</label>
-                                <input type="file" id="customWallpaperUpload" accept="image/*" style="font-size:0.6rem;padding:4px;background:rgba(255,255,255,0.05);border:none;border-radius:6px;color:inherit;width:100%;" />
-                            </div>
+                        wpMod.querySelector('.settings-module-body').innerHTML = `
+                            <div class="setting-row"><label>类型</label><div class="type-btns"><button class="type-btn ${type === 'static' ? 'active' : ''}" data-type="static">静态</button><button class="type-btn ${type === 'dynamic' ? 'active' : ''}" data-type="dynamic">动态</button></div></div>
+                            <div class="setting-row"><label>选择仙境</label><div class="wallpaper-scroll-container"><div class="wp-grid" id="wallpaperPreviewGrid"></div></div></div>
+                            <div class="setting-row"><label>上传自定义壁纸 (静态图片 ≤ 5MB)</label><input type="file" id="customWallpaperUpload" accept="image/*" style="font-size:0.6rem;padding:4px;background:rgba(255,255,255,0.05);border:none;border-radius:6px;color:inherit;width:100%;" /></div>
                         `;
-                        wpMod.appendChild(wBody);
                         content.appendChild(wpMod);
                     }
 
-                    // ---- 元素控制模块 ----
-                    const elemMod = document.createElement('div');
-                    elemMod.className = 'settings-module';
-                    elemMod.dataset.module = 'elements';
-                    const eHeader = this._createHeader('⊞ 元素控制', 'elements');
-                    elemMod.appendChild(eHeader);
-                    const eBody = document.createElement('div');
-                    eBody.className = 'settings-module-body' + (state.moduleStates.elements ? '' : ' collapsed');
+                    // 元素
+                    const elemMod = this._createModule('⊞ 元素控制', 'elements');
                     const defs = state.isWallpaperMode ? ELEM_DEFS.wallpaper : ELEM_DEFS.simple;
                     let elemHtml = '';
                     defs.forEach(def => {
                         const st = state.elemState[def.id] || { visible: true, opacity: 1 };
-                        elemHtml += `
-                            <div class="elem-control" data-elem-id="${def.id}">
-                                <span class="elem-name">${def.name}</span>
-                                <button class="elem-toggle ${st.visible ? 'active' : ''}"><span class="thumb"></span></button>
-                                <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${st.opacity}" /></div>
-                                <span class="elem-opacity-value">${Math.round(st.opacity*100)}%</span>
-                            </div>
-                        `;
+                        elemHtml += `<div class="elem-control" data-elem-id="${def.id}"><span class="elem-name">${def.name}</span><button class="elem-toggle ${st.visible ? 'active' : ''}"><span class="thumb"></span></button><div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${st.opacity}" /></div><span class="elem-opacity-value">${Math.round(st.opacity*100)}%</span></div>`;
                     });
-                    eBody.innerHTML = `<div class="setting-row"><div id="elemControlList">${elemHtml}</div></div>`;
-                    elemMod.appendChild(eBody);
+                    elemMod.querySelector('.settings-module-body').innerHTML =
+                        `<div class="setting-row"><div id="elemControlList">${elemHtml}</div></div>`;
                     content.appendChild(elemMod);
 
-                    // ---- 语录模块 ----
-                    const qMod = document.createElement('div');
-                    qMod.className = 'settings-module';
-                    qMod.dataset.module = 'quotes';
-                    const qHeader = this._createHeader('❝ 经典语录', 'quotes');
-                    qMod.appendChild(qHeader);
-                    const qBody = document.createElement('div');
-                    qBody.className = 'settings-module-body' + (state.moduleStates.quotes ? '' : ' collapsed');
-
-                    // 语录列表
+                    // 语录
+                    const qMod = this._createModule('❝ 经典语录', 'quotes');
                     const manager = document.createElement('div');
                     manager.className = 'quote-manager';
                     manager.id = 'quoteManager';
@@ -3491,67 +3293,39 @@
                         const item = document.createElement('div');
                         item.className = 'quote-item';
                         item.dataset.index = i;
-                        item.innerHTML = `
-                            <span class="q-text">${q.text}</span>
-                            <span class="q-author">— ${q.author}</span>
-                            <div class="q-actions">
-                                <button class="edit-btn" data-index="${i}">✎</button>
-                                <button class="del-btn" data-index="${i}">✕</button>
-                            </div>
-                        `;
+                        item.innerHTML =
+                            `<span class="q-text">${q.text}</span><span class="q-author">— ${q.author}</span><div class="q-actions"><button class="edit-btn" data-index="${i}">✎</button><button class="del-btn" data-index="${i}">✕</button></div>`;
                         manager.appendChild(item);
                     });
+                    const qBody = qMod.querySelector('.settings-module-body');
                     qBody.appendChild(manager);
-
-                    // 添加表单
                     const form = document.createElement('div');
                     form.className = 'quote-add-form';
-                    form.innerHTML = `
-                        <input type="text" id="newQuoteText" placeholder="语录内容" />
-                        <input type="text" id="newQuoteAuthor" placeholder="作者" />
-                        <button id="addQuoteBtn">添加</button>
-                    `;
+                    form.innerHTML =
+                        `<input type="text" id="newQuoteText" placeholder="语录内容" /><input type="text" id="newQuoteAuthor" placeholder="作者" /><button id="addQuoteBtn">添加</button>`;
                     qBody.appendChild(form);
-
-                    // 间隔控制
                     const intervalRow = document.createElement('div');
                     intervalRow.className = 'setting-row';
-                    intervalRow.innerHTML = `
-                        <div class="interval-control">
-                            <label>切换间隔（秒）</label>
-                            <input type="number" id="intervalInput" min="1" max="300" value="${Math.round(state.quoteInterval / 1000)}" />
-                            <span style="font-size:0.6rem;opacity:0.4;">秒</span>
-                        </div>
-                    `;
+                    intervalRow.innerHTML =
+                        `<div class="interval-control"><label>切换间隔（秒）</label><input type="number" id="intervalInput" min="1" max="300" value="${Math.round(state.quoteInterval / 1000)}" /><span style="font-size:0.6rem;opacity:0.4;">秒</span></div>`;
                     qBody.appendChild(intervalRow);
-                    qMod.appendChild(qBody);
                     content.appendChild(qMod);
 
-                    // ---- 导出/导入 ----
-                    const toolMod = document.createElement('div');
-                    toolMod.className = 'settings-module';
-                    toolMod.dataset.module = 'tools';
-                    const tHeader = this._createHeader('⚡ 配置工具', 'tools');
-                    toolMod.appendChild(tHeader);
-                    const tBody = document.createElement('div');
-                    tBody.className = 'settings-module-body' + (state.moduleStates.tools !== false ? '' : ' collapsed');
-                    tBody.innerHTML = `
-                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
-                            <button id="exportConfigBtn" style="flex:1;padding:4px 8px;border-radius:8px;border:none;background:rgba(255,255,255,0.08);color:inherit;font-size:0.65rem;cursor:pointer;">导出配置</button>
-                            <button id="importConfigBtn" style="flex:1;padding:4px 8px;border-radius:8px;border:none;background:rgba(255,255,255,0.08);color:inherit;font-size:0.65rem;cursor:pointer;">导入配置</button>
-                            <input type="file" id="importConfigInput" accept=".json" style="display:none;" />
-                        </div>
+                    // 工具
+                    const toolMod = this._createModule('⚡ 配置工具', 'tools');
+                    toolMod.querySelector('.settings-module-body').innerHTML = `
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;"><button id="exportConfigBtn" style="flex:1;padding:4px 8px;border-radius:8px;border:none;background:rgba(255,255,255,0.08);color:inherit;font-size:0.65rem;cursor:pointer;">导出配置</button><button id="importConfigBtn" style="flex:1;padding:4px 8px;border-radius:8px;border:none;background:rgba(255,255,255,0.08);color:inherit;font-size:0.65rem;cursor:pointer;">导入配置</button><input type="file" id="importConfigInput" accept=".json" style="display:none;" /></div>
                     `;
-                    toolMod.appendChild(tBody);
                     content.appendChild(toolMod);
 
-                    // ---- 绑定事件 ----
                     this._bindEvents();
-                    // 更新壁纸预览
                     if (state.isWallpaperMode) this._updateWallpaperPreview();
                 },
 
-                _createHeader(label, key) {
+                _createModule(label, key) {
+                    const mod = document.createElement('div');
+                    mod.className = 'settings-module';
+                    mod.dataset.module = key;
                     const header = document.createElement('div');
                     header.className = 'settings-module-header';
                     header.dataset.moduleToggle = key;
@@ -3568,24 +3342,22 @@
                         if (state.moduleStates[k] !== undefined) {
                             state.moduleStates[k] = !state.moduleStates[k];
                             Storage.set('moduleStates', state.moduleStates);
-                            const body = header.closest('.settings-module').querySelector(
-                            '.settings-module-body');
+                            const body = mod.querySelector('.settings-module-body');
                             const arr = header.querySelector('.arrow');
                             if (body) body.classList.toggle('collapsed', !state.moduleStates[k]);
                             if (arr) arr.classList.toggle('collapsed', !state.moduleStates[k]);
                         }
                     });
-                    return header;
+                    mod.appendChild(header);
+                    const body = document.createElement('div');
+                    body.className = 'settings-module-body' + (state.moduleStates[key] !== false ? '' : ' collapsed');
+                    mod.appendChild(body);
+                    return mod;
                 },
 
                 _bindEvents() {
-                    // 模式切换
-                    const bigSwitch = document.getElementById('modeSwitchBig');
-                    if (bigSwitch) {
-                        bigSwitch.addEventListener('click', () => ModeManager.toggleMode());
-                    }
+                    document.getElementById('modeSwitchBig')?.addEventListener('click', () => ModeManager.toggleMode());
 
-                    // 壁纸类型切换
                     document.querySelectorAll('.type-btn').forEach(btn => {
                         btn.addEventListener('click', () => {
                             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove(
@@ -3604,22 +3376,17 @@
                         });
                     });
 
-                    // 自定义壁纸上传
-                    const upload = document.getElementById('customWallpaperUpload');
-                    if (upload) {
-                        upload.addEventListener('change', (e) => {
-                            const file = e.target.files[0];
-                            if (file) {
-                                WallpaperManager.uploadCustom(file).then(() => {
-                                    showToast('壁纸已上传');
-                                    this._updateWallpaperPreview();
-                                });
-                            }
-                            upload.value = '';
-                        });
-                    }
+                    document.getElementById('customWallpaperUpload')?.addEventListener('change', (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            WallpaperManager.uploadCustom(file).then(() => {
+                                showToast('壁纸已上传');
+                                this._updateWallpaperPreview();
+                            }).catch(() => {});
+                        }
+                        e.target.value = '';
+                    });
 
-                    // 元素控制
                     document.querySelectorAll('.elem-control').forEach(row => {
                         const id = row.dataset.elemId;
                         const toggle = row.querySelector('.elem-toggle');
@@ -3636,7 +3403,6 @@
                         });
                     });
 
-                    // 语录管理
                     const manager = document.getElementById('quoteManager');
                     if (manager) {
                         manager.querySelectorAll('.edit-btn').forEach(btn => {
@@ -3665,66 +3431,54 @@
                         });
                     }
 
-                    const addBtn = document.getElementById('addQuoteBtn');
-                    if (addBtn) {
-                        addBtn.addEventListener('click', () => {
-                            const text = document.getElementById('newQuoteText');
-                            const author = document.getElementById('newQuoteAuthor');
-                            if (QuoteManager.add(text.value, author.value)) {
-                                text.value = '';
-                                author.value = '';
-                                this.renderSettings();
-                                showToast('语录已添加');
-                            } else {
-                                showToast('请输入内容');
-                            }
-                        });
-                    }
+                    document.getElementById('addQuoteBtn')?.addEventListener('click', () => {
+                        const text = document.getElementById('newQuoteText');
+                        const author = document.getElementById('newQuoteAuthor');
+                        if (QuoteManager.add(text.value, author.value)) {
+                            text.value = '';
+                            author.value = '';
+                            this.renderSettings();
+                            showToast('语录已添加');
+                        } else {
+                            showToast('请输入内容');
+                        }
+                    });
 
-                    const intervalInput = document.getElementById('intervalInput');
-                    if (intervalInput) {
-                        intervalInput.addEventListener('change', () => {
-                            let val = parseInt(intervalInput.value);
-                            if (isNaN(val) || val < 1) val = 1;
-                            if (val > 300) val = 300;
-                            intervalInput.value = val;
-                            QuoteManager.setInterval(val);
-                            showToast('间隔已更新');
-                        });
-                    }
+                    document.getElementById('intervalInput')?.addEventListener('change', function() {
+                        let val = parseInt(this.value);
+                        if (isNaN(val) || val < 1) val = 1;
+                        if (val > 300) val = 300;
+                        this.value = val;
+                        QuoteManager.setInterval(val);
+                        showToast('间隔已更新');
+                    });
 
-                    // 导出配置
-                    const exportBtn = document.getElementById('exportConfigBtn');
-                    if (exportBtn) {
-                        exportBtn.addEventListener('click', () => {
-                            const data = {
-                                links: state.links,
-                                quotes: QuoteManager.quotes,
-                                quoteInterval: state.quoteInterval,
-                                nightMode: state.currentMode === 'night',
-                                isWallpaperMode: state.isWallpaperMode,
-                                wallpaperType: state.currentWallpaperType,
-                                wallpaperId: state.currentWallpaperId,
-                                elemState: state.elemState,
-                                moduleStates: state.moduleStates,
-                                simplePositions: Storage.get(getStorageKey('simplePositions'), {}),
-                                wallpaperPositions: Storage.get(getStorageKey('wallpaperPositions'),
-                                {}),
-                                simpleLocks: Storage.get(getStorageKey('simpleLocks'), {}),
-                                wallpaperLocks: Storage.get(getStorageKey('wallpaperLocks'), {}),
-                            };
-                            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = 'lingjing_config.json';
-                            a.click();
-                            URL.revokeObjectURL(url);
-                            showToast('配置已导出');
-                        });
-                    }
+                    document.getElementById('exportConfigBtn')?.addEventListener('click', () => {
+                        const data = {
+                            links: state.links,
+                            quotes: QuoteManager.quotes,
+                            quoteInterval: state.quoteInterval,
+                            nightMode: state.currentMode === 'night',
+                            isWallpaperMode: state.isWallpaperMode,
+                            wallpaperType: state.currentWallpaperType,
+                            wallpaperId: state.currentWallpaperId,
+                            elemState: state.elemState,
+                            moduleStates: state.moduleStates,
+                            simplePositions: Storage.get(getStorageKey('simplePositions'), {}),
+                            wallpaperPositions: Storage.get(getStorageKey('wallpaperPositions'), {}),
+                            simpleLocks: Storage.get(getStorageKey('simpleLocks'), {}),
+                            wallpaperLocks: Storage.get(getStorageKey('wallpaperLocks'), {}),
+                        };
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'lingjing_config.json';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        showToast('配置已导出');
+                    });
 
-                    // 导入配置
                     const importBtn = document.getElementById('importConfigBtn');
                     const importInput = document.getElementById('importConfigInput');
                     if (importBtn && importInput) {
@@ -3751,7 +3505,7 @@
                                     if (data.isWallpaperMode !== undefined) {
                                         state.isWallpaperMode = data.isWallpaperMode;
                                         Storage.set('isWallpaperMode', state.isWallpaperMode);
-                                        ModeManager.toggleMode(); // 重新应用
+                                        ModeManager.toggleMode();
                                     }
                                     if (data.elemState) { state.elemState = data.elemState;
                                         Storage.set('elemState', state.elemState);
@@ -3767,7 +3521,7 @@
                                         data.simpleLocks);
                                     if (data.wallpaperLocks) Storage.set(getStorageKey(
                                         'wallpaperLocks'), data.wallpaperLocks);
-                                    showToast('配置导入成功，请刷新页面');
+                                    showToast('配置导入成功，刷新页面生效');
                                     setTimeout(() => location.reload(), 1000);
                                 } catch (err) { showToast('配置文件格式错误'); }
                             };
@@ -3784,7 +3538,8 @@
                     grid.innerHTML = '';
                     items.forEach(wp => {
                         const el = document.createElement('div');
-                        el.className = 'wp-preview-item' + (state.currentWallpaperId === wp.id ? ' active' : '');
+                        el.className = 'wp-preview-item' + (state.currentWallpaperId === wp.id ? ' active' :
+                            '');
                         el.dataset.id = wp.id;
                         el.dataset.type = state.currentWallpaperType;
                         if (state.currentWallpaperType === 'dynamic') {
@@ -3825,7 +3580,7 @@
             };
 
             // ================================================================
-            // 13. 核心模块: 拖拽系统 (简单模式 + 修仙模式)
+            // 13. 核心模块: 拖拽系统
             // ================================================================
             const DragManager = {
                 init() {
@@ -3834,10 +3589,36 @@
                     this._loadSimplePositions();
                 },
 
-                // 简单模式拖拽
+                _getTransform(el) {
+                    let tx = 0,
+                        ty = 0;
+                    const style = window.getComputedStyle(el);
+                    const transform = style.transform;
+                    if (transform && transform !== 'none') {
+                        const matrix = transform.match(/matrix.*\((.+)\)/);
+                        if (matrix) {
+                            const values = matrix[1].split(', ').map(Number);
+                            if (values.length === 6) { tx = values[4] || 0;
+                                ty = values[5] || 0; } else if (values.length === 16) { tx = values[12] || 0;
+                                ty = values[13] || 0; }
+                        }
+                    }
+                    return { x: tx, y: ty };
+                },
+
+                _applyTransformRAF(el, x, y, st) {
+                    if (st.rafId) { cancelAnimationFrame(st.rafId);
+                        st.rafId = null; }
+                    st.rafId = requestAnimationFrame(() => {
+                        el.style.transform = `translate(${x}px, ${y}px)`;
+                        st.rafId = null;
+                    });
+                },
+
                 _initSimpleDrags() {
                     const targets = document.querySelectorAll('.simple-draggable');
                     const stateMap = new WeakMap();
+                    let activeDrag = null;
                     targets.forEach(el => {
                         const st = {
                             isDragging: false,
@@ -3854,13 +3635,10 @@
                         };
                         stateMap.set(el, st);
 
-                        // 加载锁状态
                         const locks = Storage.get(getStorageKey('simpleLocks'), {});
-                        if (locks[el.id]) {
-                            st.locked = true;
+                        if (locks[el.id]) { st.locked = true;
                             el.classList.add('locked');
-                            el.style.cursor = 'default';
-                        }
+                            el.style.cursor = 'default'; }
 
                         el.addEventListener('contextmenu', (e) => {
                             e.preventDefault();
@@ -3869,21 +3647,25 @@
                             const locks = Storage.get(getStorageKey('simpleLocks'), {});
                             locks[el.id] = st.locked;
                             Storage.set(getStorageKey('simpleLocks'), locks);
-                            if (st.locked) {
-                                el.classList.add('locked');
-                                el.style.cursor = 'default';
-                            } else {
-                                el.classList.remove('locked');
-                                el.style.cursor = 'grab';
-                            }
+                            if (st.locked) { el.classList.add('locked');
+                                el.style.cursor = 'default'; } else { el.classList.remove('locked');
+                                el.style.cursor = 'grab'; }
                         });
 
                         const onStart = (e) => {
                             if (st.locked) return;
                             if (e.target.closest('input') || e.target.closest('a') || e.target.closest(
-                                    'button')) return;
-                            if (ModeManager.isWallpaperMode) return;
-                            if (activeDrag) _endDrag(activeDrag);
+                                'button')) return;
+                            if (state.isWallpaperMode) return;
+                            if (activeDrag) {
+                                const prev = stateMap.get(activeDrag);
+                                if (prev && prev.isDragging) {
+                                    activeDrag.classList.remove('dragging-simple');
+                                    activeDrag.style.cursor = prev.locked ? 'default' : 'grab';
+                                    prev.isDragging = false;
+                                }
+                                activeDrag = null;
+                            }
                             const ev = e.touches ? e.touches[0] : e;
                             const rect = el.getBoundingClientRect();
                             const transform = this._getTransform(el);
@@ -3925,11 +3707,8 @@
                                 }
                                 let newTX = st.baseTX + (ev.clientX - st.startX);
                                 let newTY = st.baseTY + (ev.clientY - st.startY);
-                                const safeRight = window.innerWidth - parseFloat(getComputedStyle(
-                                    document.documentElement).getPropertyValue('--safe-right') || '0');
-                                const safeBottom = window.innerHeight - parseFloat(getComputedStyle(
-                                    document.documentElement).getPropertyValue('--safe-bottom') ||
-                                    '0');
+                                const safeRight = window.innerWidth - getSafeCSSVar('--safe-right', 0);
+                                const safeBottom = window.innerHeight - getSafeCSSVar('--safe-bottom', 0);
                                 const maxX = safeRight - st.width - st.fixedLeft;
                                 const minX = -st.fixedLeft;
                                 const maxY = safeBottom - st.height - st.fixedTop;
@@ -3987,32 +3766,6 @@
                     });
                 },
 
-                _getTransform(el) {
-                    let tx = 0,
-                        ty = 0;
-                    const style = window.getComputedStyle(el);
-                    const transform = style.transform;
-                    if (transform && transform !== 'none') {
-                        const matrix = transform.match(/matrix.*\((.+)\)/);
-                        if (matrix) {
-                            const values = matrix[1].split(', ').map(Number);
-                            if (values.length === 6) { tx = values[4] || 0;
-                                ty = values[5] || 0; } else if (values.length === 16) { tx = values[12] || 0;
-                                ty = values[13] || 0; }
-                        }
-                    }
-                    return { x: tx, y: ty };
-                },
-
-                _applyTransformRAF(el, x, y, st) {
-                    if (st.rafId) { cancelAnimationFrame(st.rafId);
-                        st.rafId = null; }
-                    st.rafId = requestAnimationFrame(() => {
-                        el.style.transform = `translate(${x}px, ${y}px)`;
-                        st.rafId = null;
-                    });
-                },
-
                 _loadSimplePositions() {
                     const pos = Storage.get(getStorageKey('simplePositions'), {});
                     document.querySelectorAll('.simple-draggable').forEach(el => {
@@ -4022,7 +3775,6 @@
                             tx = pos[el.id].x;
                             ty = pos[el.id].y;
                         } else {
-                            // 默认布局优化
                             const isMobile = window.innerWidth <= 768;
                             if (el.id === 'clockArea') {
                                 tx = 0;
@@ -4039,13 +3791,9 @@
                             }
                         }
                         el.style.transform = `translate(${tx}px, ${ty}px)`;
-                        const st = window._simpleStateMap?.get(el);
-                        if (st) { st.baseTX = tx;
-                            st.baseTY = ty; }
                     });
                 },
 
-                // 修仙模式拖拽
                 _initWallpaperDrags() {
                     const items = document.querySelectorAll('.draggable-item');
                     items.forEach(item => {
@@ -4105,11 +3853,8 @@
                                 }
                                 let newX = origX + dx;
                                 let newY = origY + dy;
-                                const safeRight = window.innerWidth - parseFloat(getComputedStyle(
-                                    document.documentElement).getPropertyValue('--safe-right') || '0');
-                                const safeBottom = window.innerHeight - parseFloat(getComputedStyle(
-                                    document.documentElement).getPropertyValue('--safe-bottom') ||
-                                    '0');
+                                const safeRight = window.innerWidth - getSafeCSSVar('--safe-right', 0);
+                                const safeBottom = window.innerHeight - getSafeCSSVar('--safe-bottom', 0);
                                 newX = Math.max(0, Math.min(safeRight - item.offsetWidth, newX));
                                 newY = Math.max(0, Math.min(safeBottom - item.offsetHeight, newY));
                                 if (rafId) cancelAnimationFrame(rafId);
@@ -4172,10 +3917,9 @@
                     });
                 }
             };
-            let activeDrag = null;
 
             // ================================================================
-            // 14. 核心模块: 开始页与雨滴
+            // 14. 核心模块: 开始页与雨滴 (完整着色器)
             // ================================================================
             const StartPageManager = {
                 el: document.getElementById('startPage'),
@@ -4187,17 +3931,11 @@
                 _mouse: { x: 0, y: 0 },
 
                 init() {
-                    // 触发淡入
-                    setTimeout(() => {
-                        this.el.classList.remove('fade-out');
-                        this.el.classList.add('show');
-                    }, 200);
-                    // 延迟初始化雨滴
+                    setTimeout(() => { this.el.classList.remove('fade-out');
+                        this.el.classList.add('show'); }, 200);
                     setTimeout(() => this._initRainEffect(), 300);
-                    // 点击退出
                     this.el.addEventListener('click', () => this.exit());
                     this.el.addEventListener('touchstart', () => this.exit(), { passive: true });
-                    // 构建雨丝
                     this._buildRaindrops();
                 },
 
@@ -4205,21 +3943,14 @@
                     if (this.el.classList.contains('fade-out')) return;
                     this.el.classList.remove('show');
                     this.el.classList.add('fade-out');
-
-                    // 启动独立雨丝
                     const rc = this.rainContainer;
                     rc.classList.add('active');
                     setTimeout(() => {
                         rc.classList.add('fade-out');
-                        setTimeout(() => {
-                            rc.classList.remove('active');
-                            rc.style.display = 'none';
-                        }, 1200);
+                        setTimeout(() => { rc.classList.remove('active');
+                            rc.style.display = 'none'; }, 1200);
                     }, 300);
-
-                    setTimeout(() => {
-                        this._destroyRainEffect();
-                    }, 1300);
+                    setTimeout(() => this._destroyRainEffect(), 1300);
                 },
 
                 _buildRaindrops() {
@@ -4252,10 +3983,7 @@
 
                 _initRainEffect() {
                     if (this._rainInitialized || this._rainDestroyed) return;
-                    if (typeof Curtains === 'undefined') {
-                        console.warn('Curtains.js 未加载，雨滴跳过');
-                        return;
-                    }
+                    if (typeof Curtains === 'undefined') { console.warn('Curtains.js 未加载'); return; }
                     const container = document.getElementById('canvas');
                     const texture = document.getElementById('texture');
                     if (!container || !texture) return;
@@ -4269,94 +3997,104 @@
                             watchScroll: false,
                             pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
                         });
+
+                        // ===== 完整顶点着色器 =====
                         const vs = `
-                            #ifdef GL_ES
-                            precision mediump float;
-                            #endif
-                            attribute vec3 aVertexPosition;
-                            attribute vec2 aTextureCoord;
-                            uniform mat4 uMVMatrix;
-                            uniform mat4 uPMatrix;
-                            uniform mat4 dispImageMatrix;
-                            varying vec3 vVertexPosition;
-                            varying vec2 vTextureCoord;
-                            void main() {
-                                vec3 vertexPosition = aVertexPosition;
-                                gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-                                vTextureCoord = (dispImageMatrix * vec4(aTextureCoord, 0., 1.)).xy;
-                                vVertexPosition = vertexPosition;
-                            }
+                        #ifdef GL_ES
+                        precision mediump float;
+                        #endif
+                        attribute vec3 aVertexPosition;
+                        attribute vec2 aTextureCoord;
+                        uniform mat4 uMVMatrix;
+                        uniform mat4 uPMatrix;
+                        uniform mat4 dispImageMatrix;
+                        varying vec3 vVertexPosition;
+                        varying vec2 vTextureCoord;
+                        void main() {
+                            vec3 vertexPosition = aVertexPosition;
+                            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+                            vTextureCoord = (dispImageMatrix * vec4(aTextureCoord, 0., 1.)).xy;
+                            vVertexPosition = vertexPosition;
+                        }
                         `;
+
+                        // ===== 完整片元着色器 (雨滴特效) =====
                         const fs = `
-                            #ifdef GL_ES
-                            precision mediump float;
-                            #endif
-                            #define PI2 6.28318530718
-                            #define PI  3.14159265359
-                            #define S(a,b,n) smoothstep(a,b,n)
-                            varying vec3 vVertexPosition;
-                            varying vec2 vTextureCoord;
-                            uniform float uTime;
-                            uniform vec2  uReso;
-                            uniform vec2  uMouse;
-                            uniform sampler2D dispImage;
-                            float N12(vec2 p) {
-                                p = fract(p * vec2(123.34, 345.45));
-                                p += dot(p, p + 34.345);
-                                return fract(p.x * p.y);
+                        #ifdef GL_ES
+                        precision mediump float;
+                        #endif
+                        #define PI2 6.28318530718
+                        #define PI  3.14159265359
+                        #define S(a,b,n) smoothstep(a,b,n)
+
+                        varying vec3 vVertexPosition;
+                        varying vec2 vTextureCoord;
+
+                        uniform float uTime;
+                        uniform vec2  uReso;
+                        uniform vec2  uMouse;
+                        uniform sampler2D dispImage;
+
+                        float N12(vec2 p) {
+                            p = fract(p * vec2(123.34, 345.45));
+                            p += dot(p, p + 34.345);
+                            return fract(p.x * p.y);
+                        }
+
+                        vec3 Layer(vec2 uv0, float t) {
+                            vec2 asp = vec2(2., 1.);
+                            vec2 uv1 = uv0 * 3.0 * asp;
+                            uv1.y += t * 0.25;
+                            vec2 gv = fract(uv1) - 0.5;
+                            vec2 id = floor(uv1);
+                            float n = N12(id);
+                            t += n * PI2;
+                            float w = uv0.y * 10.0;
+                            float x = (n - 0.5) * 0.8;
+                            x += (0.4 - abs(x)) * sin(3.0 * w) * pow(sin(w), 6.0) * 0.45;
+                            float y = -sin(t + sin(t + sin(t) * 0.5)) * (0.5 - 0.06);
+                            y -= (gv.x - x) * (gv.x - x);
+                            vec2 dropPos = (gv - vec2(x, y)) / asp;
+                            float drop = S(0.015, 0.01, length(dropPos));
+                            vec2 trailPos = (gv - vec2(x, t * 0.25)) / asp;
+                            trailPos.y = (fract(trailPos.y * 8.0) - 0.5) / 8.0;
+                            float trail = S(0.01, 0.0075, length(trailPos));
+                            float fogTrail = S(-0.05, 0.05, dropPos.y);
+                            fogTrail *= S(0.5, y, gv.y);
+                            trail *= fogTrail;
+                            fogTrail *= S(0.015, 0.0075, abs(dropPos.x));
+                            vec2 off = drop * dropPos + trail * trailPos;
+                            return vec3(off, fogTrail);
+                        }
+
+                        void main() {
+                            float dist = 5.0;
+                            float blurSize = 1.5;
+                            float t = mod(uTime * 0.03, 7200.0);
+                            vec2 uv = vTextureCoord;
+                            vec3 drops = Layer(uv, t);
+                            drops += Layer(uv * 1.25 + 7.54, t);
+                            drops += Layer(uv * 1.35 + 1.54, t);
+                            drops += Layer(uv * 1.57 - 7.54, t);
+                            float blur = blurSize * 1.0 * (1.0 - drops.z);
+                            vec4 col = vec4(0.0);
+                            int numSamples = 32;
+                            float a = N12(uv) * PI2;
+                            blur *= 0.0005;
+                            uv += drops.xy * dist;
+                            for (int n = 0; n < 32; n++) {
+                                vec2 off = vec2(sin(a), cos(a)) * blur;
+                                float d = fract(sin(float(n + 1) * 546.0) * 5424.0);
+                                d = sqrt(d);
+                                off *= d;
+                                col += texture2D(dispImage, uv + off);
+                                a++;
                             }
-                            vec3 Layer(vec2 uv0, float t) {
-                                vec2 asp = vec2(2., 1.);
-                                vec2 uv1 = uv0 * 3.0 * asp;
-                                uv1.y += t * 0.25;
-                                vec2 gv = fract(uv1) - 0.5;
-                                vec2 id = floor(uv1);
-                                float n = N12(id);
-                                t += n * PI2;
-                                float w = uv0.y * 10.0;
-                                float x = (n - 0.5) * 0.8;
-                                x += (0.4 - abs(x)) * sin(3.0 * w) * pow(sin(w), 6.0) * 0.45;
-                                float y = -sin(t + sin(t + sin(t) * 0.5)) * (0.5 - 0.06);
-                                y -= (gv.x - x) * (gv.x - x);
-                                vec2 dropPos = (gv - vec2(x, y)) / asp;
-                                float drop = S(0.015, 0.01, length(dropPos));
-                                vec2 trailPos = (gv - vec2(x, t * 0.25)) / asp;
-                                trailPos.y = (fract(trailPos.y * 8.0) - 0.5) / 8.0;
-                                float trail = S(0.01, 0.0075, length(trailPos));
-                                float fogTrail = S(-0.05, 0.05, dropPos.y);
-                                fogTrail *= S(0.5, y, gv.y);
-                                trail *= fogTrail;
-                                fogTrail *= S(0.015, 0.0075, abs(dropPos.x));
-                                vec2 off = drop * dropPos + trail * trailPos;
-                                return vec3(off, fogTrail);
-                            }
-                            void main() {
-                                float dist = 5.0;
-                                float blurSize = 1.5;
-                                float t = mod(uTime * 0.03, 7200.0);
-                                vec2 uv = vTextureCoord;
-                                vec3 drops = Layer(uv, t);
-                                drops += Layer(uv * 1.25 + 7.54, t);
-                                drops += Layer(uv * 1.35 + 1.54, t);
-                                drops += Layer(uv * 1.57 - 7.54, t);
-                                float blur = blurSize * 1.0 * (1.0 - drops.z);
-                                vec4 col = vec4(0.0);
-                                int numSamples = 32;
-                                float a = N12(uv) * PI2;
-                                blur *= 0.0005;
-                                uv += drops.xy * dist;
-                                for (int n = 0; n < 32; n++) {
-                                    vec2 off = vec2(sin(a), cos(a)) * blur;
-                                    float d = fract(sin(float(n + 1) * 546.0) * 5424.0);
-                                    d = sqrt(d);
-                                    off *= d;
-                                    col += texture2D(dispImage, uv + off);
-                                    a++;
-                                }
-                                col /= float(numSamples);
-                                gl_FragColor = col;
-                            }
+                            col /= float(numSamples);
+                            gl_FragColor = col;
+                        }
                         `;
+
                         const planeEl = document.querySelector('.plane');
                         this._plane = this._curtains.addPlane(planeEl, {
                             vertexShader: vs,
@@ -4370,6 +4108,7 @@
                                         .innerHeight] },
                             }
                         });
+
                         if (this._plane) {
                             this._plane.onRender(() => {
                                 if (this._rainDestroyed) return;
@@ -4408,7 +4147,7 @@
             };
 
             // ================================================================
-            // 15. 核心模块: 时钟
+            // 15. 时钟
             // ================================================================
             const ClockManager = {
                 init() {
@@ -4430,7 +4169,7 @@
             };
 
             // ================================================================
-            // 16. 拉绳交互 (键盘支持)
+            // 16. 拉绳
             // ================================================================
             const RopeManager = {
                 handle: document.getElementById('rope-handle'),
@@ -4445,7 +4184,6 @@
 
                 init() {
                     this._reset(false);
-                    // 鼠标/触摸
                     this.handle.addEventListener('mousedown', (e) => this._onStart(e.clientY, e));
                     this.handle.addEventListener('touchstart', (e) => {
                         const t = e.touches[0];
@@ -4459,12 +4197,10 @@
                     }, { passive: true });
                     document.addEventListener('touchend', () => this._onEnd());
                     document.addEventListener('touchcancel', () => this._onEnd());
-                    // 键盘支持
                     this.handle.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
                             ModeManager.toggleDayNight();
-                            // 模拟拉动反馈
                             this.line.style.height = (60 + 70) + 'px';
                             this.handle.style.top = (72 + 70) + 'px';
                             setTimeout(() => this._reset(true), 400);
@@ -4540,17 +4276,15 @@
             };
 
             // ================================================================
-            // 17. 音乐播放器 UI 事件绑定
+            // 17. 音乐播放器事件绑定
             // ================================================================
             function bindMusicEvents() {
                 const cover = document.getElementById('playerCover');
                 const joystickDirs = document.querySelectorAll('.player-joystick .touch > div');
                 const btn = document.getElementById('playerJoystickBtn');
 
-                // 点击封面切换播放
                 cover.addEventListener('click', () => MusicManager.togglePlay());
 
-                // 摇杆方向
                 joystickDirs.forEach(div => {
                     const dir = div.dataset.dir;
                     div.addEventListener('mouseenter', () => {
@@ -4560,29 +4294,22 @@
                     div.addEventListener('mouseleave', () => {
                         btn.classList.remove('dir-up', 'dir-down', 'dir-left', 'dir-right');
                     });
-                    div.addEventListener('click', (e) => {
+                    div.addEventListener('click', (e) => { e.stopPropagation();
+                        MusicManager.handleJoystick(dir); });
+                    div.addEventListener('touchstart', (e) => { e.preventDefault();
                         e.stopPropagation();
-                        MusicManager.handleJoystick(dir);
-                    });
-                    div.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        MusicManager.handleJoystick(dir);
-                    }, { passive: false });
+                        MusicManager.handleJoystick(dir); }, { passive: false });
                 });
 
-                // 播放器拖拽 (整体)
                 const player = document.getElementById('musicPlayer');
                 let isDrag = false,
-                    ox, oy, sx, sy;
+                    ox, oy;
                 const onStart = (e) => {
                     if (e.target.closest('.player-cover') || e.target.closest('.player-joystick')) return;
                     const ev = e.touches ? e.touches[0] : e;
                     const rect = player.getBoundingClientRect();
                     ox = ev.clientX - rect.left;
                     oy = ev.clientY - rect.top;
-                    sx = rect.left;
-                    sy = rect.top;
                     isDrag = true;
                     player.style.cursor = 'grabbing';
                     if (e.cancelable) e.preventDefault();
@@ -4592,10 +4319,8 @@
                     const ev = e.touches ? e.touches[0] : e;
                     let x = ev.clientX - ox,
                         y = ev.clientY - oy;
-                    const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
-                        .getPropertyValue('--safe-right') || '0');
-                    const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
-                        .getPropertyValue('--safe-bottom') || '0');
+                    const safeRight = window.innerWidth - getSafeCSSVar('--safe-right', 0);
+                    const safeBottom = window.innerHeight - getSafeCSSVar('--safe-bottom', 0);
                     x = Math.max(0, Math.min(safeRight - player.offsetWidth, x));
                     y = Math.max(0, Math.min(safeBottom - player.offsetHeight, y));
                     player.style.left = x + 'px';
@@ -4638,46 +4363,22 @@
             // 19. 主初始化
             // ================================================================
             function initApp() {
-                // 加载模块折叠状态
                 const ms = Storage.get('moduleStates');
                 if (ms) Object.assign(state.moduleStates, ms);
 
-                // 加载链接
                 LinkManager.init();
-
-                // 加载名言
                 QuoteManager.init();
-
-                // 加载元素状态
                 ElemManager.init();
-
-                // 加载模式
                 ModeManager.init();
-
-                // 壁纸管理器 (由ModeManager内部调用)
-                // 拖拽
                 DragManager.init();
-
-                // 时钟
                 ClockManager.init();
-
-                // 拉绳
                 RopeManager.init();
-
-                // 音乐
                 MusicManager.init();
                 bindMusicEvents();
-
-                // 设置UI
                 UIManager.init();
-
-                // 开始页
                 StartPageManager.init();
-
-                // 双击播放器
                 initDoubleTapPlayer();
 
-                // 模态框事件
                 document.getElementById('modalSave').addEventListener('click', () => LinkManager.saveLink());
                 document.getElementById('modalCancel').addEventListener('click', () => LinkManager.closeEditor());
                 document.getElementById('modalDelete').addEventListener('click', () => LinkManager.deleteLink());
@@ -4685,7 +4386,6 @@
                     if (e.target === e.currentTarget) LinkManager.closeEditor();
                 });
 
-                // 搜索框事件
                 const searchInput = document.getElementById('searchInput');
                 const searchBtn = document.getElementById('searchBtn');
                 searchBtn.addEventListener('click', () => LinkManager.search(searchInput.value));
@@ -4706,19 +4406,15 @@
                     }
                 });
 
-                // 预加载核心资源
                 ResourceLoader.preloadCore(
                     state.currentWallpaperType,
                     state.currentWallpaperId,
                     state.currentSongIndex
                 );
 
-                // 窗口resize调整边界
                 window.addEventListener('resize', () => {
-                    const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
-                        .getPropertyValue('--safe-right') || '0');
-                    const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
-                        .getPropertyValue('--safe-bottom') || '0');
+                    const safeRight = window.innerWidth - getSafeCSSVar('--safe-right', 0);
+                    const safeBottom = window.innerHeight - getSafeCSSVar('--safe-bottom', 0);
                     document.querySelectorAll('.draggable-item').forEach(item => {
                         if (item.style.display !== 'none') {
                             let left = parseFloat(item.style.left) || 0;
@@ -4729,7 +4425,6 @@
                             item.style.top = top + 'px';
                         }
                     });
-                    // 简单模式拖拽边界
                     document.querySelectorAll('.simple-draggable').forEach(el => {
                         const rect = el.getBoundingClientRect();
                         const transform = DragManager._getTransform(el);
@@ -4754,27 +4449,20 @@
                     });
                 });
 
-                console.log('✅ 小永子·灵境 启动成功 (全部六方向优化)');
-                console.log('📱 移动端适配 + 键盘支持 + 导入/导出配置');
-                console.log('🖱️ 右键锁定元素 | 双击空白切换播放器');
+                console.log('✅ 小永子·灵境 完整修复版启动 (含全部着色器)');
             }
 
-            // 页面加载完成后启动
             if (document.readyState === 'complete') {
                 setTimeout(initApp, 100);
             } else {
                 window.addEventListener('load', () => setTimeout(initApp, 100));
             }
 
-            // 页面关闭释放资源
             window.addEventListener('beforeunload', () => {
                 ResourceLoader.revokeAll();
-                if (state.audioPlayer) {
-                    state.audioPlayer.pause();
-                    state.audioPlayer.src = '';
-                }
+                if (state.audioPlayer) { state.audioPlayer.pause();
+                    state.audioPlayer.src = ''; }
                 if (state.intervalTimer) clearInterval(state.intervalTimer);
-                // 清理拖拽监听
                 document.querySelectorAll('.simple-draggable, .draggable-item').forEach(el => {
                     if (el._dragCleanup) el._dragCleanup();
                 });
