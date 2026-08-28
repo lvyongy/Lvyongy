@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline' https://www.curtainsjs.com https://lvyy.cc.cd https://static.cloudflareinsights.com; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self';">
     <title>小永子の首页</title>
     <style>
         /* ===== 全局重置 & 变量 ===== */
@@ -70,6 +71,7 @@
             position: relative;
             width: 100%;
             max-width: 100vw;
+            background-color: #d0d4d8;
         }
         body.night-mode {
             background: var(--bg-night);
@@ -79,6 +81,7 @@
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            background-color: #121416;
         }
         body.wallpaper-mode {
             background-image: none !important;
@@ -1956,7 +1959,9 @@
             }
         }
 
-        /* ===== 开始页（含雨滴特效层） ===== */
+        /* ================================================================
+           开始页（顶层覆盖层，含雨滴）—— 全新淡入淡出设计
+           ================================================================ */
         #startPage {
             position: fixed;
             top: 0;
@@ -1966,95 +1971,56 @@
             height: 100dvh;
             z-index: 99999;
             background-color: #0a0c0e;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding-bottom: 18%;
+            overflow: hidden;
+            cursor: pointer;
+            /* 关键：淡入淡出过渡 */
             transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                 transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            will-change: opacity, transform;
-            cursor: pointer;
-            overflow: hidden;
-        }
-        /* 雨滴canvas容器 — 在背景之上，内容之下 */
-#rainCanvasContainer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;   /* 必须显式设置高度，而非仅依赖 position */
-    z-index: 1;
-    pointer-events: none;
-}
-        #rainCanvasContainer canvas {
-            display: block;
-            width: 100% !important;
-            height: 100% !important;
-        }
-        /* 纹理图片隐藏 */
-        #textureImage {
-            display: none;
-        }
-        /* 开始页内容层 (z-index高于canvas) */
-        .start-loading,
-        .start-subtitle {
-            position: relative;
-            z-index: 2;
-            pointer-events: none;
-        }
-        #startPage .start-loading {
-            display: none;
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 1.2rem;
-            letter-spacing: 4px;
-            font-weight: 300;
-            font-family: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.04);
-            animation: loadingPulse 1.8s ease-in-out infinite;
-            margin-top: auto;
-            margin-bottom: 5%;
+            /* 初始透明——等待 JS 触发淡入 */
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            /* 透明时不可交互 */;
+        }
+        /* 淡入状态：可见 + 可交互 */
+        #startPage.show {
+        }
+        /* 淡出状态：透明 + 不可交互 */
+        #startPage.fade-out {
+            opacity: 0;
+            transform: scale(1.04);
             pointer-events: none;
         }
-        #startPage.loading .start-loading {
-            display: flex;
-        }
-        #startPage:not(.loading) .start-loading {
+        /* 隐藏状态（完全不可见，保留在 DOM 中） */
+        #startPage.hide {
             display: none;
         }
-        .start-loading .spinner {
-            width: 28px;
-            height: 28px;
-            border: 2px solid rgba(255, 255, 255, 0.08);
-            border-top-color: rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            animation: spin 0.9s linear infinite;
+
+        #startPage #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
         }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        #startPage .plane {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
         }
-        @keyframes loadingPulse {
-            0% {
-                opacity: 0.3;
-            }
-            50% {
-                opacity: 0.8;
-            }
-            100% {
-                opacity: 0.3;
-            }
-        }
-        #startPage .start-subtitle {
-            display: none;
+        .start-subtitle {
+            position: relative;
+            z-index: 2;
             font-size: 1.8rem;
             font-weight: 300;
             letter-spacing: 6px;
@@ -2070,40 +2036,23 @@
             border: none !important;
             border-radius: 0 !important;
             padding: 0 !important;
-            margin-top: auto;
-            margin-bottom: 5%;
+            margin-bottom: 10%;
             pointer-events: none;
-        }
-        #startPage:not(.loading) .start-subtitle {
-            display: block;
+            text-align: center;
         }
         @keyframes breath {
-            0% {
-                opacity: 0.4;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
-                transform: scale(0.98);
+            0%,
+            100% {
+                opacity: 0.7;
+                transform: scale(1);
             }
             50% {
                 opacity: 1;
-                text-shadow: 0 0 40px rgba(255, 255, 255, 0.15);
                 transform: scale(1.02);
             }
-            100% {
-                opacity: 0.4;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
-                transform: scale(0.98);
-            }
-        }
-        #startPage.fade-out {
-            opacity: 0;
-            transform: scale(1.04);
-            pointer-events: none;
-        }
-        #startPage.hide {
-            display: none !important;
         }
 
-        /* ===== 独立的雨丝容器（进入首页后继续显示） ===== */
+        /* ===== 独立雨丝容器（进入首页后出现并淡出） ===== */
         #rain-container {
             position: fixed;
             top: 0;
@@ -2115,7 +2064,15 @@
             z-index: 99998;
             overflow: hidden;
             transition: opacity 1.2s ease;
+            opacity: 0;
+            display: none;
+        }
+        #rain-container.active {
+            display: block;
             opacity: 1;
+        }
+        #rain-container.fade-out {
+            opacity: 0;
         }
         #rain-container .raindrop {
             position: absolute;
@@ -2401,7 +2358,7 @@
                 width: 16px;
                 height: 16px;
             }
-            #startPage .start-subtitle {
+            .start-subtitle {
                 font-size: 1.4rem;
                 letter-spacing: 4px;
             }
@@ -2542,7 +2499,7 @@
                 width: 14px;
                 height: 14px;
             }
-            #startPage .start-subtitle {
+            .start-subtitle {
                 font-size: 1.2rem;
                 letter-spacing: 3px;
             }
@@ -2561,22 +2518,16 @@
 
 <body>
 
-    <!-- ===== 开始页（含雨滴玻璃特效） ===== -->
-    <div id="startPage" class="loading">
-        <!-- 雨滴canvas容器（z-index:1，位于背景之上） -->
-        <div id="rainCanvasContainer"></div>
-        <!-- 纹理图片（隐藏，供Curtains使用） -->
-        <img id="textureImage" src="images/background.png" crossorigin="anonymous" style="display:none;" />
-        <!-- 加载动画（z-index:2） -->
-        <div class="start-loading">
-            <div class="spinner"></div>
-            <span>加载中 ...</span>
+    <!-- ===== 开始页（顶层覆盖层，WebGL 雨滴特效） ===== -->
+    <div id="startPage">
+        <div id="canvas"></div>
+        <div class="plane">
+            <img data-sampler="dispImage" id="texture" src="images/background.png" crossorigin="anonymous" />
         </div>
-        <!-- 点击进入文字（z-index:2） -->
         <div class="start-subtitle">✦ 点击任意处开启 ✦</div>
     </div>
 
-    <!-- 独立雨丝容器（进入首页后继续显示，2秒后淡出） -->
+    <!-- 独立雨丝容器（进入首页后出现并淡出） -->
     <div id="rain-container"></div>
 
     <!-- 修仙容器 (原壁纸容器) -->
@@ -2722,294 +2673,6 @@
 
             function getStorageKey(baseKey) {
                 return isMobile() ? baseKey + '_mobile' : baseKey + '_desktop';
-            }
-
-            // ================================================================
-            // 0b. 开始页 + 独立雨丝
-            // ================================================================
-            const startPage = document.getElementById('startPage');
-            const rainContainer = document.getElementById('rain-container');
-            let startPageHidden = false;
-            let startPageReady = false;
-
-            // 在 rain-container 中生成雨滴（从 startPage 迁移过来）
-            function buildRaindrops() {
-                rainContainer.innerHTML = '';
-                const raindropConfigs = [
-                    { left: 10, duration: 2.4, delay: 0.2, height: 60 },
-                    { left: 22, duration: 3.0, delay: 0.8, height: 80 },
-                    { left: 35, duration: 2.0, delay: 0.0, height: 50 },
-                    { left: 48, duration: 2.8, delay: 0.5, height: 70 },
-                    { left: 60, duration: 2.2, delay: 1.0, height: 55 },
-                    { left: 73, duration: 3.2, delay: 0.3, height: 90 },
-                    { left: 85, duration: 2.6, delay: 0.7, height: 65 },
-                    { left: 92, duration: 2.0, delay: 1.2, height: 45 },
-                    { left: 15, duration: 2.9, delay: 0.9, height: 75 },
-                    { left: 42, duration: 2.1, delay: 0.1, height: 50 },
-                    { left: 68, duration: 3.1, delay: 0.6, height: 85 },
-                    { left: 78, duration: 2.3, delay: 1.1, height: 60 },
-                ];
-                raindropConfigs.forEach(cfg => {
-                    const el = document.createElement('div');
-                    el.className = 'raindrop';
-                    el.style.left = cfg.left + '%';
-                    el.style.animationDuration = cfg.duration + 's';
-                    el.style.animationDelay = cfg.delay + 's';
-                    el.style.height = cfg.height + 'px';
-                    rainContainer.appendChild(el);
-                });
-            }
-            buildRaindrops();
-
-            // ================================================================
-            // 0c. 雨滴玻璃特效 (Curtains.js) — 集成到 #startPage
-            // ================================================================
-            let rainCurtains = null;
-            let rainPlane = null;
-            let rainInitialized = false;
-
-            // 着色器代码 (修改版：雨量减少、速度减慢)
-            const rainVertexShader = `
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-
-                attribute vec3 aVertexPosition;
-                attribute vec2 aTextureCoord;
-
-                uniform mat4 uMVMatrix;
-                uniform mat4 uPMatrix;
-                uniform mat4 dispImageMatrix;
-
-                varying vec3 vVertexPosition;
-                varying vec2 vTextureCoord;
-
-                void main() {
-                    vec3 vertexPosition = aVertexPosition;
-                    gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-                    vTextureCoord = (dispImageMatrix * vec4(aTextureCoord, 0., 1.)).xy;
-                    vVertexPosition = vertexPosition;
-                }
-            `;
-
-            const rainFragmentShader = `
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-
-                #define PI2 6.28318530718
-                #define PI  3.14159265359
-                #define S(a,b,n) smoothstep(a,b,n)
-
-                varying vec3 vVertexPosition;
-                varying vec2 vTextureCoord;
-
-                uniform float uTime;
-                uniform vec2  uReso;
-
-                uniform sampler2D dispImage;
-
-                // ---- 噪声 ----
-                float N12(vec2 p) {
-                    p = fract(p * vec2(123.34, 345.45));
-                    p += dot(p, p + 34.345);
-                    return fract(p.x * p.y);
-                }
-
-                // ---- 单层雨滴 (密度调高 → 雨滴更稀疏) ----
-                vec3 Layer(vec2 uv0, float t) {
-                    vec2 asp = vec2(2., 1.);
-                    // 密度从 3.0 提高到 4.5，使雨滴更稀疏
-                    vec2 uv1 = uv0 * 4.5 * asp;
-                    uv1.y += t * 0.25;
-
-                    vec2 gv = fract(uv1) - 0.5;
-                    vec2 id = floor(uv1);
-
-                    float n = N12(id);
-                    t += n * PI2;
-
-                    float w = uv0.y * 10.0;
-                    float x = (n - 0.5) * 0.8;
-                    x += (0.4 - abs(x)) * sin(3.0 * w) * pow(sin(w), 6.0) * 0.45;
-
-                    float y = -sin(t + sin(t + sin(t) * 0.5)) * (0.5 - 0.06);
-                    y -= (gv.x - x) * (gv.x - x);
-
-                    // 雨滴大小阈值调小 → 雨滴更小更淡
-                    vec2 dropPos = (gv - vec2(x, y)) / asp;
-                    float drop = S(0.025, 0.015, length(dropPos));
-
-                    vec2 trailPos = (gv - vec2(x, t * 0.25)) / asp;
-                    trailPos.y = (fract(trailPos.y * 8.0) - 0.5) / 8.0;
-                    float trail = S(0.02, 0.015, length(trailPos));
-
-                    float fogTrail = S(-0.05, 0.05, dropPos.y);
-                    fogTrail *= S(0.5, y, gv.y);
-                    trail *= fogTrail;
-                    fogTrail *= S(0.03, 0.015, abs(dropPos.x));
-
-                    vec2 off = drop * dropPos + trail * trailPos;
-                    return vec3(off, fogTrail);
-                }
-
-                // ---- 主渲染 ----
-                void main() {
-                    float dist = 5.0;
-                    float blurSize = 5.0;
-                    // 速度从 0.03 降到 0.012，滑落更慢
-                    float t = mod(uTime * 0.012, 7200.0);
-
-                    vec2 uv = vTextureCoord;
-
-                    // 雨量从 4 层减到 2 层
-                    vec3 drops = Layer(uv, t);
-                    drops += Layer(uv * 1.35 + 1.54, t);
-
-                    float blur = blurSize * 7.0 * (1.0 - drops.z);
-                    vec4 col = vec4(0.0);
-
-                    // 采样数从 32 减到 20，提升性能
-                    int numSamples = 20;
-                    float a = N12(uv) * PI2;
-
-                    blur *= 0.0005;
-                    uv += drops.xy * dist;
-
-                    for (int n = 0; n < 20; n++) {
-                        vec2 off = vec2(sin(a), cos(a)) * blur;
-                        float d = fract(sin(float(n + 1) * 546.0) * 5424.0);
-                        d = sqrt(d);
-                        off *= d;
-                        col += texture2D(dispImage, uv + off);
-                        a++;
-                    }
-
-                    col /= float(numSamples);
-                    gl_FragColor = col;
-                }
-            `;
-
-            function initRainEffect() {
-                if (rainInitialized) return;
-                const container = document.getElementById('rainCanvasContainer');
-                const textureImg = document.getElementById('textureImage');
-                if (!container || !textureImg) return;
-
-                // 确保图片已加载
-                if (!textureImg.complete || textureImg.naturalWidth === 0) {
-                    // 图片尚未加载，等待
-                    textureImg.onload = function() {
-                        initRainEffect();
-                    };
-                    return;
-                }
-
-                try {
-                    // 创建 Curtains 实例，绑定到容器
-                    rainCurtains = new Curtains({
-                        container: 'rainCanvasContainer',
-                        watchScroll: false,
-                        pixelRatio: Math.min(window.devicePixelRatio || 1, 2), // 限制像素比提升性能
-                    });
-
-                    // 创建平面
-                    const planeParams = {
-                        vertexShader: rainVertexShader,
-                        fragmentShader: rainFragmentShader,
-                        widthSegments: 20,
-                        heightSegments: 20,
-                        uniforms: {
-                            time: {
-                                name: 'uTime',
-                                type: '1f',
-                                value: 0,
-                            },
-                            resolution: {
-                                name: 'uReso',
-                                type: '2f',
-                                value: [window.innerWidth, window.innerHeight],
-                            },
-                        },
-                        // 使用 data-sampler 自动绑定纹理
-                        // 但 Curtains 通过 data-sampler 属性查找，我们手动绑定
-                    };
-
-                    // 创建一个包含 img 的 plane 元素
-                    const planeEl = document.createElement('div');
-                    planeEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
-                    planeEl.setAttribute('data-sampler', 'dispImage');
-                    // 将 textureImg 移动到 planeEl 中
-                    planeEl.appendChild(textureImg);
-                    container.appendChild(planeEl);
-
-                    rainPlane = new Plane(rainCurtains, planeEl, {
-    vertexShader: rainVertexShader,
-    fragmentShader: rainFragmentShader,
-    uniforms: {
-        uTime: { name: "uTime", type: "1f", value: 0 },
-        uReso: { name: "uReso", type: "2f", value: [window.innerWidth, window.innerHeight] },
-        uSampler0: { name: "uSampler0", type: "sampler2D" } // 纹理采样器需在uniforms中声明
-    }
-});
-
-                    if (rainPlane) {
-                        rainPlane.onRender(() => {
-                            rainPlane.uniforms.time.value++;
-                            rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
-                        });
-                        rainInitialized = true;
-                        console.log('🌧️ 雨滴玻璃特效已启动 (雨量减少, 速度减慢)');
-                    } else {
-                        console.warn('⚠️ 雨滴平面初始化失败');
-                        // 清理
-                        if (rainCurtains) {
-                            rainCurtains.dispose();
-                            rainCurtains = null;
-                        }
-                    }
-                } catch (e) {
-                    console.warn('⚠️ 雨滴特效初始化异常:', e);
-                    if (rainCurtains) {
-                        rainCurtains.dispose();
-                        rainCurtains = null;
-                    }
-                }
-            }
-
-            // 销毁雨滴特效
-            function destroyRainEffect() {
-                if (rainPlane) {
-                    try {
-                        rainPlane.remove();
-                    } catch (e) {}
-                    rainPlane = null;
-                }
-                if (rainCurtains) {
-                    try {
-                        rainCurtains.dispose();
-                    } catch (e) {}
-                    rainCurtains = null;
-                }
-                rainInitialized = false;
-                // 清理容器
-                const container = document.getElementById('rainCanvasContainer');
-                if (container) {
-                    container.innerHTML = '';
-                    // 重新添加纹理图片（以便后续重新初始化）
-                    const img = document.getElementById('textureImage');
-                    if (img && !container.contains(img)) {
-                        container.appendChild(img);
-                    }
-                }
-                console.log('🌧️ 雨滴特效已销毁');
-            }
-
-            // 窗口 resize 时更新分辨率
-            function handleRainResize() {
-                if (rainPlane) {
-                    rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
-                }
             }
 
             // ================================================================
@@ -3466,11 +3129,11 @@
                 if (quoteLocked) {
                     quoteArea.classList.add('locked');
                     quoteArea.style.cursor = 'default';
-                    wqDisplay.classList.add('locked');
+                    if (wqDisplay) wqDisplay.classList.add('locked');
                 } else {
                     quoteArea.classList.remove('locked');
                     quoteArea.style.cursor = 'pointer';
-                    wqDisplay.classList.remove('locked');
+                    if (wqDisplay) wqDisplay.classList.remove('locked');
                 }
                 saveAllSettings();
             }
@@ -3479,10 +3142,12 @@
                 e.preventDefault();
                 toggleQuoteLock();
             });
-            wqDisplay.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                toggleQuoteLock();
-            });
+            if (wqDisplay) {
+                wqDisplay.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    toggleQuoteLock();
+                });
+            }
 
             quoteArea.addEventListener('click', function(e) {
                 if (this._clickTimer) {
@@ -3495,20 +3160,22 @@
                     if (!quoteLocked) nextQuote();
                 }, 200);
             });
-            wqDisplay.addEventListener('click', function(e) {
-                if (this._clickTimerW) {
-                    clearTimeout(this._clickTimerW);
-                    this._clickTimerW = null;
-                    return;
-                }
-                this._clickTimerW = setTimeout(() => {
-                    this._clickTimerW = null;
-                    if (!quoteLocked) nextQuote();
-                }, 200);
-            });
+            if (wqDisplay) {
+                wqDisplay.addEventListener('click', function(e) {
+                    if (this._clickTimerW) {
+                        clearTimeout(this._clickTimerW);
+                        this._clickTimerW = null;
+                        return;
+                    }
+                    this._clickTimerW = setTimeout(() => {
+                        this._clickTimerW = null;
+                        if (!quoteLocked) nextQuote();
+                    }, 200);
+                });
+            }
 
             // ================================================================
-            // 6. 快捷链接
+            // 6. 快捷链接 (修复: URL 安全校验)
             // ================================================================
             const linksGrid = document.getElementById('linksGrid');
             const glassLinks = document.getElementById('glassLinks');
@@ -3528,6 +3195,36 @@
             let editingIndex = -1;
             let searchVisible = true;
             let searchBtnEndExists = false;
+
+            // 安全的 URL 校验
+            function isValidUrl(url) {
+                if (!url) return false;
+                let trimmed = url.trim();
+                // 黑名单协议
+                if (/^(javascript|data|vbscript):/i.test(trimmed)) return false;
+                // 尝试使用 URL 构造函数
+                try {
+                    const parsed = new URL(trimmed);
+                    return ['http:', 'https:', 'ftp:', 'mailto:', 'tel:'].includes(parsed.protocol);
+                } catch (_) {
+                    // 尝试添加协议再解析
+                    try {
+                        const parsed2 = new URL('http://' + trimmed);
+                        return ['http:', 'https:', 'ftp:'].includes(parsed2.protocol);
+                    } catch {
+                        return false;
+                    }
+                }
+            }
+
+            function sanitizeUrl(url) {
+                const trimmed = url.trim();
+                if (!trimmed) return '';
+                if (!trimmed.includes('://') && !trimmed.startsWith('mailto:') && !trimmed.startsWith('tel:')) {
+                    return 'http://' + trimmed;
+                }
+                return trimmed;
+            }
 
             function renderAllLinks() {
                 const existingMobile = document.getElementById('searchBtnMobile');
@@ -3660,12 +3357,13 @@
                 const text = modalText.value.trim();
                 const url = modalUrl.value.trim();
                 if (!text || !url) { showToast('请填写完整信息'); return; }
-                if (!/^(https?|ftp|mailto|tel):/i.test(url) && !url.includes('://')) {
-                    showToast('链接地址需包含协议（如 http://, https://）');
+                if (!isValidUrl(url)) {
+                    showToast('链接地址无效，仅支持 http, https, ftp, mailto, tel 协议');
                     return;
                 }
-                if (editingIndex === -1) links.push({ text, url });
-                else links[editingIndex] = { text, url };
+                const safeUrl = sanitizeUrl(url);
+                if (editingIndex === -1) links.push({ text, url: safeUrl });
+                else links[editingIndex] = { text, url: safeUrl };
                 renderAllLinks();
                 closeEditor();
                 saveLinksToStorage();
@@ -3747,7 +3445,7 @@
             });
 
             // ================================================================
-            // 7. 设置面板 - 模块化设计
+            // 7. 设置面板 - 模块化设计 (修复: 语录模块 DOM 安全创建)
             // ================================================================
             const settingsToggleBtn = document.getElementById('wallpaperSettingsBtn');
             const settingsPanel = document.getElementById('settingsPanel');
@@ -3844,7 +3542,6 @@
                     }
                     el.style.opacity = state.opacity;
                 });
-                syncElemControls();
             }
 
             let isWallpaperMode = false;
@@ -3903,7 +3600,7 @@
                 items.forEach(wp => {
                     const el = document.createElement('div');
                     el.className = 'wp-preview-item' + (type === currentWallpaperType && id === wp.id ? ' active' :
-                    '');
+                        '');
                     el.dataset.id = wp.id;
                     el.dataset.type = type;
                     if (type === 'dynamic') {
@@ -3944,124 +3641,207 @@
                 });
             }
 
-            function renderSettings() {
-                const isWp = isWallpaperMode;
-                let html = '';
+            // ---- 安全构建语录模块 (完全使用 DOM, 避免 innerHTML) ----
+            function renderQuotesModule() {
+                const container = document.createElement('div');
+                container.className = 'settings-module';
+                container.dataset.module = 'quotes';
 
-                html += `
-                        <div class="settings-module" data-module="mode">
-                            <div class="settings-module-header" data-module-toggle="mode">
-                                <span>✦ 模式</span>
-                                <span class="arrow ${moduleStates.mode ? '' : 'collapsed'}">▾</span>
+                // header
+                const header = document.createElement('div');
+                header.className = 'settings-module-header';
+                header.dataset.moduleToggle = 'quotes';
+                const headerSpan = document.createElement('span');
+                headerSpan.textContent = '❝ 经典语录';
+                const arrow = document.createElement('span');
+                arrow.className = 'arrow' + (moduleStates.quotes ? '' : ' collapsed');
+                arrow.textContent = '▾';
+                header.appendChild(headerSpan);
+                header.appendChild(arrow);
+                container.appendChild(header);
+
+                // body
+                const body = document.createElement('div');
+                body.className = 'settings-module-body' + (moduleStates.quotes ? '' : ' collapsed');
+
+                // 语录列表
+                const manager = document.createElement('div');
+                manager.className = 'quote-manager';
+                manager.id = 'quoteManager';
+                quotes.forEach((q, i) => {
+                    const item = document.createElement('div');
+                    item.className = 'quote-item';
+                    item.dataset.index = i;
+
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'q-text';
+                    textSpan.textContent = q.text;
+
+                    const authorSpan = document.createElement('span');
+                    authorSpan.className = 'q-author';
+                    authorSpan.textContent = '— ' + q.author;
+
+                    const actions = document.createElement('div');
+                    actions.className = 'q-actions';
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'edit-btn';
+                    editBtn.textContent = '✎';
+                    editBtn.dataset.index = i;
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'del-btn';
+                    delBtn.textContent = '✕';
+                    delBtn.dataset.index = i;
+                    actions.appendChild(editBtn);
+                    actions.appendChild(delBtn);
+
+                    item.appendChild(textSpan);
+                    item.appendChild(authorSpan);
+                    item.appendChild(actions);
+                    manager.appendChild(item);
+                });
+                body.appendChild(manager);
+
+                // 添加表单
+                const form = document.createElement('div');
+                form.className = 'quote-add-form';
+                const inputText = document.createElement('input');
+                inputText.type = 'text';
+                inputText.id = 'newQuoteText';
+                inputText.placeholder = '语录内容';
+                const inputAuthor = document.createElement('input');
+                inputAuthor.type = 'text';
+                inputAuthor.id = 'newQuoteAuthor';
+                inputAuthor.placeholder = '作者';
+                const addBtn = document.createElement('button');
+                addBtn.id = 'addQuoteBtn';
+                addBtn.textContent = '添加';
+                form.appendChild(inputText);
+                form.appendChild(inputAuthor);
+                form.appendChild(addBtn);
+                body.appendChild(form);
+
+                // 间隔控制
+                const intervalRow = document.createElement('div');
+                intervalRow.className = 'setting-row';
+                const intervalCtrl = document.createElement('div');
+                intervalCtrl.className = 'interval-control';
+                const label = document.createElement('label');
+                label.textContent = '切换间隔（秒）';
+                const intervalInput = document.createElement('input');
+                intervalInput.type = 'number';
+                intervalInput.id = 'intervalInput';
+                intervalInput.min = '1';
+                intervalInput.max = '300';
+                intervalInput.value = Math.round(quoteInterval / 1000);
+                const unit = document.createElement('span');
+                unit.style.cssText = 'font-size:0.6rem;opacity:0.4;';
+                unit.textContent = '秒';
+                intervalCtrl.appendChild(label);
+                intervalCtrl.appendChild(intervalInput);
+                intervalCtrl.appendChild(unit);
+                intervalRow.appendChild(intervalCtrl);
+                body.appendChild(intervalRow);
+
+                container.appendChild(body);
+
+                // 返回 DOM 元素，后续需要绑定事件，但我们返回 container 并且外部会追加到 settingsDynamic
+                // 但由于 settingsDynamic 使用 innerHTML 会清除所有，所以我们改为使用 replaceChildren
+                return container;
+            }
+
+            // ---- 重写 renderSettings 使用 DOM 追加 ----
+            function renderSettings() {
+                // 清空 settingsDynamic
+                const content = document.getElementById('settingsDynamicContent');
+                content.innerHTML = ''; // 仍使用 innerHTML 清空，但后续全部用 DOM 追加
+
+                // 模式模块 (可保留字符串，因为不涉及用户输入)
+                const modeModule = document.createElement('div');
+                modeModule.className = 'settings-module';
+                modeModule.dataset.module = 'mode';
+                modeModule.innerHTML = `
+                    <div class="settings-module-header" data-module-toggle="mode">
+                        <span>✦ 模式</span>
+                        <span class="arrow ${moduleStates.mode ? '' : 'collapsed'}">▾</span>
+                    </div>
+                    <div class="settings-module-body ${moduleStates.mode ? '' : 'collapsed'}">
+                        <div class="setting-row">
+                            <div class="mode-switch-container">
+                                <div class="mode-switch-big ${isWallpaperMode ? 'wallpaper' : ''}" id="modeSwitchBig">
+                                    <span class="mode-label-left ${!isWallpaperMode ? 'active' : ''}">阴阳</span>
+                                    <span class="mode-label-right ${isWallpaperMode ? 'active' : ''}">修仙</span>
+                                    <div class="slider-track"></div>
+                                </div>
                             </div>
-                            <div class="settings-module-body ${moduleStates.mode ? '' : 'collapsed'}">
-                                <div class="setting-row">
-                                    <div class="mode-switch-container">
-                                        <div class="mode-switch-big ${isWp ? 'wallpaper' : ''}" id="modeSwitchBig">
-                                            <span class="mode-label-left ${!isWp ? 'active' : ''}">阴阳</span>
-                                            <span class="mode-label-right ${isWp ? 'active' : ''}">修仙</span>
-                                            <div class="slider-track"></div>
-                                        </div>
-                                    </div>
+                        </div>
+                    </div>
+                `;
+                content.appendChild(modeModule);
+
+                // 壁纸模块（只当修仙模式时显示）
+                if (isWallpaperMode) {
+                    const wpModule = document.createElement('div');
+                    wpModule.className = 'settings-module';
+                    wpModule.dataset.module = 'wallpaper';
+                    wpModule.innerHTML = `
+                        <div class="settings-module-header" data-module-toggle="wallpaper">
+                            <span>🏔 修仙</span>
+                            <span class="arrow ${moduleStates.wallpaper ? '' : 'collapsed'}">▾</span>
+                        </div>
+                        <div class="settings-module-body ${moduleStates.wallpaper ? '' : 'collapsed'}">
+                            <div class="setting-row">
+                                <label>类型</label>
+                                <div class="type-btns">
+                                    <button class="type-btn ${currentWallpaperType === 'static' ? 'active' : ''}" data-type="static">静态</button>
+                                    <button class="type-btn ${currentWallpaperType === 'dynamic' ? 'active' : ''}" data-type="dynamic">动态</button>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <label>选择仙境</label>
+                                <div class="wallpaper-scroll-container">
+                                    <div class="wp-grid" id="wallpaperPreviewGrid"></div>
                                 </div>
                             </div>
                         </div>
                     `;
-
-                if (isWp) {
-                    html += `
-                            <div class="settings-module" data-module="wallpaper">
-                                <div class="settings-module-header" data-module-toggle="wallpaper">
-                                    <span>🏔 修仙</span>
-                                    <span class="arrow ${moduleStates.wallpaper ? '' : 'collapsed'}">▾</span>
-                                </div>
-                                <div class="settings-module-body ${moduleStates.wallpaper ? '' : 'collapsed'}">
-                                    <div class="setting-row">
-                                        <label>类型</label>
-                                        <div class="type-btns">
-                                            <button class="type-btn ${currentWallpaperType === 'static' ? 'active' : ''}" data-type="static">静态</button>
-                                            <button class="type-btn ${currentWallpaperType === 'dynamic' ? 'active' : ''}" data-type="dynamic">动态</button>
-                                        </div>
-                                    </div>
-                                    <div class="setting-row">
-                                        <label>选择仙境</label>
-                                        <div class="wallpaper-scroll-container">
-                                            <div class="wp-grid" id="wallpaperPreviewGrid"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
+                    content.appendChild(wpModule);
                 }
 
-                const defs = isWp ? elemDefs.wallpaper : elemDefs.simple;
+                // 元素控制模块（使用模板字符串，因为不涉及用户输入）
+                const elemModule = document.createElement('div');
+                elemModule.className = 'settings-module';
+                elemModule.dataset.module = 'elements';
+                const defs = isWallpaperMode ? elemDefs.wallpaper : elemDefs.simple;
                 let elemHtml = '';
                 defs.forEach(def => {
                     const state = elemState[def.id] || { visible: true, opacity: 1 };
                     elemHtml += `
-                            <div class="elem-control" data-elem-id="${def.id}">
-                                <span class="elem-name">${def.name}</span>
-                                <button class="elem-toggle ${state.visible ? 'active' : ''}"><span class="thumb"></span></button>
-                                <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${state.opacity}" /></div>
-                                <span class="elem-opacity-value">${Math.round(state.opacity*100)}%</span>
-                            </div>
-                        `;
-                });
-                html += `
-                        <div class="settings-module" data-module="elements">
-                            <div class="settings-module-header" data-module-toggle="elements">
-                                <span>⊞ 元素控制</span>
-                                <span class="arrow ${moduleStates.elements ? '' : 'collapsed'}">▾</span>
-                            </div>
-                            <div class="settings-module-body ${moduleStates.elements ? '' : 'collapsed'}">
-                                <div class="setting-row">
-                                    <div id="elemControlList">${elemHtml}</div>
-                                </div>
-                            </div>
+                        <div class="elem-control" data-elem-id="${def.id}">
+                            <span class="elem-name">${def.name}</span>
+                            <button class="elem-toggle ${state.visible ? 'active' : ''}"><span class="thumb"></span></button>
+                            <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${state.opacity}" /></div>
+                            <span class="elem-opacity-value">${Math.round(state.opacity*100)}%</span>
                         </div>
                     `;
-
-                let quoteHtml = '';
-                quotes.forEach((q, i) => {
-                    quoteHtml += `
-                            <div class="quote-item" data-index="${i}">
-                                <span class="q-text">${q.text}</span>
-                                <span class="q-author">— ${q.author}</span>
-                                <div class="q-actions">
-                                    <button class="edit-btn" data-index="${i}">✎</button>
-                                    <button class="del-btn" data-index="${i}">✕</button>
-                                </div>
-                            </div>
-                        `;
                 });
-                html += `
-                        <div class="settings-module" data-module="quotes">
-                            <div class="settings-module-header" data-module-toggle="quotes">
-                                <span>❝ 经典语录</span>
-                                <span class="arrow ${moduleStates.quotes ? '' : 'collapsed'}">▾</span>
-                            </div>
-                            <div class="settings-module-body ${moduleStates.quotes ? '' : 'collapsed'}">
-                                <div class="setting-row">
-                                    <div class="quote-manager" id="quoteManager">${quoteHtml}</div>
-                                    <div class="quote-add-form">
-                                        <input type="text" id="newQuoteText" placeholder="语录内容" />
-                                        <input type="text" id="newQuoteAuthor" placeholder="作者" />
-                                        <button id="addQuoteBtn">添加</button>
-                                    </div>
-                                </div>
-                                <div class="setting-row">
-                                    <div class="interval-control">
-                                        <label>切换间隔（秒）</label>
-                                        <input type="number" id="intervalInput" min="1" max="300" value="${Math.round(quoteInterval/1000)}" />
-                                        <span style="font-size:0.6rem;opacity:0.4;">秒</span>
-                                    </div>
-                                </div>
-                            </div>
+                elemModule.innerHTML = `
+                    <div class="settings-module-header" data-module-toggle="elements">
+                        <span>⊞ 元素控制</span>
+                        <span class="arrow ${moduleStates.elements ? '' : 'collapsed'}">▾</span>
+                    </div>
+                    <div class="settings-module-body ${moduleStates.elements ? '' : 'collapsed'}">
+                        <div class="setting-row">
+                            <div id="elemControlList">${elemHtml}</div>
                         </div>
-                    `;
+                    </div>
+                `;
+                content.appendChild(elemModule);
 
-                settingsDynamic.innerHTML = html;
+                // 语录模块（安全 DOM 创建）
+                const quoteModule = renderQuotesModule();
+                content.appendChild(quoteModule);
 
+                // ---- 绑定事件 ----
                 document.querySelectorAll('[data-module-toggle]').forEach(header => {
                     header.addEventListener('click', function(e) {
                         e.stopPropagation();
@@ -4105,7 +3885,7 @@
                     });
                 });
 
-                if (isWp) {
+                if (isWallpaperMode) {
                     updateWallpaperPreview(currentWallpaperType, currentWallpaperId);
                 }
 
@@ -4135,6 +3915,7 @@
                     });
                 });
 
+                // 语录管理器事件 (使用事件委托)
                 const manager = document.getElementById('quoteManager');
                 if (manager) {
                     manager.querySelectorAll('.edit-btn').forEach(btn => {
@@ -4233,15 +4014,13 @@
                 if (quoteLocked) {
                     quoteArea.classList.add('locked');
                     quoteArea.style.cursor = 'default';
-                    wqDisplay.classList.add('locked');
+                    if (wqDisplay) wqDisplay.classList.add('locked');
                 } else {
                     quoteArea.classList.remove('locked');
                     quoteArea.style.cursor = 'pointer';
-                    wqDisplay.classList.remove('locked');
+                    if (wqDisplay) wqDisplay.classList.remove('locked');
                 }
             }
-
-            function syncElemControls() {}
 
             function toggleSettings(e) {
                 if (e) e.stopPropagation();
@@ -4328,8 +4107,12 @@
                     let newTop = coverDragOrigTop + dy;
                     const w = musicPlayer.offsetWidth;
                     const h = musicPlayer.offsetHeight;
-                    newLeft = Math.max(0, Math.min(window.innerWidth - w, newLeft));
-                    newTop = Math.max(0, Math.min(window.innerHeight - h, newTop));
+                    const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                        .getPropertyValue('--safe-right') || '0');
+                    const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                        .getPropertyValue('--safe-bottom') || '0');
+                    newLeft = Math.max(0, Math.min(safeRight - w, newLeft));
+                    newTop = Math.max(0, Math.min(safeBottom - h, newTop));
                     musicPlayer.style.left = newLeft + 'px';
                     musicPlayer.style.top = newTop + 'px';
                     saveMusicPlayerPos();
@@ -4364,7 +4147,8 @@
                 initAudio();
                 const song = songs[index % songs.length];
                 if (!song) return;
-                audioPlayer.src = preloaded.blobs[song.file] || 'songs/' + song.file;
+                const src = preloaded.blobs[song.file] || 'songs/' + song.file;
+                audioPlayer.src = src;
                 audioPlayer.load();
                 audioPlayer.play().catch(() => {});
                 isPlaying = true;
@@ -4448,6 +4232,7 @@
 
             let playerVisible = false;
 
+            // 双击空白区域切换播放器 (与 elemState 同步)
             document.addEventListener('dblclick', function(e) {
                 const interactiveSelectors = [
                     'button', 'a', 'input', 'textarea', 'select',
@@ -4483,37 +4268,35 @@
             function togglePlayerVisibility() {
                 const state = elemState['musicPlayer'];
                 if (!state) return;
-                if (!state.visible) {
-                    elemState['musicPlayer'].visible = true;
-                    saveElemState();
-                    applyElemState();
-                }
-                if (!playerVisible) {
+                const newVis = !elemState['musicPlayer'].visible;
+                elemState['musicPlayer'].visible = newVis;
+                saveElemState();
+                applyElemState();
+                playerVisible = newVis;
+
+                if (newVis) {
                     musicPlayer.classList.add('active');
-                    playerVisible = true;
                     const w = window.innerWidth,
                         h = window.innerHeight;
                     const pw = musicPlayer.offsetWidth || 270,
                         ph = musicPlayer.offsetHeight || 400;
-                    musicPlayer.style.left = Math.max(10, Math.min(w - pw - 10, w / 2 - pw / 2 + (Math.random() - 0.5) *
-                        100)) + 'px';
-                    musicPlayer.style.top = Math.max(10, Math.min(h - ph - 10, h / 2 - ph / 2 + (Math.random() - 0.5) *
-                        100)) + 'px';
+                    const safeRight = w - parseFloat(getComputedStyle(document.documentElement).getPropertyValue(
+                        '--safe-right') || '0');
+                    const safeBottom = h - parseFloat(getComputedStyle(document.documentElement).getPropertyValue(
+                        '--safe-bottom') || '0');
+                    musicPlayer.style.left = Math.max(10, Math.min(safeRight - pw - 10, w / 2 - pw / 2 + (Math.random() -
+                        0.5) * 100)) + 'px';
+                    musicPlayer.style.top = Math.max(10, Math.min(safeBottom - ph - 10, h / 2 - ph / 2 + (Math.random() -
+                        0.5) * 100)) + 'px';
                     updatePlayerCover();
                     initAudio();
                     if (!isPlaying) playSong(currentSongIndex);
-                    elemState['musicPlayer'].visible = true;
-                    saveElemState();
-                    applyElemState();
                 } else {
                     musicPlayer.classList.remove('active');
-                    playerVisible = false;
-                    elemState['musicPlayer'].visible = false;
-                    saveElemState();
-                    applyElemState();
                 }
             }
 
+            // 播放器拖拽
             let isDraggingPlayer = false;
             let dragOffsetX, dragOffsetY;
             musicPlayer.addEventListener('mousedown', function(e) {
@@ -4529,8 +4312,12 @@
                 if (!isDraggingPlayer) return;
                 let x = e.clientX - dragOffsetX,
                     y = e.clientY - dragOffsetY;
-                x = Math.max(0, Math.min(window.innerWidth - musicPlayer.offsetWidth, x));
-                y = Math.max(0, Math.min(window.innerHeight - musicPlayer.offsetHeight, y));
+                const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-right') || '0');
+                const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-bottom') || '0');
+                x = Math.max(0, Math.min(safeRight - musicPlayer.offsetWidth, x));
+                y = Math.max(0, Math.min(safeBottom - musicPlayer.offsetHeight, y));
                 musicPlayer.style.left = x + 'px';
                 musicPlayer.style.top = y + 'px';
                 saveMusicPlayerPos();
@@ -4556,8 +4343,12 @@
                 const touch = e.touches[0];
                 let x = touch.clientX - dragOffsetX,
                     y = touch.clientY - dragOffsetY;
-                x = Math.max(0, Math.min(window.innerWidth - musicPlayer.offsetWidth, x));
-                y = Math.max(0, Math.min(window.innerHeight - musicPlayer.offsetHeight, y));
+                const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-right') || '0');
+                const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-bottom') || '0');
+                x = Math.max(0, Math.min(safeRight - musicPlayer.offsetWidth, x));
+                y = Math.max(0, Math.min(safeBottom - musicPlayer.offsetHeight, y));
                 musicPlayer.style.left = x + 'px';
                 musicPlayer.style.top = y + 'px';
                 saveMusicPlayerPos();
@@ -4597,7 +4388,7 @@
             updatePlayerCover();
 
             // ================================================================
-            // 9. 修仙模式拖拽系统
+            // 9. 修仙模式拖拽系统 (修复: 设置面板点击冲突 + 安全区域)
             // ================================================================
             const draggableItems = document.querySelectorAll('.draggable-item');
             const positions = {};
@@ -4660,7 +4451,8 @@
                 });
 
                 function onStart(e) {
-                    if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) {
+                    if (e.target.closest('.settings-panel') || e.target.closest('.settings-toggle') ||
+                        e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) {
                         return;
                     }
                     if (locked) {
@@ -4714,8 +4506,12 @@
                         let newY = origY + dy;
                         const w = item.offsetWidth;
                         const h = item.offsetHeight;
-                        newX = Math.max(0, Math.min(window.innerWidth - w, newX));
-                        newY = Math.max(0, Math.min(window.innerHeight - h, newY));
+                        const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-right') || '0');
+                        const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-bottom') || '0');
+                        newX = Math.max(0, Math.min(safeRight - w, newX));
+                        newY = Math.max(0, Math.min(safeBottom - h, newY));
 
                         if (dragRafId) cancelAnimationFrame(dragRafId);
                         dragRafId = requestAnimationFrame(() => {
@@ -4878,7 +4674,7 @@
             }
 
             // ================================================================
-            // 10. 阴阳模式拖拽
+            // 10. 阴阳模式拖拽 (修复: setPointerCapture 兼容 + 安全区域)
             // ================================================================
             const simpleDragTargets = document.querySelectorAll('.simple-draggable');
             const dragStateMap = new WeakMap();
@@ -4943,7 +4739,9 @@
                     state.width = el.offsetWidth || rect.width;
                     state.height = el.offsetHeight || rect.height;
 
-                    el.setPointerCapture(e.pointerId);
+                    try {
+                        el.setPointerCapture(e.pointerId);
+                    } catch (_) {}
                     el.style.cursor = 'grabbing';
                     activeSimpleDrag = el;
                     e.preventDefault();
@@ -4952,6 +4750,7 @@
                 el.addEventListener('pointermove', function(e) {
                     if (activeSimpleDrag !== el) return;
                     if (state.locked) return;
+                    if (e.target.closest('.settings-panel') || e.target.closest('.settings-toggle')) return;
 
                     const dx = e.clientX - state.startX;
                     const dy = e.clientY - state.startY;
@@ -4976,9 +4775,14 @@
                         let newTX = state.baseTX + (e.clientX - state.startX);
                         let newTY = state.baseTY + (e.clientY - state.startY);
 
-                        const maxX = window.innerWidth - state.width - state.fixedLeft;
+                        const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-right') || '0');
+                        const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-bottom') || '0');
+
+                        const maxX = safeRight - state.width - state.fixedLeft;
                         const minX = -state.fixedLeft;
-                        const maxY = window.innerHeight - state.height - state.fixedTop;
+                        const maxY = safeBottom - state.height - state.fixedTop;
                         const minY = -state.fixedTop;
 
                         newTX = Math.max(minX, Math.min(maxX, newTX));
@@ -5006,6 +4810,89 @@
                 });
 
                 el.addEventListener('pointercancel', function(e) {
+                    if (activeSimpleDrag === el) endSimpleDrag(el);
+                });
+
+                el.addEventListener('touchstart', function(e) {
+                    if (e.target.closest('input') || e.target.closest('textarea') ||
+                        e.target.closest('a') || e.target.closest('button') ||
+                        e.target.closest('.link-item') || e.target.closest('.add-link-btn') ||
+                        e.target.closest('.search-btn') || e.target.closest('.search-btn-mobile') ||
+                        e.target.closest('.search-btn-end') ||
+                        e.target.closest('.settings-panel') || e.target.closest('.settings-toggle')) {
+                        return;
+                    }
+                    if (isWallpaperMode) return;
+                    if (state.locked) return;
+                    if (activeSimpleDrag) endSimpleDrag(activeSimpleDrag);
+                    const touch = e.touches[0];
+                    const rect = el.getBoundingClientRect();
+                    const transform = getElementTransform(el);
+                    state.isDragging = false;
+                    state.startX = touch.clientX;
+                    state.startY = touch.clientY;
+                    state.baseTX = transform.x;
+                    state.baseTY = transform.y;
+                    state.fixedLeft = rect.left - state.baseTX;
+                    state.fixedTop = rect.top - state.baseTY;
+                    state.width = el.offsetWidth || rect.width;
+                    state.height = el.offsetHeight || rect.height;
+                    el.style.cursor = 'grabbing';
+                    activeSimpleDrag = el;
+                    e.preventDefault();
+                }, { passive: false });
+
+                el.addEventListener('touchmove', function(e) {
+                    if (activeSimpleDrag !== el) return;
+                    if (state.locked) return;
+                    const touch = e.touches[0];
+                    const dx = touch.clientX - state.startX;
+                    const dy = touch.clientY - state.startY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist > 6) {
+                        if (!state.isDragging) {
+                            state.isDragging = true;
+                            el.classList.add('dragging-simple');
+                            const rect = el.getBoundingClientRect();
+                            const transform = getElementTransform(el);
+                            state.baseTX = transform.x;
+                            state.baseTY = transform.y;
+                            state.fixedLeft = rect.left - state.baseTX;
+                            state.fixedTop = rect.top - state.baseTY;
+                            state.startX = touch.clientX;
+                            state.startY = touch.clientY;
+                            e.preventDefault();
+                            return;
+                        }
+                        let newTX = state.baseTX + (touch.clientX - state.startX);
+                        let newTY = state.baseTY + (touch.clientY - state.startY);
+                        const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-right') || '0');
+                        const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-bottom') || '0');
+                        const maxX = safeRight - state.width - state.fixedLeft;
+                        const minX = -state.fixedLeft;
+                        const maxY = safeBottom - state.height - state.fixedTop;
+                        const minY = -state.fixedTop;
+                        newTX = Math.max(minX, Math.min(maxX, newTX));
+                        newTY = Math.max(minY, Math.min(maxY, newTY));
+                        if (el.id === 'quoteArea') {
+                            const rectNow = el.getBoundingClientRect();
+                            const leftEdge = rectNow.left;
+                            const availWidth = Math.min(420, Math.max(200, window.innerWidth - leftEdge - 32));
+                            el.style.maxWidth = availWidth + 'px';
+                        }
+                        applyTransformRAF(el, newTX, newTY, state);
+                        saveSimplePosition(el.id, newTX, newTY);
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                el.addEventListener('touchend', function(e) {
+                    if (activeSimpleDrag === el) endSimpleDrag(el);
+                });
+
+                el.addEventListener('touchcancel', function(e) {
                     if (activeSimpleDrag === el) endSimpleDrag(el);
                 });
 
@@ -5168,69 +5055,362 @@
             updateClock();
 
             // ================================================================
-            // 12. 资源预加载 + 雨滴初始化
+            // 12. 开始页雨滴特效 (修复: Curtains.js 加载失败回退)
+            // ================================================================
+            let rainCurtains = null;
+            let rainPlane = null;
+            let rainInitialized = false;
+            let rainDestroyed = false;
+            let mouse = { x: 0, y: 0 };
+            let rainInitFailed = false;
+
+            const rainVertexShader = `
+                #ifdef GL_ES
+                precision mediump float;
+                #endif
+
+                attribute vec3 aVertexPosition;
+                attribute vec2 aTextureCoord;
+
+                uniform mat4 uMVMatrix;
+                uniform mat4 uPMatrix;
+                uniform mat4 dispImageMatrix;
+
+                varying vec3 vVertexPosition;
+                varying vec2 vTextureCoord;
+
+                void main() {
+                    vec3 vertexPosition = aVertexPosition;
+                    gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+                    vTextureCoord = (dispImageMatrix * vec4(aTextureCoord, 0., 1.)).xy;
+                    vVertexPosition = vertexPosition;
+                }
+            `;
+
+            const rainFragmentShader = `
+                #ifdef GL_ES
+                precision mediump float;
+                #endif
+
+                #define PI2 6.28318530718
+                #define PI  3.14159265359
+                #define S(a,b,n) smoothstep(a,b,n)
+
+                varying vec3 vVertexPosition;
+                varying vec2 vTextureCoord;
+
+                uniform float uTime;
+                uniform vec2  uReso;
+                uniform vec2  uMouse;
+
+                uniform sampler2D dispImage;
+
+                float N12(vec2 p) {
+                    p = fract(p * vec2(123.34, 345.45));
+                    p += dot(p, p + 34.345);
+                    return fract(p.x * p.y);
+                }
+
+                vec3 Layer(vec2 uv0, float t) {
+                    vec2 asp = vec2(2., 1.);
+                    vec2 uv1 = uv0 * 3.0 * asp;
+                    uv1.y += t * 0.25;
+
+                    vec2 gv = fract(uv1) - 0.5;
+                    vec2 id = floor(uv1);
+
+                    float n = N12(id);
+                    t += n * PI2;
+
+                    float w = uv0.y * 10.0;
+                    float x = (n - 0.5) * 0.8;
+                    x += (0.4 - abs(x)) * sin(3.0 * w) * pow(sin(w), 6.0) * 0.45;
+
+                    float y = -sin(t + sin(t + sin(t) * 0.5)) * (0.5 - 0.06);
+                    y -= (gv.x - x) * (gv.x - x);
+
+                    vec2 dropPos = (gv - vec2(x, y)) / asp;
+                    float drop = S(0.015, 0.01, length(dropPos));
+
+                    vec2 trailPos = (gv - vec2(x, t * 0.25)) / asp;
+                    trailPos.y = (fract(trailPos.y * 8.0) - 0.5) / 8.0;
+                    float trail = S(0.01, 0.0075, length(trailPos));
+
+                    float fogTrail = S(-0.05, 0.05, dropPos.y);
+                    fogTrail *= S(0.5, y, gv.y);
+                    trail *= fogTrail;
+                    fogTrail *= S(0.015, 0.0075, abs(dropPos.x));
+
+                    vec2 off = drop * dropPos + trail * trailPos;
+                    return vec3(off, fogTrail);
+                }
+
+                void main() {
+                    float dist = 5.0;
+                    float blurSize = 1.5;
+                    float t = mod(uTime * 0.03, 7200.0);
+
+                    vec2 uv = vTextureCoord;
+
+                    vec3 drops = Layer(uv, t);
+                    drops += Layer(uv * 1.25 + 7.54, t);
+                    drops += Layer(uv * 1.35 + 1.54, t);
+                    drops += Layer(uv * 1.57 - 7.54, t);
+
+                    float blur = blurSize * 1.0 * (1.0 - drops.z);
+                    vec4 col = vec4(0.0);
+
+                    int numSamples = 32;
+                    float a = N12(uv) * PI2;
+
+                    blur *= 0.0005;
+                    uv += drops.xy * dist;
+
+                    for (int n = 0; n < 32; n++) {
+                        vec2 off = vec2(sin(a), cos(a)) * blur;
+                        float d = fract(sin(float(n + 1) * 546.0) * 5424.0);
+                        d = sqrt(d);
+                        off *= d;
+                        col += texture2D(dispImage, uv + off);
+                        a++;
+                    }
+
+                    col /= float(numSamples);
+                    gl_FragColor = col;
+                }
+            `;
+
+            function initRainEffect() {
+                if (rainInitialized || rainDestroyed || rainInitFailed) return;
+                if (typeof Curtains === 'undefined') {
+                    console.warn('⚠️ Curtains.js 未加载，雨滴特效跳过');
+                    rainInitFailed = true;
+                    return;
+                }
+                const canvasContainer = document.getElementById('canvas');
+                const textureImg = document.getElementById('texture');
+                if (!canvasContainer || !textureImg) return;
+
+                if (!textureImg.complete || textureImg.naturalWidth === 0) {
+                    textureImg.onload = function() {
+                        initRainEffect();
+                    };
+                    return;
+                }
+
+                try {
+                    rainCurtains = new Curtains({
+                        container: 'canvas',
+                        watchScroll: false,
+                        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+                    });
+
+                    const planeElement = document.querySelector('.plane');
+
+                    const params = {
+                        vertexShader: rainVertexShader,
+                        fragmentShader: rainFragmentShader,
+                        widthSegments: 40,
+                        heightSegments: 40,
+                        uniforms: {
+                            time: {
+                                name: 'uTime',
+                                type: '1f',
+                                value: 0,
+                            },
+                            mousepos: {
+                                name: 'uMouse',
+                                type: '2f',
+                                value: [mouse.x, mouse.y],
+                            },
+                            resolution: {
+                                name: 'uReso',
+                                type: '2f',
+                                value: [window.innerWidth, window.innerHeight],
+                            },
+                        },
+                    };
+
+                    rainPlane = rainCurtains.addPlane(planeElement, params);
+
+                    if (rainPlane) {
+                        rainPlane.onRender(() => {
+                            if (rainDestroyed) return;
+                            rainPlane.uniforms.time.value++;
+                            rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
+                            rainPlane.uniforms.mousepos.value = [mouse.x, mouse.y];
+                        });
+
+                        window.addEventListener('mousemove', (e) => {
+                            mouse.x = e.clientX;
+                            mouse.y = e.clientY;
+                        });
+
+                        window.addEventListener('resize', () => {
+                            if (rainPlane && !rainDestroyed) {
+                                rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
+                            }
+                        });
+
+                        rainInitialized = true;
+                        console.log('🌧️ 开始页雨滴特效已启动 (4层, 小水滴, 低模糊, 鼠标交互)');
+                    } else {
+                        console.warn('⚠️ 雨滴平面初始化失败');
+                        if (rainCurtains) {
+                            rainCurtains.dispose();
+                            rainCurtains = null;
+                        }
+                        rainInitFailed = true;
+                    }
+                } catch (e) {
+                    console.warn('⚠️ 雨滴特效初始化异常:', e);
+                    if (rainCurtains) {
+                        rainCurtains.dispose();
+                        rainCurtains = null;
+                    }
+                    rainInitFailed = true;
+                }
+            }
+
+            let rainInitTimeout = setTimeout(() => {
+                if (!rainInitialized && !rainDestroyed) {
+                    console.warn('⚠️ 雨滴特效初始化超时，跳过');
+                    rainInitFailed = true;
+                }
+            }, 5000);
+
+            function destroyRainEffect() {
+                if (rainDestroyed) return;
+                rainDestroyed = true;
+                if (rainInitTimeout) {
+                    clearTimeout(rainInitTimeout);
+                    rainInitTimeout = null;
+                }
+                if (rainPlane) {
+                    try {
+                        rainPlane.remove();
+                    } catch (e) {}
+                    rainPlane = null;
+                }
+                if (rainCurtains) {
+                    try {
+                        rainCurtains.dispose();
+                    } catch (e) {}
+                    rainCurtains = null;
+                }
+                rainInitialized = false;
+                console.log('🌧️ 开始页雨滴特效已销毁');
+            }
+
+            // ================================================================
+            // ★★★ 核心：开始页淡入 + 淡出（无硬切）★★★
+            // ================================================================
+            const startPage = document.getElementById('startPage');
+
+            // 页面加载后触发淡入
+            function triggerStartPageFadeIn() {
+                if (!startPage) return;
+                startPage.classList.remove('fade-out');
+                startPage.classList.add('show');
+            }
+
+            function enterSite() {
+                if (!startPage) return;
+                if (startPage.classList.contains('fade-out')) return;
+                startPage.classList.remove('show');
+                startPage.classList.add('fade-out');
+
+                const rainContainer = document.getElementById('rain-container');
+                if (rainContainer) {
+                    rainContainer.classList.add('active');
+                    setTimeout(() => {
+                        rainContainer.classList.add('fade-out');
+                        setTimeout(() => {
+                            rainContainer.classList.remove('active');
+                            rainContainer.style.display = 'none';
+                        }, 1200);
+                    }, 300);
+                }
+
+                setTimeout(() => {
+                    destroyRainEffect();
+                }, 1300);
+            }
+
+            startPage.addEventListener('click', enterSite);
+            startPage.addEventListener('touchstart', function(e) {
+                if (!startPage.classList.contains('fade-out')) {
+                    enterSite();
+                }
+            }, { passive: true });
+
+            // 页面加载完成后触发淡入
+            if (document.readyState === 'complete') {
+                setTimeout(triggerStartPageFadeIn, 200);
+            } else {
+                window.addEventListener('load', function() {
+                    setTimeout(triggerStartPageFadeIn, 200);
+                });
+            }
+
+            // 雨滴特效初始化（页面加载后启动）
+            if (document.readyState === 'complete') {
+                setTimeout(initRainEffect, 200);
+            } else {
+                window.addEventListener('load', function() {
+                    setTimeout(initRainEffect, 200);
+                });
+            }
+
+            // 独立雨丝
+            function buildRaindrops() {
+                const rainContainer = document.getElementById('rain-container');
+                rainContainer.innerHTML = '';
+                const configs = [
+                    { left: 10, duration: 2.4, delay: 0.2, height: 60 },
+                    { left: 22, duration: 3.0, delay: 0.8, height: 80 },
+                    { left: 35, duration: 2.0, delay: 0.0, height: 50 },
+                    { left: 48, duration: 2.8, delay: 0.5, height: 70 },
+                    { left: 60, duration: 2.2, delay: 1.0, height: 55 },
+                    { left: 73, duration: 3.2, delay: 0.3, height: 90 },
+                    { left: 85, duration: 2.6, delay: 0.7, height: 65 },
+                    { left: 92, duration: 2.0, delay: 1.2, height: 45 },
+                    { left: 15, duration: 2.9, delay: 0.9, height: 75 },
+                    { left: 42, duration: 2.1, delay: 0.1, height: 50 },
+                    { left: 68, duration: 3.1, delay: 0.6, height: 85 },
+                    { left: 78, duration: 2.3, delay: 1.1, height: 60 },
+                ];
+                configs.forEach(cfg => {
+                    const el = document.createElement('div');
+                    el.className = 'raindrop';
+                    el.style.left = cfg.left + '%';
+                    el.style.animationDuration = cfg.duration + 's';
+                    el.style.animationDelay = cfg.delay + 's';
+                    el.style.height = cfg.height + 'px';
+                    rainContainer.appendChild(el);
+                });
+            }
+            buildRaindrops();
+
+            // ================================================================
+            // 13. 资源预加载 + 失败提示 (含内存管理)
             // ================================================================
             const preloaded = { blobs: {} };
             let loadedCount = 0;
             let totalCount = 0;
             let failedCount = 0;
-            let rainInitAttempted = false;
+            let resourceToastShown = false;
 
             function updateProgress() {
                 loadedCount++;
-                const loadingEl = document.querySelector('.start-loading span');
-                if (loadingEl) loadingEl.textContent = `加载中 ... ${loadedCount}/${totalCount}${failedCount ? ` (失败 ${failedCount})` : ''}`;
-                if (loadedCount >= totalCount) {
-                    if (loadingEl) loadingEl.textContent = '加载完成 ✦ 点击进入';
-                    // 所有资源加载完成，初始化雨滴特效
-                    if (!rainInitAttempted) {
-                        rainInitAttempted = true;
-                        setTimeout(initRainEffect, 300);
-                    }
+                if (!resourceToastShown && failedCount > 3) {
+                    showToast('部分资源加载失败，请检查网络');
+                    resourceToastShown = true;
                 }
             }
 
-            async function preloadAllResources() {
-                totalCount = songs.length + albumImages.length + wallpapers.static.length + wallpapers.dynamic.length + 2;
-                await new Promise((resolve) => {
-                    const bgImg = new Image();
-                    bgImg.onload = function() {
-                        startPage.style.backgroundImage = 'url(images/background.png)';
-                        startPage.classList.remove('loading');
-                        startPageReady = true;
-                        const loadingEl = document.querySelector('.start-loading span');
-                        if (loadingEl) loadingEl.textContent = '加载完成 ✦ 点击进入';
-                        resolve();
-                    };
-                    bgImg.onerror = function() {
-                        startPage.classList.remove('loading');
-                        startPageReady = true;
-                        const loadingEl = document.querySelector('.start-loading span');
-                        if (loadingEl) loadingEl.textContent = '加载完成 ✦ 点击进入';
-                        resolve();
-                    };
-                    bgImg.src = 'images/background.png';
-                });
-
-                await new Promise((resolve) => {
-                    const img = new Image();
-                    img.onload = () => { updateProgress();
-                        resolve(); };
-                    img.onerror = () => { failedCount++;
-                        updateProgress();
-                        resolve(); };
-                    img.src = 'images/bg_day.png';
-                });
-
-                await new Promise((resolve) => {
-                    const img = new Image();
-                    img.onload = () => { updateProgress();
-                        resolve(); };
-                    img.onerror = () => { failedCount++;
-                        updateProgress();
-                        resolve(); };
-                    img.src = 'images/bg_night.png';
-                });
+            async function preloadResources() {
+                totalCount = songs.length + albumImages.length + wallpapers.static.length + wallpapers.dynamic.length;
 
                 for (const song of songs) {
                     try {
@@ -5283,40 +5463,21 @@
                     }
                     updateProgress();
                 }
+            }
 
-                // 如果某些原因没有触发初始化，兜底
-                if (!rainInitAttempted) {
-                    rainInitAttempted = true;
-                    setTimeout(initRainEffect, 500);
+            if (document.readyState === 'complete') {
+                preloadResources();
+            } else {
+                window.addEventListener('load', function() {
+                    preloadResources();
+                });
+            }
+
+            // 页面关闭时释放 Blob URL
+            window.addEventListener('beforeunload', function() {
+                for (const key in preloaded.blobs) {
+                    try { URL.revokeObjectURL(preloaded.blobs[key]); } catch (e) {}
                 }
-            }
-
-            // ================================================================
-            // 13. 开始页点击进入 + 雨滴销毁
-            // ================================================================
-            function enterSite(e) {
-                if (startPageHidden) return;
-                if (!startPageReady) return;
-                startPageHidden = true;
-                startPage.classList.add('fade-out');
-                // 销毁雨滴特效（释放资源）
-                setTimeout(function() {
-                    destroyRainEffect();
-                }, 300);
-                // 雨丝淡出
-                setTimeout(function() {
-                    startPage.classList.add('hide');
-                    rainContainer.style.transition = 'opacity 1.2s ease';
-                    rainContainer.style.opacity = '0';
-                    setTimeout(function() {
-                        rainContainer.style.display = 'none';
-                    }, 1200);
-                }, 1200);
-            }
-
-            startPage.addEventListener('click', enterSite);
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !startPageHidden && startPageReady) enterSite(e);
             });
 
             // ================================================================
@@ -5379,7 +5540,7 @@
                         quoteLocked = true;
                         quoteArea.classList.add('locked');
                         quoteArea.style.cursor = 'default';
-                        wqDisplay.classList.add('locked');
+                        if (wqDisplay) wqDisplay.classList.add('locked');
                     }
                 } catch (e) {}
                 try {
@@ -5413,21 +5574,24 @@
                 renderSettings();
                 updateModeSwitchUI();
                 if (elemState['musicPlayer']) {
-                    elemState['musicPlayer'].visible = false;
-                    saveElemState();
-                    applyElemState();
+                    playerVisible = elemState['musicPlayer'].visible;
+                    if (playerVisible) {
+                        musicPlayer.classList.add('active');
+                    } else {
+                        musicPlayer.classList.remove('active');
+                    }
                 }
                 if (!isWallpaperMode) {
                     draggableItems.forEach(item => { item.style.display = 'none'; });
+                }
+                if (elemState['musicPlayer']) {
+                    playerVisible = elemState['musicPlayer'].visible;
                 }
             }
 
             // ================================================================
             // 15. 初始化
             // ================================================================
-            if (document.readyState === 'complete') setTimeout(preloadAllResources, 100);
-            else window.addEventListener('load', function() { setTimeout(preloadAllResources, 100); });
-
             loadAllSettings();
 
             if (!isWallpaperMode) {
@@ -5439,7 +5603,11 @@
             });
 
             window.addEventListener('resize', function() {
-                handleRainResize();
+                const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-right') || '0');
+                const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-bottom') || '0');
+
                 draggableItems.forEach(item => {
                     if (item.style.display !== 'none') {
                         const rect = item.getBoundingClientRect();
@@ -5447,8 +5615,8 @@
                         const h = item.offsetHeight;
                         let left = parseFloat(item.style.left) || rect.left;
                         let top = parseFloat(item.style.top) || rect.top;
-                        left = Math.max(0, Math.min(window.innerWidth - w, left));
-                        top = Math.max(0, Math.min(window.innerHeight - h, top));
+                        left = Math.max(0, Math.min(safeRight - w, left));
+                        top = Math.max(0, Math.min(safeBottom - h, top));
                         item.style.left = left + 'px';
                         item.style.top = top + 'px';
                     }
@@ -5462,9 +5630,9 @@
                     const h = el.offsetHeight || rect.height;
                     const fixedLeft = rect.left - tx;
                     const fixedTop = rect.top - ty;
-                    const maxX = window.innerWidth - w - fixedLeft;
+                    const maxX = safeRight - w - fixedLeft;
                     const minX = -fixedLeft;
-                    const maxY = window.innerHeight - h - fixedTop;
+                    const maxY = safeBottom - h - fixedTop;
                     const minY = -fixedTop;
                     let newTX = Math.max(minX, Math.min(maxX, tx));
                     let newTY = Math.max(minY, Math.min(maxY, ty));
@@ -5475,12 +5643,14 @@
                 });
             });
 
-            console.log('✅ 小永子首页 - 修仙/阴阳版 + 雨滴玻璃特效');
-            console.log('🌧️ 雨量已减少 (2层, 密度4.5) · 速度已减慢 (0.012)');
+            console.log('✅ 小永子首页 - 修仙/阴阳版 + 开始页雨滴特效（4层，小水滴，低模糊）');
+            console.log('🖱️ 开始页鼠标可影响雨滴');
             console.log('🖱️ 右键锁定/解锁所有元素');
             console.log('⚙️ 点击齿轮打开设置');
             console.log('📱 移动端独立位置存储');
             console.log('🎵 双击屏幕空白处切换播放器');
+            console.log('✨ 开始页淡入淡出（无硬切）');
+            console.log('🔒 已修复 XSS 和 URL 协议绕过漏洞');
 
         })();
     </script>
