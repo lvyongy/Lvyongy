@@ -2089,7 +2089,7 @@
             align-items: center;
             justify-content: center;
             transition: opacity 0.8s ease;
-            pointer-events: auto;    /* 关键：阻止点击穿透 */
+            pointer-events: auto;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -2865,7 +2865,9 @@
                                     this.loaded[item.id] = url;
                                     // 如果是歌曲，存入 preloadedBlobs 供播放器使用
                                     if (item.type === 'audio') {
-                                        preloadedBlobs[item.src.split('/').pop()] = url;
+                                        if (typeof preloadedBlobs !== 'undefined') {
+                                            preloadedBlobs[item.src.split('/').pop()] = url;
+                                        }
                                     }
                                     resolve();
                                 })
@@ -3106,7 +3108,9 @@
                         isWallpaperTransitioning = false;
                     };
                     if (type === 'dynamic') {
-                        const src = preloadedBlobs[item.file] || 'videos/' + item.file;
+                        const src = (typeof preloadedBlobs !== 'undefined' && preloadedBlobs[item.file]) ?
+                            preloadedBlobs[item.file] :
+                            'videos/' + item.file;
                         const source = videoEl.querySelector('source');
                         if (source) source.setAttribute('src', src);
                         else {
@@ -3883,7 +3887,9 @@
                     el.dataset.type = type;
                     if (type === 'dynamic') {
                         const vid = document.createElement('video');
-                        const src = preloadedBlobs[wp.file] || 'videos/' + wp.file;
+                        const src = (typeof preloadedBlobs !== 'undefined' && preloadedBlobs[wp.file]) ?
+                            preloadedBlobs[wp.file] :
+                            'videos/' + wp.file;
                         vid.src = src;
                         vid.muted = true;
                         vid.playsInline = true;
@@ -4359,6 +4365,9 @@
             let coverClickThreshold = 8;
             let coverPointerDownTime = 0;
 
+            // 全局 preloadedBlobs 供资源加载器使用
+            window.preloadedBlobs = {};
+
             playerCover.addEventListener('pointerdown', function(e) {
                 if (e.button !== 0) return;
                 const rect = musicPlayer.getBoundingClientRect();
@@ -4412,8 +4421,6 @@
                 isCoverDragging = false;
             });
 
-            let preloadedBlobs = {};
-
             function initAudio() {
                 if (!audioPlayer) {
                     audioPlayer = new Audio();
@@ -4426,7 +4433,7 @@
                 initAudio();
                 const song = songs[index % songs.length];
                 if (!song) return;
-                const src = preloadedBlobs[song.file] || 'songs/' + song.file;
+                const src = window.preloadedBlobs[song.file] || 'songs/' + song.file;
                 audioPlayer.src = src;
                 audioPlayer.load();
                 audioPlayer.play().catch(() => {});
@@ -4926,7 +4933,8 @@
                     }
                 } catch (e) {}
                 // 如果没有保存的位置，设置默认位置
-                const hasAll = draggableItems.every(item => {
+                // 修复: draggableItems 是 NodeList，转为数组使用 every
+                const hasAll = Array.from(draggableItems).every(item => {
                     const id = item.id;
                     return id && positions[id];
                 });
@@ -4986,11 +4994,9 @@
                                 top = 10;
                         }
                     }
-                    // 对于居中元素使用 transform
                     if (id === 'glassSearch' || id === 'glassLinks') {
                         item.style.left = left + '%';
                         item.style.top = top + '%';
-                        // 通过 CSS 处理居中
                         if (id === 'glassSearch') {
                             item.style.transform = 'translateX(-50%)';
                             item.style.width = '90%';
@@ -5341,7 +5347,6 @@
                             tx = data[id].x;
                             ty = data[id].y;
                         } else {
-                            // 默认位置 - 针对PC和移动端优化
                             if (isMobile) {
                                 switch (id) {
                                     case 'clockArea':
@@ -5696,12 +5701,10 @@
             const startPage = document.getElementById('startPage');
             let resourcesReady = false;
 
-            // 触发开始页淡入
             function triggerStartPageFadeIn() {
                 if (!startPage || resourcesReady === false) return;
                 startPage.classList.remove('fade-out');
                 startPage.classList.add('show');
-                // 雨滴特效在开始页显示后启动
                 setTimeout(initRainEffect, 300);
             }
 
@@ -5739,23 +5742,18 @@
             // ★★★ 主加载流程 ★★★
             // ================================================================
             async function startApp() {
-                // 显示加载遮罩
                 loadingOverlay.classList.remove('hide');
                 loadingProgressBar.style.width = '0%';
                 loadingDetail.textContent = '准备资源...';
 
-                // 创建资源加载队列
                 const loader = buildResourceQueue();
 
-                // 进度回调
                 loader.onProgress = function(pct, id, type) {
                     loadingProgressBar.style.width = pct + '%';
                     const label = loader.queue.find(q => q.id === id)?.meta?.label || id;
                     loadingDetail.textContent = `加载 ${label} (${loader.loadedCount}/${loader.total})`;
-                    // 标记壁纸资源加载完成
                     if (id.startsWith('wp_')) {
                         loadedWallpaperResources.add(id);
-                        // 如果当前在修仙模式且壁纸预览可见，刷新预览
                         if (isWallpaperMode) {
                             const previewGrid = document.getElementById('wallpaperPreviewGrid');
                             if (previewGrid) {
@@ -5771,23 +5769,19 @@
                     }
                 };
 
-                // 完成回调
                 loader.onComplete = function() {
                     resourcesReady = true;
                     loadingDetail.textContent = '加载完成！';
                     setTimeout(() => {
                         loadingOverlay.classList.add('hide');
-                        // 显示开始页
                         triggerStartPageFadeIn();
                     }, 400);
                 };
 
-                // 开始加载
                 try {
                     await loader.loadAll();
                 } catch (e) {
                     console.warn('⚠️ 资源加载异常:', e);
-                    // 即使出错也尝试继续
                     resourcesReady = true;
                     loadingOverlay.classList.add('hide');
                     setTimeout(triggerStartPageFadeIn, 300);
@@ -5865,13 +5859,11 @@
                         isWallpaperMode = true;
                         setTimeout(() => {
                             body.classList.add('wallpaper-mode');
-                            // 检查壁纸资源是否已加载
                             const resId = 'wp_' + (currentWallpaperType === 'dynamic' ? currentWallpaperId :
                                 currentWallpaperId);
                             if (loadedWallpaperResources.has(resId)) {
                                 applyWallpaper(currentWallpaperType, currentWallpaperId);
                             } else {
-                                // 如果壁纸还没加载完成，等加载完成后再应用
                                 const checkLoaded = setInterval(() => {
                                     if (loadedWallpaperResources.has(resId)) {
                                         clearInterval(checkLoaded);
@@ -5952,8 +5944,12 @@
             // 14. 初始化
             // ================================================================
 
-            // 加载设置
-            loadAllSettings();
+            // 使用 try-catch 包裹 loadAllSettings，防止错误阻断后续流程
+            try {
+                loadAllSettings();
+            } catch (e) {
+                console.warn('加载设置时出现错误，使用默认配置:', e);
+            }
 
             if (!isWallpaperMode) {
                 draggableItems.forEach(item => { item.style.display = 'none'; });
@@ -6007,7 +6003,7 @@
             // ★★★ 启动应用 ★★★
             startApp();
 
-            console.log('✅ 小永子首页 - 修仙/阴阳版 + 资源顺序加载 + 超时控制');
+            console.log('✅ 小永子首页 - 修仙/阴阳版 + 资源顺序加载 + 超时控制 + 错误隔离');
             console.log('🖱️ 开始页鼠标可影响雨滴');
             console.log('🖱️ 右键锁定/解锁所有元素');
             console.log('⚙️ 点击齿轮打开设置');
