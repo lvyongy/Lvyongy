@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <!-- 添加基础 CSP 防止外部资源注入（允许内联脚本和 curtainsjs） -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline' https://www.curtainsjs.com https://lvyy.cc.cd https://static.cloudflareinsights.com; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self';">
     <title>小永子の首页</title>
     <style>
@@ -1960,7 +1959,9 @@
             }
         }
 
-        /* ===== 开始页（顶层覆盖层，含雨滴） ===== */
+        /* ================================================================
+           开始页（顶层覆盖层，含雨滴）—— 全新淡入淡出设计
+           ================================================================ */
         #startPage {
             position: fixed;
             top: 0;
@@ -1974,26 +1975,34 @@
             cursor: pointer;
             /* 关键：淡入淡出过渡 */
             transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-            will-change: opacity, transform;
+                transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            opacity: 1;
-            /* 初始透明，由 JS 触发淡入 */
+            /* 初始透明——等待 JS 触发淡入 */
+            opacity: 0;
+            transform: scale(1.02);
+            pointer-events: none;
+            /* 透明时不可交互 */;
         }
+        /* 淡入状态：可见 + 可交互 */
         #startPage.show {
             opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
         }
+        /* 淡出状态：透明 + 不可交互 */
         #startPage.fade-out {
             opacity: 0;
+            transform: scale(1.04);
             pointer-events: none;
-            /* 淡出后不可交互，但保留在 DOM 中，无硬切 */;
         }
+        /* 隐藏状态（完全不可见，保留在 DOM 中） */
         #startPage.hide {
             display: none;
-            /* 不再使用，保留以防万一 */;
         }
+
         #startPage #canvas {
             position: absolute;
             top: 0;
@@ -5305,6 +5314,7 @@
             function triggerStartPageFadeIn() {
                 if (!startPage) return;
                 startPage.classList.remove('fade-out');
+                startPage.classList.add('show');
             }
 
             function enterSite() {
@@ -5337,6 +5347,7 @@
                 }
             }, { passive: true });
 
+            // 页面加载完成后触发淡入
             if (document.readyState === 'complete') {
                 setTimeout(triggerStartPageFadeIn, 200);
             } else {
@@ -5345,6 +5356,7 @@
                 });
             }
 
+            // 雨滴特效初始化（页面加载后启动）
             if (document.readyState === 'complete') {
                 setTimeout(initRainEffect, 200);
             } else {
