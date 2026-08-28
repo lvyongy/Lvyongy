@@ -2625,7 +2625,7 @@
 <body>
 
     <!-- ============================================================
-    开始页 - 带雨滴玻璃特效 (修复黑屏)
+    开始页 - 雨滴玻璃特效 + 背景图 (修复黑屏)
     ============================================================ -->
     <div id="startPage" class="loading">
         <!-- 雨滴渲染容器 -->
@@ -2765,9 +2765,9 @@
     <div id="toastContainer"></div>
 
     <!-- ============================================================
-    引入 Curtains.js —— 使用更稳定的 CDN (jsdelivr)
+    引入 Curtains.js (用于雨滴玻璃特效) —— 使用更可靠的 CDN
     ============================================================ -->
-    <script src="https://cdn.jsdelivr.net/npm/curtainsjs@8.1.0/dist/curtains.min.js">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/curtainsjs/8.1.0/curtains.min.js">
     </script>
 
     <script>
@@ -2825,6 +2825,7 @@
                 gradient.addColorStop(1, '#0a1a2a');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // 增加一些光晕
                 ctx.globalAlpha = 0.3;
                 ctx.beginPath();
                 ctx.arc(canvas.width * 0.3, canvas.height * 0.4, 150, 0, Math.PI * 2);
@@ -2863,10 +2864,12 @@
             function fallbackToCssRain() {
                 if (startPage.classList.contains('fallback')) return;
                 startPage.classList.add('fallback');
-                // 确保背景图显示
-                const imgSrc = startBgImg.src || 'images/background.png';
-                startFallbackBg.src = imgSrc;
+                // 强制使用生成的内置图片作为背景
+                const dataUrl = createFallbackImage();
+                startFallbackBg.src = dataUrl;
                 startFallbackBg.style.display = 'block';
+                // 同时更新原始背景图（万一有显示）
+                startBgImg.src = dataUrl;
                 // 生成 CSS 雨滴
                 createCssRain();
                 // 隐藏 WebGL 容器
@@ -2878,7 +2881,7 @@
                 console.log('🌧️ 已切换到 CSS 雨滴备选方案');
             }
 
-            // ---- 雨滴玻璃特效 - 着色器 ----
+            // ---- 雨滴玻璃特效 - 着色器 (保持不变) ----
             const vertexShader = `
                     #ifdef GL_ES
                     precision mediump float;
@@ -3083,6 +3086,8 @@
                 // 如果图片已经加载完成
                 if (img.complete && img.naturalWidth > 0) {
                     bgLoaded = true;
+                    // 同步给备用图
+                    fallbackImg.src = img.src;
                     initRainEffect();
                     return;
                 }
@@ -3090,7 +3095,6 @@
                 // 监听加载成功
                 img.onload = function() {
                     bgLoaded = true;
-                    // 同步给备用图
                     fallbackImg.src = img.src;
                     initRainEffect();
                 };
