@@ -1980,6 +1980,7 @@
             cursor: pointer;
             overflow: hidden;
         }
+        /* 雨滴canvas容器 — 在背景之上，内容之下 */
         #rainCanvasContainer {
             position: absolute;
             top: 0;
@@ -1994,9 +1995,11 @@
             width: 100% !important;
             height: 100% !important;
         }
+        /* 纹理图片隐藏 */
         #textureImage {
             display: none;
         }
+        /* 开始页内容层 (z-index高于canvas) */
         .start-loading,
         .start-subtitle {
             position: relative;
@@ -2758,14 +2761,14 @@
             buildRaindrops();
 
             // ================================================================
-            // 0c. 雨滴玻璃特效 (Curtains.js) — 继承 index01 效果
+            // 0c. 雨滴玻璃特效 (Curtains.js) — 直接初始化（像独立版一样）
             //     核心参数：密度3.0 · 阈值减半 · blurSize=0.2 · 速度0.03 · 4层 · 32采样
             // ================================================================
             let rainCurtains = null;
             let rainPlane = null;
             let rainInitialized = false;
 
-            // 顶点着色器（与index01相同）
+            // 顶点着色器
             const rainVertexShader = `
                 #ifdef GL_ES
                 precision mediump float;
@@ -2789,8 +2792,7 @@
                 }
             `;
 
-            // 片元着色器 — 完全继承 index01 的视觉效果
-            // 参数：密度3.0 · 阈值减半 · blurSize=0.2 · 速度0.03 · 4层 · 32采样
+            // 片元着色器 — 与独立版完全相同
             const rainFragmentShader = `
                 #ifdef GL_ES
                 precision mediump float;
@@ -2807,19 +2809,16 @@
                 uniform vec2  uReso;
 
                 uniform sampler2D dispImage;
-                uniform sampler2D blurImage; // 未使用，保留与index01一致
+                uniform sampler2D blurImage;
 
-                // ---- 噪声 ----
                 float N12(vec2 p) {
                     p = fract(p * vec2(123.34, 345.45));
                     p += dot(p, p + 34.345);
                     return fract(p.x * p.y);
                 }
 
-                // ---- 单层雨滴 ----
                 vec3 Layer(vec2 uv0, float t) {
                     vec2 asp = vec2(2., 1.);
-                    // 【密度3.0】index01 使用 3.0，index原为4.5
                     vec2 uv1 = uv0 * 3.0 * asp;
                     uv1.y += t * 0.25;
 
@@ -2836,36 +2835,29 @@
                     float y = -sin(t + sin(t + sin(t) * 0.5)) * (0.5 - 0.06);
                     y -= (gv.x - x) * (gv.x - x);
 
-                    // 【雨滴大小减半】阈值从0.03/0.02 → 0.015/0.01
                     vec2 dropPos = (gv - vec2(x, y)) / asp;
                     float drop = S(0.015, 0.01, length(dropPos));
 
                     vec2 trailPos = (gv - vec2(x, t * 0.25)) / asp;
                     trailPos.y = (fract(trailPos.y * 8.0) - 0.5) / 8.0;
-                    // 【雨滴大小减半】阈值从0.02/0.015 → 0.01/0.0075
                     float trail = S(0.01, 0.0075, length(trailPos));
 
                     float fogTrail = S(-0.05, 0.05, dropPos.y);
                     fogTrail *= S(0.5, y, gv.y);
                     trail *= fogTrail;
-                    // 【雨滴大小减半】阈值从0.03/0.015 → 0.015/0.0075
                     fogTrail *= S(0.015, 0.0075, abs(dropPos.x));
 
                     vec2 off = drop * dropPos + trail * trailPos;
                     return vec3(off, fogTrail);
                 }
 
-                // ---- 主渲染 ----
                 void main() {
                     float dist = 5.0;
-                    // 【毛玻璃效果减少70%】blurSize 从 5.0 → 0.2
                     float blurSize = 0.2;
-                    // 【速度提升】从0.012 → 0.03
                     float t = mod(uTime * 0.03, 7200.0);
 
                     vec2 uv = vTextureCoord;
 
-                    // 【4层雨滴】index01 使用4层，index原为2层
                     vec3 drops = Layer(uv, t);
                     drops += Layer(uv * 1.25 + 7.54, t);
                     drops += Layer(uv * 1.35 + 1.54, t);
@@ -2874,7 +2866,6 @@
                     float blur = blurSize * 1.0 * (1.0 - drops.z);
                     vec4 col = vec4(0.0);
 
-                    // 【采样数提升】从20 → 32
                     int numSamples = 32;
                     float a = N12(uv) * PI2;
 
@@ -2895,33 +2886,31 @@
                 }
             `;
 
+            // ----- 直接初始化（无任何图片加载检查）-----
             function initRainEffect() {
                 if (rainInitialized) return;
                 const container = document.getElementById('rainCanvasContainer');
                 const textureImg = document.getElementById('textureImage');
                 if (!container || !textureImg) return;
 
-                if (!textureImg.complete || textureImg.naturalWidth === 0) {
-                    textureImg.onload = function() {
-                        initRainEffect();
-                    };
-                    return;
-                }
-
                 try {
+                    // 创建 Curtains 实例
                     rainCurtains = new Curtains({
                         container: 'rainCanvasContainer',
                         watchScroll: false,
                         pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
                     });
 
+                    // 构建 plane 元素
                     const planeEl = document.createElement('div');
                     planeEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
                     planeEl.setAttribute('data-sampler', 'dispImage');
+                    // 将纹理图片移入 plane 内
                     planeEl.appendChild(textureImg);
                     container.appendChild(planeEl);
 
-                    rainPlane = new Plane(rainCurtains, planeEl, {
+                    // 添加平面
+                    rainPlane = rainCurtains.addPlane(planeEl, {
                         vertexShader: rainVertexShader,
                         fragmentShader: rainFragmentShader,
                         widthSegments: 20,
@@ -2938,7 +2927,7 @@
                             rainPlane.uniforms.uReso.value = [window.innerWidth, window.innerHeight];
                         });
                         rainInitialized = true;
-                        console.log('🌧️ 雨滴玻璃特效已启动 (继承index01: 密度3.0 · 阈值减半 · blurSize=0.2 · 速度0.03 · 4层 · 32采样)');
+                        console.log('🌧️ 雨滴玻璃特效已启动 (直接初始化, 参数同独立版)');
                     } else {
                         console.warn('⚠️ 雨滴平面初始化失败');
                         if (rainCurtains) {
@@ -5152,8 +5141,10 @@
                 if (loadingEl) loadingEl.textContent = `加载中 ... ${loadedCount}/${totalCount}${failedCount ? ` (失败 ${failedCount})` : ''}`;
                 if (loadedCount >= totalCount) {
                     if (loadingEl) loadingEl.textContent = '加载完成 ✦ 点击进入';
+                    // 直接初始化雨滴特效（不再等待图片加载）
                     if (!rainInitAttempted) {
                         rainInitAttempted = true;
+                        // 略微延迟确保 DOM 完全就绪
                         setTimeout(initRainEffect, 300);
                     }
                 }
@@ -5253,6 +5244,7 @@
                     updateProgress();
                 }
 
+                // 兜底：如果预加载完成时仍未初始化，直接调用
                 if (!rainInitAttempted) {
                     rainInitAttempted = true;
                     setTimeout(initRainEffect, 500);
@@ -5267,9 +5259,11 @@
                 if (!startPageReady) return;
                 startPageHidden = true;
                 startPage.classList.add('fade-out');
+                // 销毁雨滴特效（释放资源）
                 setTimeout(function() {
                     destroyRainEffect();
                 }, 300);
+                // 雨丝淡出
                 setTimeout(function() {
                     startPage.classList.add('hide');
                     rainContainer.style.transition = 'opacity 1.2s ease';
@@ -5441,7 +5435,7 @@
                 });
             });
 
-            console.log('✅ 小永子首页 · 雨滴特效已继承 index01 效果');
+            console.log('✅ 小永子首页 - 雨滴特效已修复 (直接初始化)');
             console.log('🌧️ 参数: 密度3.0 · 阈值减半 · blurSize=0.2 · 速度0.03 · 4层 · 32采样');
             console.log('🖱️ 右键锁定/解锁所有元素');
             console.log('⚙️ 点击齿轮打开设置');
