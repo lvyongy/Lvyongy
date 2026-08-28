@@ -1981,16 +1981,13 @@
             align-items: center;
             justify-content: center;
             /* 初始透明——等待 JS 触发淡入 */
-            opacity: 0;
-            transform: scale(1.02);
-            pointer-events: none;
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
             /* 透明时不可交互 */;
         }
         /* 淡入状态：可见 + 可交互 */
         #startPage.show {
-            opacity: 1;
-            transform: scale(1);
-            pointer-events: auto;
         }
         /* 淡出状态：透明 + 不可交互 */
         #startPage.fade-out {
