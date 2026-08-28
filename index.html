@@ -2762,13 +2762,13 @@
             buildRaindrops();
 
             // ================================================================
-            // 0c. 雨滴玻璃特效 (Curtains.js) — 集成到 #startPage
+            // 0c. 雨滴玻璃特效 (Curtains.js) — 使用您提供的原始着色器
             // ================================================================
             let rainCurtains = null;
             let rainPlane = null;
             let rainInitialized = false;
 
-            // 着色器代码 (修改版：雨量减少、速度减慢)
+            // ---------- 着色器代码（来自您提供的独立文件） ----------
             const rainVertexShader = `
                 #ifdef GL_ES
                 precision mediump float;
@@ -2806,21 +2806,20 @@
 
                 uniform float uTime;
                 uniform vec2  uReso;
+                uniform vec2  uMouse;
 
                 uniform sampler2D dispImage;
+                uniform sampler2D blurImage;
 
-                // ---- 噪声 ----
                 float N12(vec2 p) {
                     p = fract(p * vec2(123.34, 345.45));
                     p += dot(p, p + 34.345);
                     return fract(p.x * p.y);
                 }
 
-                // ---- 单层雨滴 (密度调高 → 雨滴更稀疏) ----
                 vec3 Layer(vec2 uv0, float t) {
                     vec2 asp = vec2(2., 1.);
-                    // 密度从 3.0 提高到 4.5，使雨滴更稀疏
-                    vec2 uv1 = uv0 * 4.5 * asp;
+                    vec2 uv1 = uv0 * 3.0 * asp;
                     uv1.y += t * 0.25;
 
                     vec2 gv = fract(uv1) - 0.5;
@@ -2836,9 +2835,8 @@
                     float y = -sin(t + sin(t + sin(t) * 0.5)) * (0.5 - 0.06);
                     y -= (gv.x - x) * (gv.x - x);
 
-                    // 雨滴大小阈值调小 → 雨滴更小更淡
                     vec2 dropPos = (gv - vec2(x, y)) / asp;
-                    float drop = S(0.025, 0.015, length(dropPos));
+                    float drop = S(0.03, 0.02, length(dropPos));
 
                     vec2 trailPos = (gv - vec2(x, t * 0.25)) / asp;
                     trailPos.y = (fract(trailPos.y * 8.0) - 0.5) / 8.0;
@@ -2853,30 +2851,28 @@
                     return vec3(off, fogTrail);
                 }
 
-                // ---- 主渲染 ----
                 void main() {
                     float dist = 5.0;
                     float blurSize = 5.0;
-                    // 速度从 0.03 降到 0.012，滑落更慢
-                    float t = mod(uTime * 0.012, 7200.0);
+                    float t = mod(uTime * 0.03, 7200.0);
 
                     vec2 uv = vTextureCoord;
 
-                    // 雨量从 4 层减到 2 层
                     vec3 drops = Layer(uv, t);
+                    drops += Layer(uv * 1.25 + 7.54, t);
                     drops += Layer(uv * 1.35 + 1.54, t);
+                    drops += Layer(uv * 1.57 - 7.54, t);
 
                     float blur = blurSize * 7.0 * (1.0 - drops.z);
                     vec4 col = vec4(0.0);
 
-                    // 采样数从 32 减到 20，提升性能
-                    int numSamples = 20;
+                    int numSamples = 32;
                     float a = N12(uv) * PI2;
 
                     blur *= 0.0005;
                     uv += drops.xy * dist;
 
-                    for (int n = 0; n < 20; n++) {
+                    for (int n = 0; n < 32; n++) {
                         vec2 off = vec2(sin(a), cos(a)) * blur;
                         float d = fract(sin(float(n + 1) * 546.0) * 5424.0);
                         d = sqrt(d);
@@ -2915,11 +2911,9 @@
                     const planeEl = document.createElement('div');
                     planeEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
                     planeEl.setAttribute('data-sampler', 'dispImage');
-                    // 将 textureImg 移动到 planeEl 中
                     planeEl.appendChild(textureImg);
                     container.appendChild(planeEl);
 
-                    // 使用 addPlane 方法（Curtains.js 官方用法）
                     rainPlane = rainCurtains.addPlane(planeEl, {
                         vertexShader: rainVertexShader,
                         fragmentShader: rainFragmentShader,
@@ -2934,6 +2928,11 @@
                                 type: '2f',
                                 value: [window.innerWidth, window.innerHeight],
                             },
+                            mousepos: {
+                                name: 'uMouse',
+                                type: '2f',
+                                value: [0, 0],
+                            },
                         },
                     });
 
@@ -2942,8 +2941,22 @@
                             rainPlane.uniforms.time.value++;
                             rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
                         });
+
+                        // 鼠标交互（可微调）
+                        window.addEventListener('mousemove', (e) => {
+                            if (rainPlane) {
+                                rainPlane.uniforms.mousepos.value = [e.clientX, e.clientY];
+                            }
+                        });
+
+                        window.addEventListener('resize', () => {
+                            if (rainPlane) {
+                                rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
+                            }
+                        });
+
                         rainInitialized = true;
-                        console.log('🌧️ 雨滴玻璃特效已启动 (雨量减少, 速度减慢)');
+                        console.log('🌧️ 雨滴玻璃特效已启动（原始版本，4层雨滴，32采样）');
                     } else {
                         console.warn('⚠️ 雨滴平面初始化失败');
                         if (rainCurtains) {
@@ -5451,8 +5464,8 @@
                 });
             });
 
-            console.log('✅ 小永子首页 - 修仙/阴阳版 + 雨滴玻璃特效');
-            console.log('🌧️ 雨量已减少 (2层, 密度4.5) · 速度已减慢 (0.012)');
+            console.log('✅ 小永子首页 - 修仙/阴阳版 + 雨滴玻璃特效（原始版本）');
+            console.log('🌧️ 使用您提供的原始着色器（4层雨滴，32采样，速度0.03）');
             console.log('🖱️ 右键锁定/解锁所有元素');
             console.log('⚙️ 点击齿轮打开设置');
             console.log('📱 移动端独立位置存储');
