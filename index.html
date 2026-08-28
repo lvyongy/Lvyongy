@@ -1957,7 +1957,7 @@
         }
 
         /* ================================================================
-           开始页 - 雨滴玻璃特效 + 背景图
+           开始页 - 雨滴玻璃特效 + 背景图 (修复黑屏问题)
            ================================================================ */
         #startPage {
             position: fixed;
@@ -1967,7 +1967,7 @@
             height: 100vh;
             height: 100dvh;
             z-index: 99999;
-            background-color: #0a0c0e;
+            background-color: #0a0c0e; /* 后备颜色 */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -2000,7 +2000,7 @@
             position: relative;
         }
         #startRainContainer .plane img {
-            display: none;
+            display: none; /* 纹理由 WebGL 直接读取，不显示 */
         }
 
         /* loading 状态 - 位于雨滴之上 */
@@ -2568,7 +2568,7 @@
 <body>
 
     <!-- ============================================================
-    开始页 - 带雨滴玻璃特效
+    开始页 - 带雨滴玻璃特效 (修复黑屏)
     ============================================================ -->
     <div id="startPage" class="loading">
         <!-- 雨滴渲染容器 -->
@@ -2737,7 +2737,7 @@
             }
 
             // ================================================================
-            // 0b. 开始页 + 独立雨丝 + 雨滴玻璃特效
+            // 0b. 开始页 + 独立雨丝 + 雨滴玻璃特效 (修复加载顺序)
             // ================================================================
             const startPage = document.getElementById('startPage');
             const rainContainer = document.getElementById('rain-container');
@@ -2749,6 +2749,31 @@
             let bgLoaded = false;
             let curtainsPlane = null;
             let webGLCurtain = null;
+
+            // ---- 生成后备图片 (纯色或渐变) ----
+            function createFallbackImage() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, '#2a3a5a');
+                gradient.addColorStop(0.5, '#1a2a4a');
+                gradient.addColorStop(1, '#0a1a2a');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // 添加一些光晕
+                ctx.globalAlpha = 0.3;
+                ctx.beginPath();
+                ctx.arc(canvas.width * 0.3, canvas.height * 0.4, 150, 0, Math.PI * 2);
+                ctx.fillStyle = '#4a6a8a';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(canvas.width * 0.7, canvas.height * 0.6, 120, 0, Math.PI * 2);
+                ctx.fillStyle = '#3a5a7a';
+                ctx.fill();
+                return canvas.toDataURL('image/png');
+            }
 
             // ---- 雨滴玻璃特效 - 着色器 ----
             const vertexShader = `
@@ -2871,7 +2896,7 @@
                     }
                 `;
 
-            // ---- 初始化雨滴特效 ----
+            // ---- 初始化雨滴特效 (确保背景图已加载) ----
             function initRainEffect() {
                 if (webGLCurtain) return;
                 try {
@@ -2935,7 +2960,6 @@
                         checkAllReady();
                     } else {
                         console.warn('雨滴平面初始化失败');
-                        // 即使失败也继续，使用降级方案
                         rainEffectReady = true;
                         checkAllReady();
                     }
@@ -2949,15 +2973,21 @@
             // ---- 加载背景图 ----
             function loadBackground() {
                 const img = startBgImg;
+                // 如果图片已经加载完成
                 if (img.complete && img.naturalWidth > 0) {
                     bgLoaded = true;
-                    checkAllReady();
+                    // 背景图就绪后初始化雨滴
+                    initRainEffect();
                     return;
                 }
+
+                // 监听加载成功
                 img.onload = function() {
                     bgLoaded = true;
-                    checkAllReady();
+                    initRainEffect();
                 };
+
+                // 加载失败，尝试备用路径
                 img.onerror = function() {
                     console.warn('背景图加载失败，尝试备用路径');
                     // 尝试根目录
@@ -2966,16 +2996,20 @@
                     fallback.onload = function() {
                         startBgImg.src = 'background.png';
                         bgLoaded = true;
-                        checkAllReady();
+                        initRainEffect();
                     };
                     fallback.onerror = function() {
-                        // 最终降级：使用纯色
+                        // 最终降级：使用 canvas 生成图片
+                        console.warn('所有背景图路径失败，使用内置后备图片');
+                        const dataUrl = createFallbackImage();
+                        startBgImg.src = dataUrl;
                         bgLoaded = true;
-                        checkAllReady();
+                        initRainEffect();
                     };
                     fallback.src = 'background.png';
                 };
-                // 如果src为空，设置默认
+
+                // 如果 src 为空，设置默认
                 if (!img.src || img.src === '') {
                     img.src = 'images/background.png';
                 }
@@ -3046,16 +3080,7 @@
             // ---- 启动资源加载 ----
             loadBackground();
 
-            // 等待 DOM 和 Curtains.js 就绪
-            if (document.readyState === 'complete') {
-                setTimeout(initRainEffect, 200);
-            } else {
-                window.addEventListener('load', function() {
-                    setTimeout(initRainEffect, 300);
-                });
-            }
-
-            // 备用：如果 Curtains.js 未加载，5秒后强制就绪
+            // 如果 Curtains.js 加载超时，强制就绪
             setTimeout(function() {
                 if (!rainEffectReady) {
                     rainEffectReady = true;
@@ -5226,7 +5251,7 @@
             updateClock();
 
             // ================================================================
-            // 12. 资源预加载
+            // 12. 资源预加载 (仅用于后续音乐和壁纸)
             // ================================================================
             const preloaded = { blobs: {} };
             let loadedCount = 0;
@@ -5244,21 +5269,7 @@
 
             async function preloadAllResources() {
                 totalCount = songs.length + albumImages.length + wallpapers.static.length + wallpapers.dynamic.length + 2;
-                // 背景图由 loadBackground 单独处理
-                await new Promise((resolve) => {
-                    const bgImg = new Image();
-                    bgImg.onload = function() {
-                        // 背景图已由 startBgImg 加载，这里只是额外预加载
-                        updateProgress();
-                        resolve();
-                    };
-                    bgImg.onerror = function() {
-                        updateProgress();
-                        resolve();
-                    };
-                    bgImg.src = 'images/background.png';
-                });
-
+                // 这些资源不影响开始页，可在后台加载
                 await new Promise((resolve) => {
                     const img = new Image();
                     img.onload = () => { updateProgress();
@@ -5487,14 +5498,11 @@
                 });
             });
 
-            console.log('✅ 小永子首页 - 修仙/阴阳版 (含雨滴玻璃特效)');
-            console.log('🖱️ 右键锁定/解锁所有元素（锁定时仍可搜索）');
-            console.log('⚙️ 点击齿轮打开设置 (模块化可折叠)');
-            console.log('📱 移动端独立位置存储，不干扰PC');
+            console.log('✅ 小永子首页 - 修仙/阴阳版 (雨滴玻璃特效修复)');
+            console.log('🖱️ 右键锁定/解锁所有元素');
+            console.log('⚙️ 点击齿轮打开设置');
             console.log('🎵 双击屏幕空白处切换播放器');
-            console.log('🖼️ 切换壁纸类型不自动换壁纸，点击预览才换');
-            console.log('💾 所有设置自动保存到 localStorage');
-            console.log('🌧️ 雨滴玻璃特效已叠加到开始页背景图，雨量少、速度慢');
+            console.log('🌧️ 雨滴特效已与背景图绑定，雨量少、速度慢');
 
         })();
     </script>
