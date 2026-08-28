@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- 添加基础 CSP 防止外部资源注入（允许内联脚本和 curtainsjs） -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline' https://www.curtainsjs.com; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self';">
     <title>小永子の首页</title>
     <style>
         /* ===== 全局重置 & 变量 ===== */
@@ -3168,7 +3170,7 @@
             }
 
             // ================================================================
-            // 6. 快捷链接
+            // 6. 快捷链接 (修复: URL 安全校验)
             // ================================================================
             const linksGrid = document.getElementById('linksGrid');
             const glassLinks = document.getElementById('glassLinks');
@@ -3189,21 +3191,24 @@
             let searchVisible = true;
             let searchBtnEndExists = false;
 
-            // ---- XSS 过滤: 协议白名单 ----
+            // 安全的 URL 校验
             function isValidUrl(url) {
                 if (!url) return false;
-                const trimmed = url.trim();
-                const allowed = /^(https?|ftp|mailto|tel):/i;
+                let trimmed = url.trim();
+                // 黑名单协议
                 if (/^(javascript|data|vbscript):/i.test(trimmed)) return false;
-                if (trimmed.includes('://')) {
-                    return allowed.test(trimmed);
-                }
+                // 尝试使用 URL 构造函数
                 try {
-                    const withProto = 'http://' + trimmed;
-                    const parsed = new URL(withProto);
+                    const parsed = new URL(trimmed);
                     return ['http:', 'https:', 'ftp:', 'mailto:', 'tel:'].includes(parsed.protocol);
                 } catch (_) {
-                    return false;
+                    // 尝试添加协议再解析
+                    try {
+                        const parsed2 = new URL('http://' + trimmed);
+                        return ['http:', 'https:', 'ftp:'].includes(parsed2.protocol);
+                    } catch {
+                        return false;
+                    }
                 }
             }
 
@@ -3435,7 +3440,7 @@
             });
 
             // ================================================================
-            // 7. 设置面板 - 模块化设计 (性能优化: 增量更新)
+            // 7. 设置面板 - 模块化设计 (修复: 语录模块 DOM 安全创建)
             // ================================================================
             const settingsToggleBtn = document.getElementById('wallpaperSettingsBtn');
             const settingsPanel = document.getElementById('settingsPanel');
@@ -3631,34 +3636,149 @@
                 });
             }
 
-            // ---- 拆分 renderSettings ----
-            function renderModeModule() {
-                const isWp = isWallpaperMode;
-                return `
-                    <div class="settings-module" data-module="mode">
-                        <div class="settings-module-header" data-module-toggle="mode">
-                            <span>✦ 模式</span>
-                            <span class="arrow ${moduleStates.mode ? '' : 'collapsed'}">▾</span>
-                        </div>
-                        <div class="settings-module-body ${moduleStates.mode ? '' : 'collapsed'}">
-                            <div class="setting-row">
-                                <div class="mode-switch-container">
-                                    <div class="mode-switch-big ${isWp ? 'wallpaper' : ''}" id="modeSwitchBig">
-                                        <span class="mode-label-left ${!isWp ? 'active' : ''}">阴阳</span>
-                                        <span class="mode-label-right ${isWp ? 'active' : ''}">修仙</span>
-                                        <div class="slider-track"></div>
-                                    </div>
+            // ---- 安全构建语录模块 (完全使用 DOM, 避免 innerHTML) ----
+            function renderQuotesModule() {
+                const container = document.createElement('div');
+                container.className = 'settings-module';
+                container.dataset.module = 'quotes';
+
+                // header
+                const header = document.createElement('div');
+                header.className = 'settings-module-header';
+                header.dataset.moduleToggle = 'quotes';
+                const headerSpan = document.createElement('span');
+                headerSpan.textContent = '❝ 经典语录';
+                const arrow = document.createElement('span');
+                arrow.className = 'arrow' + (moduleStates.quotes ? '' : ' collapsed');
+                arrow.textContent = '▾';
+                header.appendChild(headerSpan);
+                header.appendChild(arrow);
+                container.appendChild(header);
+
+                // body
+                const body = document.createElement('div');
+                body.className = 'settings-module-body' + (moduleStates.quotes ? '' : ' collapsed');
+
+                // 语录列表
+                const manager = document.createElement('div');
+                manager.className = 'quote-manager';
+                manager.id = 'quoteManager';
+                quotes.forEach((q, i) => {
+                    const item = document.createElement('div');
+                    item.className = 'quote-item';
+                    item.dataset.index = i;
+
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'q-text';
+                    textSpan.textContent = q.text;
+
+                    const authorSpan = document.createElement('span');
+                    authorSpan.className = 'q-author';
+                    authorSpan.textContent = '— ' + q.author;
+
+                    const actions = document.createElement('div');
+                    actions.className = 'q-actions';
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'edit-btn';
+                    editBtn.textContent = '✎';
+                    editBtn.dataset.index = i;
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'del-btn';
+                    delBtn.textContent = '✕';
+                    delBtn.dataset.index = i;
+                    actions.appendChild(editBtn);
+                    actions.appendChild(delBtn);
+
+                    item.appendChild(textSpan);
+                    item.appendChild(authorSpan);
+                    item.appendChild(actions);
+                    manager.appendChild(item);
+                });
+                body.appendChild(manager);
+
+                // 添加表单
+                const form = document.createElement('div');
+                form.className = 'quote-add-form';
+                const inputText = document.createElement('input');
+                inputText.type = 'text';
+                inputText.id = 'newQuoteText';
+                inputText.placeholder = '语录内容';
+                const inputAuthor = document.createElement('input');
+                inputAuthor.type = 'text';
+                inputAuthor.id = 'newQuoteAuthor';
+                inputAuthor.placeholder = '作者';
+                const addBtn = document.createElement('button');
+                addBtn.id = 'addQuoteBtn';
+                addBtn.textContent = '添加';
+                form.appendChild(inputText);
+                form.appendChild(inputAuthor);
+                form.appendChild(addBtn);
+                body.appendChild(form);
+
+                // 间隔控制
+                const intervalRow = document.createElement('div');
+                intervalRow.className = 'setting-row';
+                const intervalCtrl = document.createElement('div');
+                intervalCtrl.className = 'interval-control';
+                const label = document.createElement('label');
+                label.textContent = '切换间隔（秒）';
+                const intervalInput = document.createElement('input');
+                intervalInput.type = 'number';
+                intervalInput.id = 'intervalInput';
+                intervalInput.min = '1';
+                intervalInput.max = '300';
+                intervalInput.value = Math.round(quoteInterval / 1000);
+                const unit = document.createElement('span');
+                unit.style.cssText = 'font-size:0.6rem;opacity:0.4;';
+                unit.textContent = '秒';
+                intervalCtrl.appendChild(label);
+                intervalCtrl.appendChild(intervalInput);
+                intervalCtrl.appendChild(unit);
+                intervalRow.appendChild(intervalCtrl);
+                body.appendChild(intervalRow);
+
+                container.appendChild(body);
+
+                // 返回 DOM 元素，后续需要绑定事件，但我们返回 container 并且外部会追加到 settingsDynamic
+                // 但由于 settingsDynamic 使用 innerHTML 会清除所有，所以我们改为使用 replaceChildren
+                return container;
+            }
+
+            // ---- 重写 renderSettings 使用 DOM 追加 ----
+            function renderSettings() {
+                // 清空 settingsDynamic
+                const content = document.getElementById('settingsDynamicContent');
+                content.innerHTML = ''; // 仍使用 innerHTML 清空，但后续全部用 DOM 追加
+
+                // 模式模块 (可保留字符串，因为不涉及用户输入)
+                const modeModule = document.createElement('div');
+                modeModule.className = 'settings-module';
+                modeModule.dataset.module = 'mode';
+                modeModule.innerHTML = `
+                    <div class="settings-module-header" data-module-toggle="mode">
+                        <span>✦ 模式</span>
+                        <span class="arrow ${moduleStates.mode ? '' : 'collapsed'}">▾</span>
+                    </div>
+                    <div class="settings-module-body ${moduleStates.mode ? '' : 'collapsed'}">
+                        <div class="setting-row">
+                            <div class="mode-switch-container">
+                                <div class="mode-switch-big ${isWallpaperMode ? 'wallpaper' : ''}" id="modeSwitchBig">
+                                    <span class="mode-label-left ${!isWallpaperMode ? 'active' : ''}">阴阳</span>
+                                    <span class="mode-label-right ${isWallpaperMode ? 'active' : ''}">修仙</span>
+                                    <div class="slider-track"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
-            }
+                content.appendChild(modeModule);
 
-            function renderWallpaperModule() {
-                if (!isWallpaperMode) return '';
-                return `
-                    <div class="settings-module" data-module="wallpaper">
+                // 壁纸模块（只当修仙模式时显示）
+                if (isWallpaperMode) {
+                    const wpModule = document.createElement('div');
+                    wpModule.className = 'settings-module';
+                    wpModule.dataset.module = 'wallpaper';
+                    wpModule.innerHTML = `
                         <div class="settings-module-header" data-module-toggle="wallpaper">
                             <span>🏔 修仙</span>
                             <span class="arrow ${moduleStates.wallpaper ? '' : 'collapsed'}">▾</span>
@@ -3678,13 +3798,15 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `;
-            }
+                    `;
+                    content.appendChild(wpModule);
+                }
 
-            function renderElementsModule() {
-                const isWp = isWallpaperMode;
-                const defs = isWp ? elemDefs.wallpaper : elemDefs.simple;
+                // 元素控制模块（使用模板字符串，因为不涉及用户输入）
+                const elemModule = document.createElement('div');
+                elemModule.className = 'settings-module';
+                elemModule.dataset.module = 'elements';
+                const defs = isWallpaperMode ? elemDefs.wallpaper : elemDefs.simple;
                 let elemHtml = '';
                 defs.forEach(def => {
                     const state = elemState[def.id] || { visible: true, opacity: 1 };
@@ -3697,69 +3819,22 @@
                         </div>
                     `;
                 });
-                return `
-                    <div class="settings-module" data-module="elements">
-                        <div class="settings-module-header" data-module-toggle="elements">
-                            <span>⊞ 元素控制</span>
-                            <span class="arrow ${moduleStates.elements ? '' : 'collapsed'}">▾</span>
-                        </div>
-                        <div class="settings-module-body ${moduleStates.elements ? '' : 'collapsed'}">
-                            <div class="setting-row">
-                                <div id="elemControlList">${elemHtml}</div>
-                            </div>
+                elemModule.innerHTML = `
+                    <div class="settings-module-header" data-module-toggle="elements">
+                        <span>⊞ 元素控制</span>
+                        <span class="arrow ${moduleStates.elements ? '' : 'collapsed'}">▾</span>
+                    </div>
+                    <div class="settings-module-body ${moduleStates.elements ? '' : 'collapsed'}">
+                        <div class="setting-row">
+                            <div id="elemControlList">${elemHtml}</div>
                         </div>
                     </div>
                 `;
-            }
+                content.appendChild(elemModule);
 
-            function renderQuotesModule() {
-                let quoteHtml = '';
-                quotes.forEach((q, i) => {
-                    quoteHtml += `
-                        <div class="quote-item" data-index="${i}">
-                            <span class="q-text">${q.text}</span>
-                            <span class="q-author">— ${q.author}</span>
-                            <div class="q-actions">
-                                <button class="edit-btn" data-index="${i}">✎</button>
-                                <button class="del-btn" data-index="${i}">✕</button>
-                            </div>
-                        </div>
-                    `;
-                });
-                return `
-                    <div class="settings-module" data-module="quotes">
-                        <div class="settings-module-header" data-module-toggle="quotes">
-                            <span>❝ 经典语录</span>
-                            <span class="arrow ${moduleStates.quotes ? '' : 'collapsed'}">▾</span>
-                        </div>
-                        <div class="settings-module-body ${moduleStates.quotes ? '' : 'collapsed'}">
-                            <div class="setting-row">
-                                <div class="quote-manager" id="quoteManager">${quoteHtml}</div>
-                                <div class="quote-add-form">
-                                    <input type="text" id="newQuoteText" placeholder="语录内容" />
-                                    <input type="text" id="newQuoteAuthor" placeholder="作者" />
-                                    <button id="addQuoteBtn">添加</button>
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <div class="interval-control">
-                                    <label>切换间隔（秒）</label>
-                                    <input type="number" id="intervalInput" min="1" max="300" value="${Math.round(quoteInterval/1000)}" />
-                                    <span style="font-size:0.6rem;opacity:0.4;">秒</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            function renderSettings() {
-                let html = '';
-                html += renderModeModule();
-                html += renderWallpaperModule();
-                html += renderElementsModule();
-                html += renderQuotesModule();
-                settingsDynamic.innerHTML = html;
+                // 语录模块（安全 DOM 创建）
+                const quoteModule = renderQuotesModule();
+                content.appendChild(quoteModule);
 
                 // ---- 绑定事件 ----
                 document.querySelectorAll('[data-module-toggle]').forEach(header => {
@@ -3835,6 +3910,7 @@
                     });
                 });
 
+                // 语录管理器事件 (使用事件委托)
                 const manager = document.getElementById('quoteManager');
                 if (manager) {
                     manager.querySelectorAll('.edit-btn').forEach(btn => {
@@ -5229,24 +5305,17 @@
             // 页面加载后触发淡入
             function triggerStartPageFadeIn() {
                 if (!startPage) return;
-                // 移除可能的 fade-out，确保透明度从 0 开始
                 startPage.classList.remove('fade-out');
-                // 强制回流后添加 show 类触发淡入
                 void startPage.offsetWidth;
                 startPage.classList.add('show');
             }
 
-            // 点击开始页 → 淡出
             function enterSite() {
                 if (!startPage) return;
-                // 如果已经淡出或正在淡出，不重复触发
                 if (startPage.classList.contains('fade-out')) return;
-
-                // 1. 开始页淡出（opacity → 0）
                 startPage.classList.remove('show');
                 startPage.classList.add('fade-out');
 
-                // 2. 独立雨丝容器短暂出现后淡出
                 const rainContainer = document.getElementById('rain-container');
                 if (rainContainer) {
                     rainContainer.classList.add('active');
@@ -5259,15 +5328,11 @@
                     }, 300);
                 }
 
-                // 3. 延迟销毁雨滴特效（等淡出完成）
                 setTimeout(() => {
                     destroyRainEffect();
-                    // 不添加 hide 类 → 无硬切！
-                    // 开始页保持透明且 pointer-events: none（由 fade-out 处理）
                 }, 1300);
             }
 
-            // 绑定点击/触摸事件
             startPage.addEventListener('click', enterSite);
             startPage.addEventListener('touchstart', function(e) {
                 if (!startPage.classList.contains('fade-out')) {
@@ -5275,7 +5340,6 @@
                 }
             }, { passive: true });
 
-            // 页面加载完成后触发淡入
             if (document.readyState === 'complete') {
                 setTimeout(triggerStartPageFadeIn, 200);
             } else {
@@ -5284,7 +5348,6 @@
                 });
             }
 
-            // 雨滴特效初始化（与淡入并行）
             if (document.readyState === 'complete') {
                 setTimeout(initRainEffect, 200);
             } else {
@@ -5324,7 +5387,7 @@
             buildRaindrops();
 
             // ================================================================
-            // 13. 资源预加载 + 失败提示
+            // 13. 资源预加载 + 失败提示 (含内存管理)
             // ================================================================
             const preloaded = { blobs: {} };
             let loadedCount = 0;
@@ -5403,6 +5466,13 @@
                     preloadResources();
                 });
             }
+
+            // 页面关闭时释放 Blob URL
+            window.addEventListener('beforeunload', function() {
+                for (const key in preloaded.blobs) {
+                    try { URL.revokeObjectURL(preloaded.blobs[key]); } catch (e) {}
+                }
+            });
 
             // ================================================================
             // 14. 综合保存/加载
@@ -5574,6 +5644,7 @@
             console.log('📱 移动端独立位置存储');
             console.log('🎵 双击屏幕空白处切换播放器');
             console.log('✨ 开始页淡入淡出（无硬切）');
+            console.log('🔒 已修复 XSS 和 URL 协议绕过漏洞');
 
         })();
     </script>
