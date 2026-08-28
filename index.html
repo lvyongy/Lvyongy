@@ -1970,6 +1970,7 @@
             background-color: #0a0c0e;
             overflow: hidden;
             cursor: pointer;
+            /* 关键：淡入淡出过渡 */
             transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                 transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             will-change: opacity, transform;
@@ -1977,13 +1978,20 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            /* 初始透明，由 JS 触发淡入 */
+        }
+        #startPage.show {
+            opacity: 1;
         }
         #startPage.fade-out {
             opacity: 0;
             pointer-events: none;
+            /* 淡出后不可交互，但保留在 DOM 中，无硬切 */;
         }
         #startPage.hide {
             display: none;
+            /* 不再使用，保留以防万一 */;
         }
         #startPage #canvas {
             position: absolute;
@@ -2168,17 +2176,6 @@
         }
         body.wallpaper-mode[data-brightness="light"] .settings-module {
             background: rgba(255, 255, 255, 0.06);
-        }
-
-        /* ===== 🆕 首页淡入效果（加载页→首页 无缝过渡） ===== */
-        .simple-mode,
-        .wallpaper-container {
-            opacity: 0;
-            transition: opacity 1.2s ease;
-        }
-        body.home-visible .simple-mode,
-        body.home-visible .wallpaper-container {
-            opacity: 1;
         }
 
         /* ===== 响应式 ===== */
@@ -3017,8 +3014,7 @@
             // 5. 经典语录 (原名人名言)
             // ================================================================
             const DEFAULT_QUOTES = [
-                { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。',
-                author: '孙孙浩' },
+                { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。', author: '孙孙浩' },
                 { text: '杀人放火厉飞雨，万人敬仰韩天尊', author: '阿青' },
                 { text: '你倒是个有情有义之人。可惜在这乱世之中，最不值钱的便是情义。且看我那两个逆徒，本座养育他们两百年，却轻易背叛。',
                     author: '玄骨上人' },
@@ -5226,41 +5222,69 @@
             }
 
             // ================================================================
-            // 🆕 开始页点击进入 + 首页淡入
+            // ★★★ 核心：开始页淡入 + 淡出（无硬切）★★★
             // ================================================================
             const startPage = document.getElementById('startPage');
 
-            function enterSite() {
-                if (startPage.classList.contains('fade-out') || startPage.classList.contains('hide')) return;
-                destroyRainEffect();
-
-                // ★ 触发首页淡入（与开始页淡出同步）
-                document.body.classList.add('home-visible');
-
-                startPage.classList.add('fade-out');
-                setTimeout(() => {
-                    startPage.classList.add('hide');
-                }, 1200);
-
-                const rainContainer = document.getElementById('rain-container');
-                rainContainer.classList.add('active');
-                setTimeout(() => {
-                    rainContainer.classList.add('fade-out');
-                    setTimeout(() => {
-                        rainContainer.classList.remove('active');
-                        rainContainer.style.display = 'none';
-                    }, 1200);
-                }, 300);
+            // 页面加载后触发淡入
+            function triggerStartPageFadeIn() {
+                if (!startPage) return;
+                // 移除可能的 fade-out，确保透明度从 0 开始
+                startPage.classList.remove('fade-out');
+                // 强制回流后添加 show 类触发淡入
+                void startPage.offsetWidth;
+                startPage.classList.add('show');
             }
 
+            // 点击开始页 → 淡出
+            function enterSite() {
+                if (!startPage) return;
+                // 如果已经淡出或正在淡出，不重复触发
+                if (startPage.classList.contains('fade-out')) return;
+
+                // 1. 开始页淡出（opacity → 0）
+                startPage.classList.remove('show');
+                startPage.classList.add('fade-out');
+
+                // 2. 独立雨丝容器短暂出现后淡出
+                const rainContainer = document.getElementById('rain-container');
+                if (rainContainer) {
+                    rainContainer.classList.add('active');
+                    setTimeout(() => {
+                        rainContainer.classList.add('fade-out');
+                        setTimeout(() => {
+                            rainContainer.classList.remove('active');
+                            rainContainer.style.display = 'none';
+                        }, 1200);
+                    }, 300);
+                }
+
+                // 3. 延迟销毁雨滴特效（等淡出完成）
+                setTimeout(() => {
+                    destroyRainEffect();
+                    // 不添加 hide 类 → 无硬切！
+                    // 开始页保持透明且 pointer-events: none（由 fade-out 处理）
+                }, 1300);
+            }
+
+            // 绑定点击/触摸事件
             startPage.addEventListener('click', enterSite);
             startPage.addEventListener('touchstart', function(e) {
-                if (!startPage.classList.contains('fade-out')) enterSite();
+                if (!startPage.classList.contains('fade-out')) {
+                    enterSite();
+                }
             }, { passive: true });
 
-            // 首页初始为隐藏（opacity:0），由 home-visible 控制淡入
-            document.body.classList.remove('home-visible');
+            // 页面加载完成后触发淡入
+            if (document.readyState === 'complete') {
+                setTimeout(triggerStartPageFadeIn, 200);
+            } else {
+                window.addEventListener('load', function() {
+                    setTimeout(triggerStartPageFadeIn, 200);
+                });
+            }
 
+            // 雨滴特效初始化（与淡入并行）
             if (document.readyState === 'complete') {
                 setTimeout(initRainEffect, 200);
             } else {
@@ -5549,7 +5573,7 @@
             console.log('⚙️ 点击齿轮打开设置');
             console.log('📱 移动端独立位置存储');
             console.log('🎵 双击屏幕空白处切换播放器');
-            console.log('✨ 加载页→首页 无缝淡入淡出过渡');
+            console.log('✨ 开始页淡入淡出（无硬切）');
 
         })();
     </script>
