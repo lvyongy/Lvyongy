@@ -2763,12 +2763,11 @@
             buildRaindrops();
 
             // ================================================================
-            // 0c. 雨滴玻璃特效 (Curtains.js) — 使用更清晰的着色器（来自第二个文件）
+            // 0c. 雨滴玻璃特效 (Curtains.js) — 使用更清晰的着色器 + textures 显式绑定
             // ================================================================
             let rainCurtains = null;
             let rainPlane = null;
             let rainInitialized = false;
-            let rainInitResolve = null;
 
             // ---- 更清晰的雨滴着色器（密度低、模糊弱、扭曲小） ----
             const rainVertexShader = `
@@ -2933,83 +2932,121 @@
                     }
 
                     // 确保图片已加载，否则等待
-                    if (!textureImg.complete || textureImg.naturalWidth === 0) {
-                        textureImg.onload = function() {
-                            initRainEffect().then(resolve);
-                        };
-                        textureImg.onerror = function() {
-                            // 加载失败，使用备用纹理
-                            textureImg.src = fallbackDataUrl;
-                            initRainEffect().then(resolve);
-                        };
-                        return;
-                    }
-
-                    try {
-                        rainCurtains = new Curtains({
-                            container: 'rainCanvasContainer',
-                            watchScroll: false,
-                            pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-                        });
-
-                        const planeEl = document.createElement('div');
-                        planeEl.style.cssText =
-                            'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
-                        planeEl.setAttribute('data-sampler', 'dispImage');
-                        // 将纹理图片移动到 planeEl 中
-                        planeEl.appendChild(textureImg);
-                        container.appendChild(planeEl);
-
-                        const mouse = { x: 0, y: 0 };
-
-                        rainPlane = new Plane(rainCurtains, planeEl, {
-                            vertexShader: rainVertexShader,
-                            fragmentShader: rainFragmentShader,
-                            uniforms: {
-                                uTime: { name: 'uTime', type: '1f', value: 0 },
-                                uReso: { name: 'uReso', type: '2f', value: [window.innerWidth, window
-                                        .innerHeight] },
-                                uMouse: { name: 'uMouse', type: '2f', value: [mouse.x, mouse.y] },
+                    function doInit() {
+                        try {
+                            // 如果图片加载失败或未完成，使用备用纹理
+                            if (!textureImg.complete || textureImg.naturalWidth === 0) {
+                                // 使用备用纹理
+                                textureImg.src = fallbackDataUrl;
+                                // 再次检查，若仍失败则强制重试
+                                if (!textureImg.complete || textureImg.naturalWidth === 0) {
+                                    // 有些浏览器 dataURL 也可能异步，等待一下
+                                    setTimeout(() => {
+                                        doInit();
+                                    }, 100);
+                                    return;
+                                }
                             }
-                        });
 
-                        if (rainPlane) {
-                            rainPlane.onRender(() => {
-                                rainPlane.uniforms.uTime.value++;
-                                rainPlane.uniforms.uReso.value = [window.innerWidth, window.innerHeight];
+                            rainCurtains = new Curtains({
+                                container: 'rainCanvasContainer',
+                                watchScroll: false,
+                                pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
                             });
 
-                            // 鼠标交互
-                            const onMouseMove = (e) => {
-                                mouse.x = e.clientX;
-                                mouse.y = e.clientY;
-                                if (rainPlane) {
-                                    rainPlane.uniforms.uMouse.value = [mouse.x, mouse.y];
-                                }
-                            };
-                            window.addEventListener('mousemove', onMouseMove);
-                            // 保存引用以便清理
-                            rainPlane._mouseListener = onMouseMove;
+                            const planeEl = document.createElement('div');
+                            planeEl.style.cssText =
+                                'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+                            container.appendChild(planeEl);
 
-                            rainInitialized = true;
-                            rainEffectReady = true;
-                            console.log('🌧️ 雨滴玻璃特效已启动（清晰版：密度低·模糊弱·扭曲小）');
-                            resolve();
-                        } else {
-                            console.warn('⚠️ 雨滴平面初始化失败');
+                            const mouse = { x: 0, y: 0 };
+
+                            // 使用 textures 数组显式传递纹理
+                            rainPlane = new Plane(rainCurtains, planeEl, {
+                                vertexShader: rainVertexShader,
+                                fragmentShader: rainFragmentShader,
+                                textures: [
+                                    {
+                                        sampler: 'dispImage',
+                                        source: textureImg,
+                                    }
+                                ],
+                                uniforms: {
+                                    uTime: { name: 'uTime', type: '1f', value: 0 },
+                                    uReso: { name: 'uReso', type: '2f', value: [window.innerWidth, window
+                                            .innerHeight] },
+                                    uMouse: { name: 'uMouse', type: '2f', value: [mouse.x, mouse.y] },
+                                }
+                            });
+
+                            if (rainPlane) {
+                                rainPlane.onRender(() => {
+                                    rainPlane.uniforms.uTime.value++;
+                                    rainPlane.uniforms.uReso.value = [window.innerWidth, window.innerHeight];
+                                });
+
+                                const onMouseMove = (e) => {
+                                    mouse.x = e.clientX;
+                                    mouse.y = e.clientY;
+                                    if (rainPlane) {
+                                        rainPlane.uniforms.uMouse.value = [mouse.x, mouse.y];
+                                    }
+                                };
+                                window.addEventListener('mousemove', onMouseMove);
+                                rainPlane._mouseListener = onMouseMove;
+
+                                rainInitialized = true;
+                                rainEffectReady = true;
+                                console.log('🌧️ 雨滴玻璃特效已启动（清晰版）');
+                                resolve();
+                            } else {
+                                console.warn('⚠️ 雨滴平面初始化失败');
+                                if (rainCurtains) {
+                                    rainCurtains.dispose();
+                                    rainCurtains = null;
+                                }
+                                resolve();
+                            }
+                        } catch (e) {
+                            console.warn('⚠️ 雨滴特效初始化异常:', e);
                             if (rainCurtains) {
                                 rainCurtains.dispose();
                                 rainCurtains = null;
                             }
                             resolve();
                         }
-                    } catch (e) {
-                        console.warn('⚠️ 雨滴特效初始化异常:', e);
-                        if (rainCurtains) {
-                            rainCurtains.dispose();
-                            rainCurtains = null;
+                    }
+
+                    // 检查图片状态
+                    if (textureImg.complete && textureImg.naturalWidth > 0) {
+                        // 已加载，直接初始化
+                        doInit();
+                    } else {
+                        // 等待加载
+                        textureImg.onload = function() {
+                            doInit();
+                        };
+                        textureImg.onerror = function() {
+                            // 加载失败，使用备用纹理
+                            textureImg.src = fallbackDataUrl;
+                            // 但 dataURL 可能立即加载，也可能需要等待
+                            if (textureImg.complete && textureImg.naturalWidth > 0) {
+                                doInit();
+                            } else {
+                                textureImg.onload = function() { doInit(); };
+                                // 超时保护
+                                setTimeout(() => {
+                                    if (!rainInitialized) {
+                                        console.warn('⚠️ 备用纹理加载超时，强制初始化');
+                                        doInit();
+                                    }
+                                }, 500);
+                            }
+                        };
+                        // 如果图片已经加载但 naturalWidth === 0（可能跨域或损坏），直接触发 onerror
+                        if (textureImg.complete && textureImg.naturalWidth === 0) {
+                            textureImg.onerror();
                         }
-                        resolve();
                     }
                 });
             }
