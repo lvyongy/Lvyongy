@@ -1967,7 +1967,8 @@
             height: 100vh;
             height: 100dvh;
             z-index: 99999;
-            background-color: #0a0c0e; /* 后备颜色 */
+            background-color: #0a0c0e;
+            /* 后备颜色 */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -2000,7 +2001,26 @@
             position: relative;
         }
         #startRainContainer .plane img {
-            display: none; /* 纹理由 WebGL 直接读取，不显示 */
+            display: none;
+            /* 纹理由 WebGL 直接读取，不显示 */
+        }
+        /* ---- 备用背景图（当 Curtains.js 失败时显示） ---- */
+        #startFallbackBg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            display: none;
+            pointer-events: none;
+        }
+        #startPage.fallback #startFallbackBg {
+            display: block;
+        }
+        #startPage.fallback #startRainContainer .plane {
+            display: none;
         }
 
         /* loading 状态 - 位于雨滴之上 */
@@ -2562,6 +2582,43 @@
         .no-pointer-events {
             pointer-events: none !important;
         }
+
+        /* ===== 备选雨滴 CSS 动画 (当 WebGL 失败时使用) ===== */
+        #cssRainContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+            display: none;
+        }
+        #startPage.fallback #cssRainContainer {
+            display: block;
+        }
+        #cssRainContainer .drop {
+            position: absolute;
+            bottom: 100%;
+            width: 1.5px;
+            background: rgba(255, 255, 255, 0.15);
+            animation: dropFall linear infinite;
+            border-radius: 2px;
+        }
+        @keyframes dropFall {
+            0% {
+                transform: translateY(0) scaleY(1);
+                opacity: 0.1;
+            }
+            30% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(110vh) scaleY(0.4);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
@@ -2577,6 +2634,10 @@
                 <img id="startBgImg" src="images/background.png" crossorigin="anonymous" />
             </div>
         </div>
+        <!-- 备用背景图 (Curtains.js 失败时显示) -->
+        <img id="startFallbackBg" src="images/background.png" alt="背景" />
+        <!-- CSS 备选雨滴 -->
+        <div id="cssRainContainer"></div>
         <!-- loading 状态 -->
         <div class="start-loading">
             <div class="spinner"></div>
@@ -2620,9 +2681,9 @@
         <div class="bottom-area simple-draggable" id="bottomArea">
             <div class="search-wrapper" id="searchWrapper">
                 <div class="search-box">
-                    <input type="text" id="searchInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+                    <input type="text" id="searchInput" aria-label="搜索框" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
                 </div>
-                <button class="search-btn" id="searchBtn">
+                <button class="search-btn" id="searchBtn" aria-label="搜索">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                 </button>
             </div>
@@ -2641,9 +2702,9 @@
     </div>
     <div class="draggable-item glass-search-wrapper" id="glassSearch" data-draggable>
         <div class="glass-search-box">
-            <input type="text" class="glass-search-input" id="glassSearchInput" placeholder="搜索..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <input type="text" class="glass-search-input" id="glassSearchInput" aria-label="搜索" placeholder="搜索..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
         </div>
-        <button class="glass-search-btn" id="glassSearchBtn">
+        <button class="glass-search-btn" id="glassSearchBtn" aria-label="搜索">
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         </button>
     </div>
@@ -2651,7 +2712,7 @@
 
     <!-- 设置面板 -->
     <div id="settingsPanelWrapper">
-        <button class="settings-toggle" id="wallpaperSettingsBtn">⚙</button>
+        <button class="settings-toggle" id="wallpaperSettingsBtn" aria-label="设置">⚙</button>
         <div class="settings-panel" id="settingsPanel">
             <div id="settingsDynamicContent"></div>
         </div>
@@ -2676,10 +2737,10 @@
                 </div>
             </div>
             <div class="touch">
-                <div class="t1" data-dir="up"></div>
-                <div class="t2" data-dir="right"></div>
-                <div class="t3" data-dir="down"></div>
-                <div class="t4" data-dir="left"></div>
+                <div class="t1" data-dir="up" aria-label="上一张封面"></div>
+                <div class="t2" data-dir="right" aria-label="下一首"></div>
+                <div class="t3" data-dir="down" aria-label="下一张封面"></div>
+                <div class="t4" data-dir="left" aria-label="上一首"></div>
             </div>
         </div>
     </div>
@@ -2688,14 +2749,14 @@
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-box">
             <h3 id="modalTitle">编辑链接</h3>
-            <label>显示文字</label>
-            <input type="text" id="modalText" placeholder="例如：百度" />
-            <label>链接地址</label>
-            <input type="text" id="modalUrl" placeholder="https://..." />
+            <label for="modalText">显示文字</label>
+            <input type="text" id="modalText" placeholder="例如：百度" aria-label="显示文字" />
+            <label for="modalUrl">链接地址</label>
+            <input type="text" id="modalUrl" placeholder="https://..." aria-label="链接地址" />
             <div class="modal-actions">
-                <button class="btn-danger" id="modalDelete" style="display:none;">删除</button>
-                <button id="modalCancel">取消</button>
-                <button class="btn-primary" id="modalSave">保存</button>
+                <button class="btn-danger" id="modalDelete" style="display:none;" aria-label="删除">删除</button>
+                <button id="modalCancel" aria-label="取消">取消</button>
+                <button class="btn-primary" id="modalSave" aria-label="保存">保存</button>
             </div>
         </div>
     </div>
@@ -2704,9 +2765,9 @@
     <div id="toastContainer"></div>
 
     <!-- ============================================================
-    引入 Curtains.js (用于雨滴玻璃特效)
+    引入 Curtains.js (用于雨滴玻璃特效) —— 使用更可靠的 CDN
     ============================================================ -->
-    <script src="https://www.curtainsjs.com/build/curtains.min.js">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/curtainsjs/8.1.0/curtains.min.js">
     </script>
 
     <script>
@@ -2737,11 +2798,12 @@
             }
 
             // ================================================================
-            // 0b. 开始页 + 独立雨丝 + 雨滴玻璃特效 (修复加载顺序)
+            // 0b. 开始页 + 独立雨丝 + 雨滴玻璃特效 (修复加载顺序 + 备选方案)
             // ================================================================
             const startPage = document.getElementById('startPage');
             const rainContainer = document.getElementById('rain-container');
             const startBgImg = document.getElementById('startBgImg');
+            const startFallbackBg = document.getElementById('startFallbackBg');
             const startRainContainer = document.getElementById('startRainContainer');
             let startPageHidden = false;
             let startPageReady = false;
@@ -2749,6 +2811,7 @@
             let bgLoaded = false;
             let curtainsPlane = null;
             let webGLCurtain = null;
+            let curtainInitAttempted = false;
 
             // ---- 生成后备图片 (纯色或渐变) ----
             function createFallbackImage() {
@@ -2762,7 +2825,6 @@
                 gradient.addColorStop(1, '#0a1a2a');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                // 添加一些光晕
                 ctx.globalAlpha = 0.3;
                 ctx.beginPath();
                 ctx.arc(canvas.width * 0.3, canvas.height * 0.4, 150, 0, Math.PI * 2);
@@ -2773,6 +2835,47 @@
                 ctx.fillStyle = '#3a5a7a';
                 ctx.fill();
                 return canvas.toDataURL('image/png');
+            }
+
+            // ---- 生成备选 CSS 雨滴 ----
+            function createCssRain() {
+                const container = document.getElementById('cssRainContainer');
+                if (!container) return;
+                container.innerHTML = '';
+                for (let i = 0; i < 80; i++) {
+                    const drop = document.createElement('div');
+                    drop.className = 'drop';
+                    const left = Math.random() * 100;
+                    const delay = Math.random() * 3;
+                    const duration = 1.8 + Math.random() * 2.2;
+                    const height = 20 + Math.random() * 60;
+                    const opacity = 0.1 + Math.random() * 0.2;
+                    drop.style.left = left + '%';
+                    drop.style.animationDelay = delay + 's';
+                    drop.style.animationDuration = duration + 's';
+                    drop.style.height = height + 'px';
+                    drop.style.opacity = opacity;
+                    container.appendChild(drop);
+                }
+            }
+
+            // ---- 切换到备选方案 (CSS雨滴 + 背景图) ----
+            function fallbackToCssRain() {
+                if (startPage.classList.contains('fallback')) return;
+                startPage.classList.add('fallback');
+                // 确保背景图显示
+                const imgSrc = startBgImg.src || 'images/background.png';
+                startFallbackBg.src = imgSrc;
+                startFallbackBg.style.display = 'block';
+                // 生成 CSS 雨滴
+                createCssRain();
+                // 隐藏 WebGL 容器
+                const plane = startRainContainer.querySelector('.plane');
+                if (plane) plane.style.display = 'none';
+                // 标记就绪
+                rainEffectReady = true;
+                checkAllReady();
+                console.log('🌧️ 已切换到 CSS 雨滴备选方案');
             }
 
             // ---- 雨滴玻璃特效 - 着色器 ----
@@ -2818,14 +2921,12 @@
                     uniform sampler2D dispImage;
                     uniform sampler2D blurImage;
 
-                    // ---- 噪声 ----
                     float N12(vec2 p) {
                         p = fract(p * vec2(123.34, 345.45));
                         p += dot(p, p + 34.345);
                         return fract(p.x * p.y);
                     }
 
-                    // ---- 单层雨滴 (密度降低: 3.0 → 2.2) ----
                     vec3 Layer(vec2 uv0, float t) {
                         vec2 asp = vec2(2., 1.);
                         vec2 uv1 = uv0 * 2.2 * asp;
@@ -2860,16 +2961,13 @@
                         return vec3(off, fogTrail);
                     }
 
-                    // ---- 主渲染 ----
                     void main() {
                         float dist = 5.0;
                         float blurSize = 5.0;
-                        // 速度减半: 0.03 → 0.015
                         float t = mod(uTime * 0.015, 7200.0);
 
                         vec2 uv = vTextureCoord;
 
-                        // 只保留 2 层雨滴 (原4层 → 2层)
                         vec3 drops = Layer(uv, t);
                         drops += Layer(uv * 1.35 + 1.54, t);
 
@@ -2896,9 +2994,18 @@
                     }
                 `;
 
-            // ---- 初始化雨滴特效 (确保背景图已加载) ----
+            // ---- 初始化雨滴特效 (使用 Curtains.js) ----
             function initRainEffect() {
-                if (webGLCurtain) return;
+                if (curtainInitAttempted) return;
+                curtainInitAttempted = true;
+
+                // 检查 Curtains 是否可用
+                if (typeof Curtains === 'undefined') {
+                    console.warn('Curtains.js 未加载，使用备选方案');
+                    fallbackToCssRain();
+                    return;
+                }
+
                 try {
                     webGLCurtain = new Curtains({
                         container: 'startRainContainer',
@@ -2956,27 +3063,26 @@
                         });
 
                         rainEffectReady = true;
-                        console.log('🌧️ 雨滴玻璃特效已启动');
+                        console.log('🌧️ 雨滴玻璃特效已启动 (Curtains.js)');
                         checkAllReady();
                     } else {
-                        console.warn('雨滴平面初始化失败');
-                        rainEffectReady = true;
-                        checkAllReady();
+                        console.warn('雨滴平面初始化失败，使用备选方案');
+                        fallbackToCssRain();
                     }
                 } catch (e) {
                     console.warn('Curtains.js 初始化失败:', e);
-                    rainEffectReady = true;
-                    checkAllReady();
+                    fallbackToCssRain();
                 }
             }
 
             // ---- 加载背景图 ----
             function loadBackground() {
                 const img = startBgImg;
+                const fallbackImg = startFallbackBg;
+
                 // 如果图片已经加载完成
                 if (img.complete && img.naturalWidth > 0) {
                     bgLoaded = true;
-                    // 背景图就绪后初始化雨滴
                     initRainEffect();
                     return;
                 }
@@ -2984,6 +3090,8 @@
                 // 监听加载成功
                 img.onload = function() {
                     bgLoaded = true;
+                    // 同步给备用图
+                    fallbackImg.src = img.src;
                     initRainEffect();
                 };
 
@@ -2995,6 +3103,7 @@
                     fallback.crossOrigin = 'anonymous';
                     fallback.onload = function() {
                         startBgImg.src = 'background.png';
+                        fallbackImg.src = 'background.png';
                         bgLoaded = true;
                         initRainEffect();
                     };
@@ -3003,6 +3112,7 @@
                         console.warn('所有背景图路径失败，使用内置后备图片');
                         const dataUrl = createFallbackImage();
                         startBgImg.src = dataUrl;
+                        fallbackImg.src = dataUrl;
                         bgLoaded = true;
                         initRainEffect();
                     };
@@ -3026,13 +3136,29 @@
                 }
             }
 
+            // ---- 强制就绪超时 ----
+            setTimeout(function() {
+                if (!startPageReady) {
+                    console.warn('⏰ 加载超时，强制进入就绪状态');
+                    if (!bgLoaded) {
+                        bgLoaded = true;
+                        const dataUrl = createFallbackImage();
+                        startBgImg.src = dataUrl;
+                        startFallbackBg.src = dataUrl;
+                    }
+                    if (!rainEffectReady) {
+                        fallbackToCssRain();
+                    }
+                    checkAllReady();
+                }
+            }, 6000);
+
             // ---- 进入网站 ----
             function enterSite(e) {
                 if (startPageHidden) return;
                 if (!startPageReady) return;
                 startPageHidden = true;
                 startPage.classList.add('fade-out');
-                // 雨丝淡出
                 setTimeout(function() {
                     startPage.classList.add('hide');
                     rainContainer.style.transition = 'opacity 1.2s ease';
@@ -3079,15 +3205,6 @@
 
             // ---- 启动资源加载 ----
             loadBackground();
-
-            // 如果 Curtains.js 加载超时，强制就绪
-            setTimeout(function() {
-                if (!rainEffectReady) {
-                    rainEffectReady = true;
-                    checkAllReady();
-                    console.warn('⚠️ Curtains.js 加载超时，强制进入');
-                }
-            }, 5000);
 
             // ================================================================
             // 1. 预置链接
@@ -4082,8 +4199,8 @@
                     elemHtml += `
                             <div class="elem-control" data-elem-id="${def.id}">
                                 <span class="elem-name">${def.name}</span>
-                                <button class="elem-toggle ${state.visible ? 'active' : ''}"><span class="thumb"></span></button>
-                                <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${state.opacity}" /></div>
+                                <button class="elem-toggle ${state.visible ? 'active' : ''}" aria-label="切换 ${def.name} 显示"><span class="thumb"></span></button>
+                                <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${state.opacity}" aria-label="${def.name} 不透明度" /></div>
                                 <span class="elem-opacity-value">${Math.round(state.opacity*100)}%</span>
                             </div>
                         `;
@@ -4110,8 +4227,8 @@
                                 <span class="q-text">${q.text}</span>
                                 <span class="q-author">— ${q.author}</span>
                                 <div class="q-actions">
-                                    <button class="edit-btn" data-index="${i}">✎</button>
-                                    <button class="del-btn" data-index="${i}">✕</button>
+                                    <button class="edit-btn" data-index="${i}" aria-label="编辑语录">✎</button>
+                                    <button class="del-btn" data-index="${i}" aria-label="删除语录">✕</button>
                                 </div>
                             </div>
                         `;
@@ -4126,15 +4243,15 @@
                                 <div class="setting-row">
                                     <div class="quote-manager" id="quoteManager">${quoteHtml}</div>
                                     <div class="quote-add-form">
-                                        <input type="text" id="newQuoteText" placeholder="语录内容" />
-                                        <input type="text" id="newQuoteAuthor" placeholder="作者" />
-                                        <button id="addQuoteBtn">添加</button>
+                                        <input type="text" id="newQuoteText" aria-label="语录内容" placeholder="语录内容" />
+                                        <input type="text" id="newQuoteAuthor" aria-label="作者" placeholder="作者" />
+                                        <button id="addQuoteBtn" aria-label="添加语录">添加</button>
                                     </div>
                                 </div>
                                 <div class="setting-row">
                                     <div class="interval-control">
-                                        <label>切换间隔（秒）</label>
-                                        <input type="number" id="intervalInput" min="1" max="300" value="${Math.round(quoteInterval/1000)}" />
+                                        <label for="intervalInput">切换间隔（秒）</label>
+                                        <input type="number" id="intervalInput" min="1" max="300" value="${Math.round(quoteInterval/1000)}" aria-label="切换间隔" />
                                         <span style="font-size:0.6rem;opacity:0.4;">秒</span>
                                     </div>
                                 </div>
@@ -5269,7 +5386,6 @@
 
             async function preloadAllResources() {
                 totalCount = songs.length + albumImages.length + wallpapers.static.length + wallpapers.dynamic.length + 2;
-                // 这些资源不影响开始页，可在后台加载
                 await new Promise((resolve) => {
                     const img = new Image();
                     img.onload = () => { updateProgress();
@@ -5502,7 +5618,7 @@
             console.log('🖱️ 右键锁定/解锁所有元素');
             console.log('⚙️ 点击齿轮打开设置');
             console.log('🎵 双击屏幕空白处切换播放器');
-            console.log('🌧️ 雨滴特效已与背景图绑定，雨量少、速度慢');
+            console.log('🌧️ 雨滴特效已修复，备选CSS雨滴可用');
 
         })();
     </script>
