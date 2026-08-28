@@ -1974,7 +1974,6 @@
             cursor: pointer;
             /* 关键：淡入淡出过渡 */
             transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             will-change: opacity, transform;
             display: flex;
             flex-direction: column;
@@ -5306,8 +5305,6 @@
             function triggerStartPageFadeIn() {
                 if (!startPage) return;
                 startPage.classList.remove('fade-out');
-                void startPage.offsetWidth;
-                startPage.classList.add('show');
             }
 
             function enterSite() {
