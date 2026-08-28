@@ -70,6 +70,7 @@
             position: relative;
             width: 100%;
             max-width: 100vw;
+            background-color: #d0d4d8;
         }
         body.night-mode {
             background: var(--bg-night);
@@ -79,6 +80,7 @@
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            background-color: #121416;
         }
         body.wallpaper-mode {
             background-image: none !important;
@@ -1972,17 +1974,16 @@
                 transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             will-change: opacity, transform;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
         }
         #startPage.fade-out {
             opacity: 0;
-            transform: scale(1.04);
             pointer-events: none;
         }
         #startPage.hide {
-            display: none !important;
+            display: none;
         }
         #startPage #canvas {
             position: absolute;
@@ -1994,16 +1995,14 @@
             pointer-events: none;
         }
         #startPage .plane {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 100vh;
-            position: relative;
+            height: 100%;
             z-index: 0;
             pointer-events: none;
         }
-        #startPage .plane img {
-            display: none;
-        }
-        /* 开始页底部文字 */
         .start-subtitle {
             position: relative;
             z-index: 2;
@@ -2022,25 +2021,19 @@
             border: none !important;
             border-radius: 0 !important;
             padding: 0 !important;
-            margin-bottom: 8%;
+            margin-bottom: 10%;
             pointer-events: none;
             text-align: center;
         }
         @keyframes breath {
-            0% {
-                opacity: 0.4;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
-                transform: scale(0.98);
+            0%,
+            100% {
+                opacity: 0.7;
+                transform: scale(1);
             }
             50% {
                 opacity: 1;
-                text-shadow: 0 0 40px rgba(255, 255, 255, 0.15);
                 transform: scale(1.02);
-            }
-            100% {
-                opacity: 0.4;
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
-                transform: scale(0.98);
             }
         }
 
@@ -3121,11 +3114,11 @@
                 if (quoteLocked) {
                     quoteArea.classList.add('locked');
                     quoteArea.style.cursor = 'default';
-                    wqDisplay.classList.add('locked');
+                    if (wqDisplay) wqDisplay.classList.add('locked');
                 } else {
                     quoteArea.classList.remove('locked');
                     quoteArea.style.cursor = 'pointer';
-                    wqDisplay.classList.remove('locked');
+                    if (wqDisplay) wqDisplay.classList.remove('locked');
                 }
                 saveAllSettings();
             }
@@ -3134,10 +3127,12 @@
                 e.preventDefault();
                 toggleQuoteLock();
             });
-            wqDisplay.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                toggleQuoteLock();
-            });
+            if (wqDisplay) {
+                wqDisplay.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    toggleQuoteLock();
+                });
+            }
 
             quoteArea.addEventListener('click', function(e) {
                 if (this._clickTimer) {
@@ -3150,17 +3145,19 @@
                     if (!quoteLocked) nextQuote();
                 }, 200);
             });
-            wqDisplay.addEventListener('click', function(e) {
-                if (this._clickTimerW) {
-                    clearTimeout(this._clickTimerW);
-                    this._clickTimerW = null;
-                    return;
-                }
-                this._clickTimerW = setTimeout(() => {
-                    this._clickTimerW = null;
-                    if (!quoteLocked) nextQuote();
-                }, 200);
-            });
+            if (wqDisplay) {
+                wqDisplay.addEventListener('click', function(e) {
+                    if (this._clickTimerW) {
+                        clearTimeout(this._clickTimerW);
+                        this._clickTimerW = null;
+                        return;
+                    }
+                    this._clickTimerW = setTimeout(() => {
+                        this._clickTimerW = null;
+                        if (!quoteLocked) nextQuote();
+                    }, 200);
+                });
+            }
 
             // ================================================================
             // 6. 快捷链接
@@ -3183,6 +3180,38 @@
             let editingIndex = -1;
             let searchVisible = true;
             let searchBtnEndExists = false;
+
+            // ---- XSS 过滤: 协议白名单 ----
+            function isValidUrl(url) {
+                if (!url) return false;
+                const trimmed = url.trim();
+                // 允许的协议
+                const allowed = /^(https?|ftp|mailto|tel):/i;
+                // 绝对禁止 javascript: 和 data: 等危险协议
+                if (/^(javascript|data|vbscript):/i.test(trimmed)) return false;
+                // 如果包含 :// 但不在白名单内, 拒绝
+                if (trimmed.includes('://')) {
+                    return allowed.test(trimmed);
+                }
+                // 没有协议的情况, 尝试补全 http:// 后再检查
+                try {
+                    const withProto = 'http://' + trimmed;
+                    const parsed = new URL(withProto);
+                    return ['http:', 'https:', 'ftp:', 'mailto:', 'tel:'].includes(parsed.protocol);
+                } catch (_) {
+                    return false;
+                }
+            }
+
+            function sanitizeUrl(url) {
+                const trimmed = url.trim();
+                if (!trimmed) return '';
+                // 如果没协议, 补 http://
+                if (!trimmed.includes('://') && !trimmed.startsWith('mailto:') && !trimmed.startsWith('tel:')) {
+                    return 'http://' + trimmed;
+                }
+                return trimmed;
+            }
 
             function renderAllLinks() {
                 const existingMobile = document.getElementById('searchBtnMobile');
@@ -3315,12 +3344,13 @@
                 const text = modalText.value.trim();
                 const url = modalUrl.value.trim();
                 if (!text || !url) { showToast('请填写完整信息'); return; }
-                if (!/^(https?|ftp|mailto|tel):/i.test(url) && !url.includes('://')) {
-                    showToast('链接地址需包含协议（如 http://, https://）');
+                if (!isValidUrl(url)) {
+                    showToast('链接地址无效，仅支持 http, https, ftp, mailto, tel 协议');
                     return;
                 }
-                if (editingIndex === -1) links.push({ text, url });
-                else links[editingIndex] = { text, url };
+                const safeUrl = sanitizeUrl(url);
+                if (editingIndex === -1) links.push({ text, url: safeUrl });
+                else links[editingIndex] = { text, url: safeUrl };
                 renderAllLinks();
                 closeEditor();
                 saveLinksToStorage();
@@ -3402,7 +3432,7 @@
             });
 
             // ================================================================
-            // 7. 设置面板 - 模块化设计
+            // 7. 设置面板 - 模块化设计 (性能优化: 增量更新)
             // ================================================================
             const settingsToggleBtn = document.getElementById('wallpaperSettingsBtn');
             const settingsPanel = document.getElementById('settingsPanel');
@@ -3499,7 +3529,6 @@
                     }
                     el.style.opacity = state.opacity;
                 });
-                syncElemControls();
             }
 
             let isWallpaperMode = false;
@@ -3558,7 +3587,7 @@
                 items.forEach(wp => {
                     const el = document.createElement('div');
                     el.className = 'wp-preview-item' + (type === currentWallpaperType && id === wp.id ? ' active' :
-                    '');
+                        '');
                     el.dataset.id = wp.id;
                     el.dataset.type = type;
                     if (type === 'dynamic') {
@@ -3599,124 +3628,137 @@
                 });
             }
 
-            function renderSettings() {
+            // ---- 拆分 renderSettings ----
+            function renderModeModule() {
                 const isWp = isWallpaperMode;
-                let html = '';
-
-                html += `
-                        <div class="settings-module" data-module="mode">
-                            <div class="settings-module-header" data-module-toggle="mode">
-                                <span>✦ 模式</span>
-                                <span class="arrow ${moduleStates.mode ? '' : 'collapsed'}">▾</span>
-                            </div>
-                            <div class="settings-module-body ${moduleStates.mode ? '' : 'collapsed'}">
-                                <div class="setting-row">
-                                    <div class="mode-switch-container">
-                                        <div class="mode-switch-big ${isWp ? 'wallpaper' : ''}" id="modeSwitchBig">
-                                            <span class="mode-label-left ${!isWp ? 'active' : ''}">阴阳</span>
-                                            <span class="mode-label-right ${isWp ? 'active' : ''}">修仙</span>
-                                            <div class="slider-track"></div>
-                                        </div>
+                return `
+                    <div class="settings-module" data-module="mode">
+                        <div class="settings-module-header" data-module-toggle="mode">
+                            <span>✦ 模式</span>
+                            <span class="arrow ${moduleStates.mode ? '' : 'collapsed'}">▾</span>
+                        </div>
+                        <div class="settings-module-body ${moduleStates.mode ? '' : 'collapsed'}">
+                            <div class="setting-row">
+                                <div class="mode-switch-container">
+                                    <div class="mode-switch-big ${isWp ? 'wallpaper' : ''}" id="modeSwitchBig">
+                                        <span class="mode-label-left ${!isWp ? 'active' : ''}">阴阳</span>
+                                        <span class="mode-label-right ${isWp ? 'active' : ''}">修仙</span>
+                                        <div class="slider-track"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    `;
+                    </div>
+                `;
+            }
 
-                if (isWp) {
-                    html += `
-                            <div class="settings-module" data-module="wallpaper">
-                                <div class="settings-module-header" data-module-toggle="wallpaper">
-                                    <span>🏔 修仙</span>
-                                    <span class="arrow ${moduleStates.wallpaper ? '' : 'collapsed'}">▾</span>
-                                </div>
-                                <div class="settings-module-body ${moduleStates.wallpaper ? '' : 'collapsed'}">
-                                    <div class="setting-row">
-                                        <label>类型</label>
-                                        <div class="type-btns">
-                                            <button class="type-btn ${currentWallpaperType === 'static' ? 'active' : ''}" data-type="static">静态</button>
-                                            <button class="type-btn ${currentWallpaperType === 'dynamic' ? 'active' : ''}" data-type="dynamic">动态</button>
-                                        </div>
-                                    </div>
-                                    <div class="setting-row">
-                                        <label>选择仙境</label>
-                                        <div class="wallpaper-scroll-container">
-                                            <div class="wp-grid" id="wallpaperPreviewGrid"></div>
-                                        </div>
-                                    </div>
+            function renderWallpaperModule() {
+                if (!isWallpaperMode) return '';
+                return `
+                    <div class="settings-module" data-module="wallpaper">
+                        <div class="settings-module-header" data-module-toggle="wallpaper">
+                            <span>🏔 修仙</span>
+                            <span class="arrow ${moduleStates.wallpaper ? '' : 'collapsed'}">▾</span>
+                        </div>
+                        <div class="settings-module-body ${moduleStates.wallpaper ? '' : 'collapsed'}">
+                            <div class="setting-row">
+                                <label>类型</label>
+                                <div class="type-btns">
+                                    <button class="type-btn ${currentWallpaperType === 'static' ? 'active' : ''}" data-type="static">静态</button>
+                                    <button class="type-btn ${currentWallpaperType === 'dynamic' ? 'active' : ''}" data-type="dynamic">动态</button>
                                 </div>
                             </div>
-                        `;
-                }
+                            <div class="setting-row">
+                                <label>选择仙境</label>
+                                <div class="wallpaper-scroll-container">
+                                    <div class="wp-grid" id="wallpaperPreviewGrid"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
 
+            function renderElementsModule() {
+                const isWp = isWallpaperMode;
                 const defs = isWp ? elemDefs.wallpaper : elemDefs.simple;
                 let elemHtml = '';
                 defs.forEach(def => {
                     const state = elemState[def.id] || { visible: true, opacity: 1 };
                     elemHtml += `
-                            <div class="elem-control" data-elem-id="${def.id}">
-                                <span class="elem-name">${def.name}</span>
-                                <button class="elem-toggle ${state.visible ? 'active' : ''}"><span class="thumb"></span></button>
-                                <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${state.opacity}" /></div>
-                                <span class="elem-opacity-value">${Math.round(state.opacity*100)}%</span>
-                            </div>
-                        `;
-                });
-                html += `
-                        <div class="settings-module" data-module="elements">
-                            <div class="settings-module-header" data-module-toggle="elements">
-                                <span>⊞ 元素控制</span>
-                                <span class="arrow ${moduleStates.elements ? '' : 'collapsed'}">▾</span>
-                            </div>
-                            <div class="settings-module-body ${moduleStates.elements ? '' : 'collapsed'}">
-                                <div class="setting-row">
-                                    <div id="elemControlList">${elemHtml}</div>
-                                </div>
-                            </div>
+                        <div class="elem-control" data-elem-id="${def.id}">
+                            <span class="elem-name">${def.name}</span>
+                            <button class="elem-toggle ${state.visible ? 'active' : ''}"><span class="thumb"></span></button>
+                            <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${state.opacity}" /></div>
+                            <span class="elem-opacity-value">${Math.round(state.opacity*100)}%</span>
                         </div>
                     `;
+                });
+                return `
+                    <div class="settings-module" data-module="elements">
+                        <div class="settings-module-header" data-module-toggle="elements">
+                            <span>⊞ 元素控制</span>
+                            <span class="arrow ${moduleStates.elements ? '' : 'collapsed'}">▾</span>
+                        </div>
+                        <div class="settings-module-body ${moduleStates.elements ? '' : 'collapsed'}">
+                            <div class="setting-row">
+                                <div id="elemControlList">${elemHtml}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
 
+            function renderQuotesModule() {
                 let quoteHtml = '';
                 quotes.forEach((q, i) => {
                     quoteHtml += `
-                            <div class="quote-item" data-index="${i}">
-                                <span class="q-text">${q.text}</span>
-                                <span class="q-author">— ${q.author}</span>
-                                <div class="q-actions">
-                                    <button class="edit-btn" data-index="${i}">✎</button>
-                                    <button class="del-btn" data-index="${i}">✕</button>
-                                </div>
-                            </div>
-                        `;
-                });
-                html += `
-                        <div class="settings-module" data-module="quotes">
-                            <div class="settings-module-header" data-module-toggle="quotes">
-                                <span>❝ 经典语录</span>
-                                <span class="arrow ${moduleStates.quotes ? '' : 'collapsed'}">▾</span>
-                            </div>
-                            <div class="settings-module-body ${moduleStates.quotes ? '' : 'collapsed'}">
-                                <div class="setting-row">
-                                    <div class="quote-manager" id="quoteManager">${quoteHtml}</div>
-                                    <div class="quote-add-form">
-                                        <input type="text" id="newQuoteText" placeholder="语录内容" />
-                                        <input type="text" id="newQuoteAuthor" placeholder="作者" />
-                                        <button id="addQuoteBtn">添加</button>
-                                    </div>
-                                </div>
-                                <div class="setting-row">
-                                    <div class="interval-control">
-                                        <label>切换间隔（秒）</label>
-                                        <input type="number" id="intervalInput" min="1" max="300" value="${Math.round(quoteInterval/1000)}" />
-                                        <span style="font-size:0.6rem;opacity:0.4;">秒</span>
-                                    </div>
-                                </div>
+                        <div class="quote-item" data-index="${i}">
+                            <span class="q-text">${q.text}</span>
+                            <span class="q-author">— ${q.author}</span>
+                            <div class="q-actions">
+                                <button class="edit-btn" data-index="${i}">✎</button>
+                                <button class="del-btn" data-index="${i}">✕</button>
                             </div>
                         </div>
                     `;
+                });
+                return `
+                    <div class="settings-module" data-module="quotes">
+                        <div class="settings-module-header" data-module-toggle="quotes">
+                            <span>❝ 经典语录</span>
+                            <span class="arrow ${moduleStates.quotes ? '' : 'collapsed'}">▾</span>
+                        </div>
+                        <div class="settings-module-body ${moduleStates.quotes ? '' : 'collapsed'}">
+                            <div class="setting-row">
+                                <div class="quote-manager" id="quoteManager">${quoteHtml}</div>
+                                <div class="quote-add-form">
+                                    <input type="text" id="newQuoteText" placeholder="语录内容" />
+                                    <input type="text" id="newQuoteAuthor" placeholder="作者" />
+                                    <button id="addQuoteBtn">添加</button>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <div class="interval-control">
+                                    <label>切换间隔（秒）</label>
+                                    <input type="number" id="intervalInput" min="1" max="300" value="${Math.round(quoteInterval/1000)}" />
+                                    <span style="font-size:0.6rem;opacity:0.4;">秒</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
 
+            function renderSettings() {
+                let html = '';
+                html += renderModeModule();
+                html += renderWallpaperModule();
+                html += renderElementsModule();
+                html += renderQuotesModule();
                 settingsDynamic.innerHTML = html;
 
+                // ---- 绑定事件 ----
                 document.querySelectorAll('[data-module-toggle]').forEach(header => {
                     header.addEventListener('click', function(e) {
                         e.stopPropagation();
@@ -3760,7 +3802,7 @@
                     });
                 });
 
-                if (isWp) {
+                if (isWallpaperMode) {
                     updateWallpaperPreview(currentWallpaperType, currentWallpaperId);
                 }
 
@@ -3888,15 +3930,13 @@
                 if (quoteLocked) {
                     quoteArea.classList.add('locked');
                     quoteArea.style.cursor = 'default';
-                    wqDisplay.classList.add('locked');
+                    if (wqDisplay) wqDisplay.classList.add('locked');
                 } else {
                     quoteArea.classList.remove('locked');
                     quoteArea.style.cursor = 'pointer';
-                    wqDisplay.classList.remove('locked');
+                    if (wqDisplay) wqDisplay.classList.remove('locked');
                 }
             }
-
-            function syncElemControls() {}
 
             function toggleSettings(e) {
                 if (e) e.stopPropagation();
@@ -3983,8 +4023,12 @@
                     let newTop = coverDragOrigTop + dy;
                     const w = musicPlayer.offsetWidth;
                     const h = musicPlayer.offsetHeight;
-                    newLeft = Math.max(0, Math.min(window.innerWidth - w, newLeft));
-                    newTop = Math.max(0, Math.min(window.innerHeight - h, newTop));
+                    const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                        .getPropertyValue('--safe-right') || '0');
+                    const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                        .getPropertyValue('--safe-bottom') || '0');
+                    newLeft = Math.max(0, Math.min(safeRight - w, newLeft));
+                    newTop = Math.max(0, Math.min(safeBottom - h, newTop));
                     musicPlayer.style.left = newLeft + 'px';
                     musicPlayer.style.top = newTop + 'px';
                     saveMusicPlayerPos();
@@ -4019,7 +4063,8 @@
                 initAudio();
                 const song = songs[index % songs.length];
                 if (!song) return;
-                audioPlayer.src = preloaded.blobs[song.file] || 'songs/' + song.file;
+                const src = preloaded.blobs[song.file] || 'songs/' + song.file;
+                audioPlayer.src = src;
                 audioPlayer.load();
                 audioPlayer.play().catch(() => {});
                 isPlaying = true;
@@ -4103,6 +4148,7 @@
 
             let playerVisible = false;
 
+            // 双击空白区域切换播放器 (与 elemState 同步)
             document.addEventListener('dblclick', function(e) {
                 const interactiveSelectors = [
                     'button', 'a', 'input', 'textarea', 'select',
@@ -4138,37 +4184,36 @@
             function togglePlayerVisibility() {
                 const state = elemState['musicPlayer'];
                 if (!state) return;
-                if (!state.visible) {
-                    elemState['musicPlayer'].visible = true;
-                    saveElemState();
-                    applyElemState();
-                }
-                if (!playerVisible) {
+                // 切换状态
+                const newVis = !elemState['musicPlayer'].visible;
+                elemState['musicPlayer'].visible = newVis;
+                saveElemState();
+                applyElemState();
+                playerVisible = newVis;
+
+                if (newVis) {
                     musicPlayer.classList.add('active');
-                    playerVisible = true;
                     const w = window.innerWidth,
                         h = window.innerHeight;
                     const pw = musicPlayer.offsetWidth || 270,
                         ph = musicPlayer.offsetHeight || 400;
-                    musicPlayer.style.left = Math.max(10, Math.min(w - pw - 10, w / 2 - pw / 2 + (Math.random() - 0.5) *
-                        100)) + 'px';
-                    musicPlayer.style.top = Math.max(10, Math.min(h - ph - 10, h / 2 - ph / 2 + (Math.random() - 0.5) *
-                        100)) + 'px';
+                    const safeRight = w - parseFloat(getComputedStyle(document.documentElement).getPropertyValue(
+                        '--safe-right') || '0');
+                    const safeBottom = h - parseFloat(getComputedStyle(document.documentElement).getPropertyValue(
+                        '--safe-bottom') || '0');
+                    musicPlayer.style.left = Math.max(10, Math.min(safeRight - pw - 10, w / 2 - pw / 2 + (Math.random() -
+                        0.5) * 100)) + 'px';
+                    musicPlayer.style.top = Math.max(10, Math.min(safeBottom - ph - 10, h / 2 - ph / 2 + (Math.random() -
+                        0.5) * 100)) + 'px';
                     updatePlayerCover();
                     initAudio();
                     if (!isPlaying) playSong(currentSongIndex);
-                    elemState['musicPlayer'].visible = true;
-                    saveElemState();
-                    applyElemState();
                 } else {
                     musicPlayer.classList.remove('active');
-                    playerVisible = false;
-                    elemState['musicPlayer'].visible = false;
-                    saveElemState();
-                    applyElemState();
                 }
             }
 
+            // 播放器拖拽
             let isDraggingPlayer = false;
             let dragOffsetX, dragOffsetY;
             musicPlayer.addEventListener('mousedown', function(e) {
@@ -4184,8 +4229,12 @@
                 if (!isDraggingPlayer) return;
                 let x = e.clientX - dragOffsetX,
                     y = e.clientY - dragOffsetY;
-                x = Math.max(0, Math.min(window.innerWidth - musicPlayer.offsetWidth, x));
-                y = Math.max(0, Math.min(window.innerHeight - musicPlayer.offsetHeight, y));
+                const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-right') || '0');
+                const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-bottom') || '0');
+                x = Math.max(0, Math.min(safeRight - musicPlayer.offsetWidth, x));
+                y = Math.max(0, Math.min(safeBottom - musicPlayer.offsetHeight, y));
                 musicPlayer.style.left = x + 'px';
                 musicPlayer.style.top = y + 'px';
                 saveMusicPlayerPos();
@@ -4211,8 +4260,12 @@
                 const touch = e.touches[0];
                 let x = touch.clientX - dragOffsetX,
                     y = touch.clientY - dragOffsetY;
-                x = Math.max(0, Math.min(window.innerWidth - musicPlayer.offsetWidth, x));
-                y = Math.max(0, Math.min(window.innerHeight - musicPlayer.offsetHeight, y));
+                const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-right') || '0');
+                const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-bottom') || '0');
+                x = Math.max(0, Math.min(safeRight - musicPlayer.offsetWidth, x));
+                y = Math.max(0, Math.min(safeBottom - musicPlayer.offsetHeight, y));
                 musicPlayer.style.left = x + 'px';
                 musicPlayer.style.top = y + 'px';
                 saveMusicPlayerPos();
@@ -4252,7 +4305,7 @@
             updatePlayerCover();
 
             // ================================================================
-            // 9. 修仙模式拖拽系统
+            // 9. 修仙模式拖拽系统 (修复: 设置面板点击冲突 + 安全区域)
             // ================================================================
             const draggableItems = document.querySelectorAll('.draggable-item');
             const positions = {};
@@ -4315,7 +4368,9 @@
                 });
 
                 function onStart(e) {
-                    if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) {
+                    // 修复: 设置面板元素不触发拖拽
+                    if (e.target.closest('.settings-panel') || e.target.closest('.settings-toggle') ||
+                        e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) {
                         return;
                     }
                     if (locked) {
@@ -4369,8 +4424,12 @@
                         let newY = origY + dy;
                         const w = item.offsetWidth;
                         const h = item.offsetHeight;
-                        newX = Math.max(0, Math.min(window.innerWidth - w, newX));
-                        newY = Math.max(0, Math.min(window.innerHeight - h, newY));
+                        const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-right') || '0');
+                        const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-bottom') || '0');
+                        newX = Math.max(0, Math.min(safeRight - w, newX));
+                        newY = Math.max(0, Math.min(safeBottom - h, newY));
 
                         if (dragRafId) cancelAnimationFrame(dragRafId);
                         dragRafId = requestAnimationFrame(() => {
@@ -4533,7 +4592,7 @@
             }
 
             // ================================================================
-            // 10. 阴阳模式拖拽
+            // 10. 阴阳模式拖拽 (修复: setPointerCapture 兼容 + 安全区域)
             // ================================================================
             const simpleDragTargets = document.querySelectorAll('.simple-draggable');
             const dragStateMap = new WeakMap();
@@ -4572,6 +4631,7 @@
                     saveSimpleLockState(el.id, state.locked);
                 });
 
+                // 使用 pointerdown + touchstart 双轨
                 el.addEventListener('pointerdown', function(e) {
                     if (e.target.closest('input') || e.target.closest('textarea') ||
                         e.target.closest('a') || e.target.closest('button') ||
@@ -4598,7 +4658,12 @@
                     state.width = el.offsetWidth || rect.width;
                     state.height = el.offsetHeight || rect.height;
 
-                    el.setPointerCapture(e.pointerId);
+                    // 兼容 setPointerCapture
+                    try {
+                        el.setPointerCapture(e.pointerId);
+                    } catch (_) {
+                        // 移动端 Safari 不支持, 忽略
+                    }
                     el.style.cursor = 'grabbing';
                     activeSimpleDrag = el;
                     e.preventDefault();
@@ -4607,6 +4672,8 @@
                 el.addEventListener('pointermove', function(e) {
                     if (activeSimpleDrag !== el) return;
                     if (state.locked) return;
+                    // 修复: 设置面板内不触发拖拽
+                    if (e.target.closest('.settings-panel') || e.target.closest('.settings-toggle')) return;
 
                     const dx = e.clientX - state.startX;
                     const dy = e.clientY - state.startY;
@@ -4631,9 +4698,14 @@
                         let newTX = state.baseTX + (e.clientX - state.startX);
                         let newTY = state.baseTY + (e.clientY - state.startY);
 
-                        const maxX = window.innerWidth - state.width - state.fixedLeft;
+                        const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-right') || '0');
+                        const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-bottom') || '0');
+
+                        const maxX = safeRight - state.width - state.fixedLeft;
                         const minX = -state.fixedLeft;
-                        const maxY = window.innerHeight - state.height - state.fixedTop;
+                        const maxY = safeBottom - state.height - state.fixedTop;
                         const minY = -state.fixedTop;
 
                         newTX = Math.max(minX, Math.min(maxX, newTX));
@@ -4661,6 +4733,90 @@
                 });
 
                 el.addEventListener('pointercancel', function(e) {
+                    if (activeSimpleDrag === el) endSimpleDrag(el);
+                });
+
+                // 额外 touch 事件兜底
+                el.addEventListener('touchstart', function(e) {
+                    if (e.target.closest('input') || e.target.closest('textarea') ||
+                        e.target.closest('a') || e.target.closest('button') ||
+                        e.target.closest('.link-item') || e.target.closest('.add-link-btn') ||
+                        e.target.closest('.search-btn') || e.target.closest('.search-btn-mobile') ||
+                        e.target.closest('.search-btn-end') ||
+                        e.target.closest('.settings-panel') || e.target.closest('.settings-toggle')) {
+                        return;
+                    }
+                    if (isWallpaperMode) return;
+                    if (state.locked) return;
+                    if (activeSimpleDrag) endSimpleDrag(activeSimpleDrag);
+                    const touch = e.touches[0];
+                    const rect = el.getBoundingClientRect();
+                    const transform = getElementTransform(el);
+                    state.isDragging = false;
+                    state.startX = touch.clientX;
+                    state.startY = touch.clientY;
+                    state.baseTX = transform.x;
+                    state.baseTY = transform.y;
+                    state.fixedLeft = rect.left - state.baseTX;
+                    state.fixedTop = rect.top - state.baseTY;
+                    state.width = el.offsetWidth || rect.width;
+                    state.height = el.offsetHeight || rect.height;
+                    el.style.cursor = 'grabbing';
+                    activeSimpleDrag = el;
+                    e.preventDefault();
+                }, { passive: false });
+
+                el.addEventListener('touchmove', function(e) {
+                    if (activeSimpleDrag !== el) return;
+                    if (state.locked) return;
+                    const touch = e.touches[0];
+                    const dx = touch.clientX - state.startX;
+                    const dy = touch.clientY - state.startY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist > 6) {
+                        if (!state.isDragging) {
+                            state.isDragging = true;
+                            el.classList.add('dragging-simple');
+                            const rect = el.getBoundingClientRect();
+                            const transform = getElementTransform(el);
+                            state.baseTX = transform.x;
+                            state.baseTY = transform.y;
+                            state.fixedLeft = rect.left - state.baseTX;
+                            state.fixedTop = rect.top - state.baseTY;
+                            state.startX = touch.clientX;
+                            state.startY = touch.clientY;
+                            e.preventDefault();
+                            return;
+                        }
+                        let newTX = state.baseTX + (touch.clientX - state.startX);
+                        let newTY = state.baseTY + (touch.clientY - state.startY);
+                        const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-right') || '0');
+                        const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                            .getPropertyValue('--safe-bottom') || '0');
+                        const maxX = safeRight - state.width - state.fixedLeft;
+                        const minX = -state.fixedLeft;
+                        const maxY = safeBottom - state.height - state.fixedTop;
+                        const minY = -state.fixedTop;
+                        newTX = Math.max(minX, Math.min(maxX, newTX));
+                        newTY = Math.max(minY, Math.min(maxY, newTY));
+                        if (el.id === 'quoteArea') {
+                            const rectNow = el.getBoundingClientRect();
+                            const leftEdge = rectNow.left;
+                            const availWidth = Math.min(420, Math.max(200, window.innerWidth - leftEdge - 32));
+                            el.style.maxWidth = availWidth + 'px';
+                        }
+                        applyTransformRAF(el, newTX, newTY, state);
+                        saveSimplePosition(el.id, newTX, newTY);
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                el.addEventListener('touchend', function(e) {
+                    if (activeSimpleDrag === el) endSimpleDrag(el);
+                });
+
+                el.addEventListener('touchcancel', function(e) {
                     if (activeSimpleDrag === el) endSimpleDrag(el);
                 });
 
@@ -4823,13 +4979,14 @@
             updateClock();
 
             // ================================================================
-            // 12. 开始页雨滴特效 (使用 index01 配置)
+            // 12. 开始页雨滴特效 (修复: Curtains.js 加载失败回退)
             // ================================================================
             let rainCurtains = null;
             let rainPlane = null;
             let rainInitialized = false;
             let rainDestroyed = false;
             let mouse = { x: 0, y: 0 };
+            let rainInitFailed = false;
 
             // 着色器（来自 index01，4层、小水滴、低模糊）
             const rainVertexShader = `
@@ -4952,12 +5109,17 @@
             `;
 
             function initRainEffect() {
-                if (rainInitialized || rainDestroyed) return;
+                if (rainInitialized || rainDestroyed || rainInitFailed) return;
+                // 检查 Curtains 是否可用
+                if (typeof Curtains === 'undefined') {
+                    console.warn('⚠️ Curtains.js 未加载，雨滴特效跳过');
+                    rainInitFailed = true;
+                    return;
+                }
                 const canvasContainer = document.getElementById('canvas');
                 const textureImg = document.getElementById('texture');
                 if (!canvasContainer || !textureImg) return;
 
-                // 确保图片已加载
                 if (!textureImg.complete || textureImg.naturalWidth === 0) {
                     textureImg.onload = function() {
                         initRainEffect();
@@ -4966,7 +5128,6 @@
                 }
 
                 try {
-                    // 创建 Curtains 实例
                     rainCurtains = new Curtains({
                         container: 'canvas',
                         watchScroll: false,
@@ -5009,13 +5170,11 @@
                             rainPlane.uniforms.mousepos.value = [mouse.x, mouse.y];
                         });
 
-                        // 鼠标移动事件
                         window.addEventListener('mousemove', (e) => {
                             mouse.x = e.clientX;
                             mouse.y = e.clientY;
                         });
 
-                        // 窗口自适应
                         window.addEventListener('resize', () => {
                             if (rainPlane && !rainDestroyed) {
                                 rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
@@ -5030,6 +5189,7 @@
                             rainCurtains.dispose();
                             rainCurtains = null;
                         }
+                        rainInitFailed = true;
                     }
                 } catch (e) {
                     console.warn('⚠️ 雨滴特效初始化异常:', e);
@@ -5037,12 +5197,25 @@
                         rainCurtains.dispose();
                         rainCurtains = null;
                     }
+                    rainInitFailed = true;
                 }
             }
+
+            // 超时检测
+            let rainInitTimeout = setTimeout(() => {
+                if (!rainInitialized && !rainDestroyed) {
+                    console.warn('⚠️ 雨滴特效初始化超时，跳过');
+                    rainInitFailed = true;
+                }
+            }, 5000);
 
             function destroyRainEffect() {
                 if (rainDestroyed) return;
                 rainDestroyed = true;
+                if (rainInitTimeout) {
+                    clearTimeout(rainInitTimeout);
+                    rainInitTimeout = null;
+                }
                 if (rainPlane) {
                     try {
                         rainPlane.remove();
@@ -5064,16 +5237,13 @@
 
             function enterSite() {
                 if (startPage.classList.contains('fade-out') || startPage.classList.contains('hide')) return;
-                // 销毁雨滴特效
                 destroyRainEffect();
 
-                // 开始页淡出
                 startPage.classList.add('fade-out');
                 setTimeout(() => {
                     startPage.classList.add('hide');
                 }, 1200);
 
-                // 独立雨丝出现并淡出
                 const rainContainer = document.getElementById('rain-container');
                 rainContainer.classList.add('active');
                 setTimeout(() => {
@@ -5087,11 +5257,9 @@
 
             startPage.addEventListener('click', enterSite);
             startPage.addEventListener('touchstart', function(e) {
-                // 防止误触，但仍然是点击进入
                 if (!startPage.classList.contains('fade-out')) enterSite();
             }, { passive: true });
 
-            // 初始化雨滴
             if (document.readyState === 'complete') {
                 setTimeout(initRainEffect, 200);
             } else {
@@ -5100,7 +5268,7 @@
                 });
             }
 
-            // 构建独立雨丝
+            // 独立雨丝
             function buildRaindrops() {
                 const rainContainer = document.getElementById('rain-container');
                 rainContainer.innerHTML = '';
@@ -5131,16 +5299,20 @@
             buildRaindrops();
 
             // ================================================================
-            // 13. 资源预加载（仅保留必要部分）
+            // 13. 资源预加载 + 失败提示
             // ================================================================
             const preloaded = { blobs: {} };
             let loadedCount = 0;
             let totalCount = 0;
             let failedCount = 0;
+            let resourceToastShown = false;
 
             function updateProgress() {
                 loadedCount++;
-                // 不做 UI 更新，仅预加载
+                if (!resourceToastShown && failedCount > 3) {
+                    showToast('部分资源加载失败，请检查网络');
+                    resourceToastShown = true;
+                }
             }
 
             async function preloadResources() {
@@ -5267,7 +5439,7 @@
                         quoteLocked = true;
                         quoteArea.classList.add('locked');
                         quoteArea.style.cursor = 'default';
-                        wqDisplay.classList.add('locked');
+                        if (wqDisplay) wqDisplay.classList.add('locked');
                     }
                 } catch (e) {}
                 try {
@@ -5301,12 +5473,19 @@
                 renderSettings();
                 updateModeSwitchUI();
                 if (elemState['musicPlayer']) {
-                    elemState['musicPlayer'].visible = false;
-                    saveElemState();
-                    applyElemState();
+                    playerVisible = elemState['musicPlayer'].visible;
+                    if (playerVisible) {
+                        musicPlayer.classList.add('active');
+                    } else {
+                        musicPlayer.classList.remove('active');
+                    }
                 }
                 if (!isWallpaperMode) {
                     draggableItems.forEach(item => { item.style.display = 'none'; });
+                }
+                // 同步 playerVisible
+                if (elemState['musicPlayer']) {
+                    playerVisible = elemState['musicPlayer'].visible;
                 }
             }
 
@@ -5323,7 +5502,13 @@
                 e.stopPropagation();
             });
 
+            // resize 安全区域适配
             window.addEventListener('resize', function() {
+                const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-right') || '0');
+                const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--safe-bottom') || '0');
+
                 draggableItems.forEach(item => {
                     if (item.style.display !== 'none') {
                         const rect = item.getBoundingClientRect();
@@ -5331,8 +5516,8 @@
                         const h = item.offsetHeight;
                         let left = parseFloat(item.style.left) || rect.left;
                         let top = parseFloat(item.style.top) || rect.top;
-                        left = Math.max(0, Math.min(window.innerWidth - w, left));
-                        top = Math.max(0, Math.min(window.innerHeight - h, top));
+                        left = Math.max(0, Math.min(safeRight - w, left));
+                        top = Math.max(0, Math.min(safeBottom - h, top));
                         item.style.left = left + 'px';
                         item.style.top = top + 'px';
                     }
@@ -5346,9 +5531,9 @@
                     const h = el.offsetHeight || rect.height;
                     const fixedLeft = rect.left - tx;
                     const fixedTop = rect.top - ty;
-                    const maxX = window.innerWidth - w - fixedLeft;
+                    const maxX = safeRight - w - fixedLeft;
                     const minX = -fixedLeft;
-                    const maxY = window.innerHeight - h - fixedTop;
+                    const maxY = safeBottom - h - fixedTop;
                     const minY = -fixedTop;
                     let newTX = Math.max(minX, Math.min(maxX, tx));
                     let newTY = Math.max(minY, Math.min(maxY, ty));
