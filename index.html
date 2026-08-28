@@ -1251,32 +1251,6 @@
         .wallpaper-scroll-container .wp-preview-item.active .check-mark {
             display: flex;
         }
-        .wallpaper-scroll-container .wp-preview-item.loading {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-        .wallpaper-scroll-container .wp-preview-item .loading-spinner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255, 255, 255, 0.15);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: none;
-        }
-        .wallpaper-scroll-container .wp-preview-item.loading .loading-spinner {
-            display: block;
-        }
-        @keyframes spin {
-            to {
-                transform: translate(-50%, -50%) rotate(360deg);
-            }
-        }
 
         /* ---- 设置面板其他元素 ---- */
         .settings-module-body .setting-row {
@@ -1999,25 +1973,32 @@
             background-color: #0a0c0e;
             overflow: hidden;
             cursor: pointer;
+            /* 关键：淡入淡出过渡 */
             transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                 transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            /* 初始透明——等待 JS 触发淡入 */
             opacity: 0;
-            transform: scale(1);
+            transform: scale(1.02);
             pointer-events: none;
+            /* 透明时不可交互 */;
         }
+        /* 淡入状态：可见 + 可交互 */
         #startPage.show {
             opacity: 1;
+            transform: scale(1);
             pointer-events: auto;
         }
+        /* 淡出状态：透明 + 不可交互 */
         #startPage.fade-out {
             opacity: 0;
             transform: scale(1.04);
             pointer-events: none;
         }
+        /* 隐藏状态（完全不可见，保留在 DOM 中） */
         #startPage.hide {
             display: none;
         }
@@ -2072,60 +2053,6 @@
                 opacity: 1;
                 transform: scale(1.02);
             }
-        }
-
-        /* ===== 加载遮罩（修复：阻止点击穿透） ===== */
-        #loadingOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            z-index: 99998;
-            background: #0a0c0e;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.8s ease;
-            pointer-events: auto;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        #loadingOverlay.hide {
-            opacity: 0;
-            pointer-events: none;
-        }
-        #loadingOverlay .loading-text {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.4rem;
-            letter-spacing: 4px;
-            font-weight: 300;
-            font-family: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
-            animation: breath 2.0s ease-in-out infinite;
-        }
-        #loadingOverlay .loading-progress {
-            margin-top: 16px;
-            width: 200px;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        #loadingOverlay .loading-progress-bar {
-            width: 0%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.25);
-            border-radius: 2px;
-            transition: width 0.4s ease;
-        }
-        #loadingOverlay .loading-detail {
-            margin-top: 8px;
-            color: rgba(255, 255, 255, 0.2);
-            font-size: 0.7rem;
-            letter-spacing: 1px;
-            font-family: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
         }
 
         /* ===== 独立雨丝容器（进入首页后出现并淡出） ===== */
@@ -2438,12 +2365,6 @@
                 font-size: 1.4rem;
                 letter-spacing: 4px;
             }
-            #loadingOverlay .loading-text {
-                font-size: 1.2rem;
-            }
-            #loadingOverlay .loading-progress {
-                width: 160px;
-            }
         }
         @media (max-width: 400px) {
             .simple-mode {
@@ -2585,12 +2506,6 @@
                 font-size: 1.2rem;
                 letter-spacing: 3px;
             }
-            #loadingOverlay .loading-text {
-                font-size: 1rem;
-            }
-            #loadingOverlay .loading-progress {
-                width: 120px;
-            }
         }
 
         .hidden {
@@ -2605,13 +2520,6 @@
 </head>
 
 <body>
-
-    <!-- ===== 加载遮罩 ===== -->
-    <div id="loadingOverlay">
-        <div class="loading-text">✦ 加载中 ✦</div>
-        <div class="loading-progress"><div class="loading-progress-bar" id="loadingProgressBar"></div></div>
-        <div class="loading-detail" id="loadingDetail">准备资源...</div>
-    </div>
 
     <!-- ===== 开始页（顶层覆盖层，WebGL 雨滴特效） ===== -->
     <div id="startPage">
@@ -2771,184 +2679,6 @@
             }
 
             // ================================================================
-            // ★★★ 资源加载管理器（顺序加载 + 超时控制） ★★★
-            // ================================================================
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            const loadingProgressBar = document.getElementById('loadingProgressBar');
-            const loadingDetail = document.getElementById('loadingDetail');
-
-            class ResourceLoader {
-                constructor() {
-                    this.queue = [];
-                    this.loaded = {};
-                    this.total = 0;
-                    this.loadedCount = 0;
-                    this.onProgress = null;
-                    this.onComplete = null;
-                    this.aborted = false;
-                }
-
-                add(id, type, src, meta) {
-                    this.queue.push({ id, type, src, meta });
-                    this.total++;
-                    return this;
-                }
-
-                async loadAll() {
-                    for (const item of this.queue) {
-                        if (this.aborted) break;
-                        await this.loadSingle(item);
-                        this.loadedCount++;
-                        const pct = Math.min(100, Math.round((this.loadedCount / this.total) * 100));
-                        if (this.onProgress) this.onProgress(pct, item.id, item.type);
-                        // 更新UI
-                        loadingProgressBar.style.width = pct + '%';
-                        const label = item.meta?.label || item.id;
-                        loadingDetail.textContent = `加载 ${label} (${this.loadedCount}/${this.total})`;
-                    }
-                    if (this.onComplete && !this.aborted) this.onComplete();
-                    return this.loaded;
-                }
-
-                loadSingle(item) {
-                    return new Promise((resolve) => {
-                        if (item.type === 'image' || item.type === 'css-bg') {
-                            const img = new Image();
-                            img.crossOrigin = 'anonymous';
-                            const timeout = setTimeout(() => {
-                                resolve();
-                            }, 15000);
-                            img.onload = () => {
-                                clearTimeout(timeout);
-                                this.loaded[item.id] = img;
-                                resolve();
-                            };
-                            img.onerror = () => {
-                                clearTimeout(timeout);
-                                resolve();
-                            };
-                            img.src = item.src;
-                        } else if (item.type === 'video') {
-                            const video = document.createElement('video');
-                            video.preload = 'metadata';
-                            video.muted = true;
-                            video.playsInline = true;
-                            const timeout = setTimeout(() => {
-                                resolve();
-                            }, 20000);
-                            video.onloadedmetadata = () => {
-                                clearTimeout(timeout);
-                                this.loaded[item.id] = video;
-                                resolve();
-                            };
-                            video.onerror = () => {
-                                clearTimeout(timeout);
-                                resolve();
-                            };
-                            video.src = item.src;
-                            video.load();
-                        } else if (item.type === 'audio' || item.type === 'blob') {
-                            // 使用 AbortController 实现超时
-                            const controller = new AbortController();
-                            const timeoutId = setTimeout(() => {
-                                controller.abort();
-                                resolve();
-                            }, 15000);
-                            fetch(item.src, { signal: controller.signal })
-                                .then(resp => {
-                                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                                    return resp.blob();
-                                })
-                                .then(blob => {
-                                    clearTimeout(timeoutId);
-                                    const url = URL.createObjectURL(blob);
-                                    this.loaded[item.id] = url;
-                                    // 如果是歌曲，存入 preloadedBlobs 供播放器使用
-                                    if (item.type === 'audio') {
-                                        if (typeof preloadedBlobs !== 'undefined') {
-                                            preloadedBlobs[item.src.split('/').pop()] = url;
-                                        }
-                                    }
-                                    resolve();
-                                })
-                                .catch(() => {
-                                    clearTimeout(timeoutId);
-                                    resolve();
-                                });
-                        } else {
-                            resolve();
-                        }
-                    });
-                }
-
-                abort() {
-                    this.aborted = true;
-                }
-            }
-
-            // 定义资源加载顺序
-            // 顺序: 开始页背景 → 白背景 → 黑背景 → 专辑图(逐个) → 歌曲(逐个) → 静态壁纸(逐个) → 动态壁纸(逐个)
-            function buildResourceQueue() {
-                const loader = new ResourceLoader();
-
-                // 1. 开始页背景
-                loader.add('bg_start', 'image', 'images/background.png', { label: '开始页背景' });
-
-                // 2. 阴阳模式壁纸 (白/黑)
-                loader.add('bg_day', 'css-bg', 'images/bg_day.png', { label: '白昼背景' });
-                loader.add('bg_night', 'css-bg', 'images/bg_night.png', { label: '黑夜背景' });
-
-                // 3. 专辑图 (逐个)
-                const IMAGE_COUNT = 36;
-                for (let i = 1; i <= IMAGE_COUNT; i++) {
-                    const num = String(i).padStart(2, '0');
-                    loader.add('cover_' + num, 'image', 'images/cover_' + num + '.png', { label: '专辑图 ' + i + '/' +
-                            IMAGE_COUNT });
-                }
-
-                // 4. 歌曲 (逐个)
-                const songs = [
-                    { id: 'song_01', file: 'song_01.mp3' },
-                    { id: 'song_02', file: 'song_02.mp3' },
-                    { id: 'song_03', file: 'song_03.mp3' },
-                ];
-                for (const s of songs) {
-                    loader.add(s.id, 'audio', 'songs/' + s.file, { label: '歌曲 ' + s.id.replace('song_', '') });
-                }
-
-                // 5. 静态壁纸 (逐个)
-                const staticWPs = [
-                    'static_01.png',
-                    'static_02.png',
-                    'static_03.png',
-                    'static_04.png',
-                    'static_05.png',
-                    'static_06.png',
-                    'static_07.png',
-                    'static_08.png',
-                    'static_09.png',
-                    'static_10.png',
-                    'static_11.png',
-                    'static_12.png'
-                ];
-                for (const f of staticWPs) {
-                    const id = f.replace('.png', '');
-                    loader.add('wp_' + id, 'image', 'images/' + f, { label: '壁纸 ' + id.replace('static_', '') });
-                }
-
-                // 6. 动态壁纸 (逐个)
-                const dynamicWPs = [
-                    { id: 'd1', file: 'dynamic_01.mp4' },
-                    { id: 'd2', file: 'dynamic_02.mp4' },
-                ];
-                for (const d of dynamicWPs) {
-                    loader.add('wp_' + d.id, 'video', 'videos/' + d.file, { label: '动态 ' + d.id });
-                }
-
-                return loader;
-            }
-
-            // ================================================================
             // 1. 预置链接
             // ================================================================
             const DEFAULT_LINKS = [
@@ -3001,9 +2731,6 @@
             let isWallpaperTransitioning = false;
             let wallpaperTimeout = null;
             let wallpaperBrightness = 'dark';
-
-            // 记录已加载的壁纸资源
-            const loadedWallpaperResources = new Set();
 
             function detectBrightnessFromImage(img) {
                 return new Promise((resolve) => {
@@ -3065,12 +2792,6 @@
 
             function applyWallpaper(type, id) {
                 if (isWallpaperTransitioning) return;
-                // 检查资源是否已加载
-                const resId = 'wp_' + (type === 'dynamic' ? id : id);
-                if (!loadedWallpaperResources.has(resId)) {
-                    showToast('壁纸尚未加载完成，请稍候', 1500);
-                    return;
-                }
                 const list = wallpapers[type];
                 if (!list) return;
                 const item = list.find(w => w.id === id);
@@ -3108,9 +2829,7 @@
                         isWallpaperTransitioning = false;
                     };
                     if (type === 'dynamic') {
-                        const src = (typeof preloadedBlobs !== 'undefined' && preloadedBlobs[item.file]) ?
-                            preloadedBlobs[item.file] :
-                            'videos/' + item.file;
+                        let src = preloaded.blobs[item.id] || 'videos/' + item.file;
                         const source = videoEl.querySelector('source');
                         if (source) source.setAttribute('src', src);
                         else {
@@ -3480,14 +3199,18 @@
             let searchVisible = true;
             let searchBtnEndExists = false;
 
+            // 安全的 URL 校验
             function isValidUrl(url) {
                 if (!url) return false;
                 let trimmed = url.trim();
+                // 黑名单协议
                 if (/^(javascript|data|vbscript):/i.test(trimmed)) return false;
+                // 尝试使用 URL 构造函数
                 try {
                     const parsed = new URL(trimmed);
                     return ['http:', 'https:', 'ftp:', 'mailto:', 'tel:'].includes(parsed.protocol);
                 } catch (_) {
+                    // 尝试添加协议再解析
                     try {
                         const parsed2 = new URL('http://' + trimmed);
                         return ['http:', 'https:', 'ftp:'].includes(parsed2.protocol);
@@ -3878,19 +3601,14 @@
                 const items = wallpapers[type] || [];
                 previewGrid.innerHTML = '';
                 items.forEach(wp => {
-                    const resId = 'wp_' + (type === 'dynamic' ? wp.id : wp.id);
-                    const isLoaded = loadedWallpaperResources.has(resId);
                     const el = document.createElement('div');
                     el.className = 'wp-preview-item' + (type === currentWallpaperType && id === wp.id ? ' active' :
-                        '') + (isLoaded ? '' : ' loading');
+                        '');
                     el.dataset.id = wp.id;
                     el.dataset.type = type;
                     if (type === 'dynamic') {
                         const vid = document.createElement('video');
-                        const src = (typeof preloadedBlobs !== 'undefined' && preloadedBlobs[wp.file]) ?
-                            preloadedBlobs[wp.file] :
-                            'videos/' + wp.file;
-                        vid.src = src;
+                        vid.src = preloaded.blobs[wp.id] || 'videos/' + wp.file;
                         vid.muted = true;
                         vid.playsInline = true;
                         vid.preload = 'metadata';
@@ -3912,14 +3630,7 @@
                     check.className = 'check-mark';
                     check.textContent = '✓';
                     el.appendChild(check);
-                    const spinner = document.createElement('div');
-                    spinner.className = 'loading-spinner';
-                    el.appendChild(spinner);
                     el.addEventListener('click', function() {
-                        if (this.classList.contains('loading')) {
-                            showToast('壁纸加载中，请稍候', 1200);
-                            return;
-                        }
                         applyWallpaper(type, wp.id);
                         document.querySelectorAll('.type-btn').forEach(b => {
                             b.classList.toggle('active', b.dataset.type === type);
@@ -3939,6 +3650,7 @@
                 container.className = 'settings-module';
                 container.dataset.module = 'quotes';
 
+                // header
                 const header = document.createElement('div');
                 header.className = 'settings-module-header';
                 header.dataset.moduleToggle = 'quotes';
@@ -3951,9 +3663,11 @@
                 header.appendChild(arrow);
                 container.appendChild(header);
 
+                // body
                 const body = document.createElement('div');
                 body.className = 'settings-module-body' + (moduleStates.quotes ? '' : ' collapsed');
 
+                // 语录列表
                 const manager = document.createElement('div');
                 manager.className = 'quote-manager';
                 manager.id = 'quoteManager';
@@ -3990,6 +3704,7 @@
                 });
                 body.appendChild(manager);
 
+                // 添加表单
                 const form = document.createElement('div');
                 form.className = 'quote-add-form';
                 const inputText = document.createElement('input');
@@ -4008,6 +3723,7 @@
                 form.appendChild(addBtn);
                 body.appendChild(form);
 
+                // 间隔控制
                 const intervalRow = document.createElement('div');
                 intervalRow.className = 'setting-row';
                 const intervalCtrl = document.createElement('div');
@@ -4030,15 +3746,19 @@
                 body.appendChild(intervalRow);
 
                 container.appendChild(body);
+
+                // 返回 DOM 元素，后续需要绑定事件，但我们返回 container 并且外部会追加到 settingsDynamic
+                // 但由于 settingsDynamic 使用 innerHTML 会清除所有，所以我们改为使用 replaceChildren
                 return container;
             }
 
             // ---- 重写 renderSettings 使用 DOM 追加 ----
             function renderSettings() {
+                // 清空 settingsDynamic
                 const content = document.getElementById('settingsDynamicContent');
-                content.innerHTML = '';
+                content.innerHTML = ''; // 仍使用 innerHTML 清空，但后续全部用 DOM 追加
 
-                // 模式模块
+                // 模式模块 (可保留字符串，因为不涉及用户输入)
                 const modeModule = document.createElement('div');
                 modeModule.className = 'settings-module';
                 modeModule.dataset.module = 'mode';
@@ -4090,7 +3810,7 @@
                     content.appendChild(wpModule);
                 }
 
-                // 元素控制模块
+                // 元素控制模块（使用模板字符串，因为不涉及用户输入）
                 const elemModule = document.createElement('div');
                 elemModule.className = 'settings-module';
                 elemModule.dataset.module = 'elements';
@@ -4344,7 +4064,7 @@
             const albumImages = [];
             for (let i = 1; i <= IMAGE_COUNT; i++) {
                 const num = String(i).padStart(2, '0');
-                albumImages.push('images/cover_' + num + '.png');
+                albumImages.push(`images/cover_${num}.png`);
             }
             const songs = [
                 { name: '凡人', file: 'song_01.mp3' },
@@ -4364,9 +4084,6 @@
                 coverDragOrigTop = 0;
             let coverClickThreshold = 8;
             let coverPointerDownTime = 0;
-
-            // 全局 preloadedBlobs 供资源加载器使用
-            window.preloadedBlobs = {};
 
             playerCover.addEventListener('pointerdown', function(e) {
                 if (e.button !== 0) return;
@@ -4433,7 +4150,7 @@
                 initAudio();
                 const song = songs[index % songs.length];
                 if (!song) return;
-                const src = window.preloadedBlobs[song.file] || 'songs/' + song.file;
+                const src = preloaded.blobs[song.file] || 'songs/' + song.file;
                 audioPlayer.src = src;
                 audioPlayer.load();
                 audioPlayer.play().catch(() => {});
@@ -4518,6 +4235,7 @@
 
             let playerVisible = false;
 
+            // 双击空白区域切换播放器 (与 elemState 同步)
             document.addEventListener('dblclick', function(e) {
                 const interactiveSelectors = [
                     'button', 'a', 'input', 'textarea', 'select',
@@ -4581,6 +4299,7 @@
                 }
             }
 
+            // 播放器拖拽
             let isDraggingPlayer = false;
             let dragOffsetX, dragOffsetY;
             musicPlayer.addEventListener('mousedown', function(e) {
@@ -4932,88 +4651,6 @@
                         });
                     }
                 } catch (e) {}
-                // 如果没有保存的位置，设置默认位置
-                // 修复: draggableItems 是 NodeList，转为数组使用 every
-                const hasAll = Array.from(draggableItems).every(item => {
-                    const id = item.id;
-                    return id && positions[id];
-                });
-                if (!hasAll) {
-                    setDefaultWallpaperPositions();
-                }
-            }
-
-            function setDefaultWallpaperPositions() {
-                const isMobile = window.innerWidth <= 768;
-                draggableItems.forEach(item => {
-                    const id = item.id;
-                    if (!id) return;
-                    let left, top;
-                    if (isMobile) {
-                        switch (id) {
-                            case 'wallpaperTimeDisplay':
-                                left = 4;
-                                top = 6;
-                                break;
-                            case 'wallpaperQuoteDisplay':
-                                left = 4;
-                                top = 50;
-                                break;
-                            case 'glassSearch':
-                                left = 50;
-                                top = 15;
-                                break;
-                            case 'glassLinks':
-                                left = 50;
-                                top = 72;
-                                break;
-                            default:
-                                left = 10;
-                                top = 10;
-                        }
-                    } else {
-                        switch (id) {
-                            case 'wallpaperTimeDisplay':
-                                left = 5;
-                                top = 8;
-                                break;
-                            case 'wallpaperQuoteDisplay':
-                                left = 5;
-                                top = 55;
-                                break;
-                            case 'glassSearch':
-                                left = 50;
-                                top = 18;
-                                break;
-                            case 'glassLinks':
-                                left = 50;
-                                top = 72;
-                                break;
-                            default:
-                                left = 10;
-                                top = 10;
-                        }
-                    }
-                    if (id === 'glassSearch' || id === 'glassLinks') {
-                        item.style.left = left + '%';
-                        item.style.top = top + '%';
-                        if (id === 'glassSearch') {
-                            item.style.transform = 'translateX(-50%)';
-                            item.style.width = '90%';
-                            item.style.maxWidth = '360px';
-                        } else if (id === 'glassLinks') {
-                            item.style.transform = 'translateX(-50%)';
-                            item.style.width = 'auto';
-                            item.style.maxWidth = 'none';
-                        }
-                    } else {
-                        item.style.left = left + '%';
-                        item.style.top = top + '%';
-                        item.style.transform = 'none';
-                    }
-                    positions[id] = { left: parseFloat(item.style.left), top: parseFloat(item.style.top) };
-                });
-                saveWallpaperPositions();
             }
 
             function saveWallpaperLock(id, locked) {
@@ -5337,7 +4974,6 @@
 
             function loadSimplePositions() {
                 const key = getStorageKey('simplePositions');
-                const isMobile = window.innerWidth <= 768;
                 try {
                     const data = JSON.parse(localStorage.getItem(key) || '{}');
                     simpleDragTargets.forEach(el => {
@@ -5347,48 +4983,22 @@
                             tx = data[id].x;
                             ty = data[id].y;
                         } else {
-                            if (isMobile) {
-                                switch (id) {
-                                    case 'clockArea':
-                                        tx = 0;
-                                        ty = -6;
-                                        ty = ty * window.innerHeight / 100;
-                                        break;
-                                    case 'quoteArea':
-                                        tx = 0;
-                                        ty = 0;
-                                        el.style.maxWidth = (window.innerWidth * 0.88) + 'px';
-                                        break;
-                                    case 'bottomArea':
-                                        tx = 0;
-                                        ty = 6;
-                                        ty = ty * window.innerHeight / 100;
-                                        break;
-                                    default:
-                                        tx = 0;
-                                        ty = 0;
-                                }
+                            const isMobile = window.innerWidth <= 768;
+                            if (id === 'clockArea') {
+                                tx = 0;
+                                ty = isMobile ? -8 : -12;
+                                ty = ty * window.innerHeight / 100;
+                            } else if (id === 'quoteArea') {
+                                tx = 0;
+                                ty = 0;
+                                el.style.maxWidth = isMobile ? (window.innerWidth * 0.88) + 'px' : '420px';
+                            } else if (id === 'bottomArea') {
+                                tx = 0;
+                                ty = isMobile ? 8 : 12;
+                                ty = ty * window.innerHeight / 100;
                             } else {
-                                switch (id) {
-                                    case 'clockArea':
-                                        tx = 0;
-                                        ty = -10;
-                                        ty = ty * window.innerHeight / 100;
-                                        break;
-                                    case 'quoteArea':
-                                        tx = 0;
-                                        ty = 0;
-                                        el.style.maxWidth = '420px';
-                                        break;
-                                    case 'bottomArea':
-                                        tx = 0;
-                                        ty = 10;
-                                        ty = ty * window.innerHeight / 100;
-                                        break;
-                                    default:
-                                        tx = 0;
-                                        ty = 0;
-                                }
+                                tx = 0;
+                                ty = 0;
                             }
                         }
                         el.style.transform = `translate(${tx}px, ${ty}px)`;
@@ -5646,7 +5256,7 @@
                         });
 
                         rainInitialized = true;
-                        console.log('🌧️ 开始页雨滴特效已启动');
+                        console.log('🌧️ 开始页雨滴特效已启动 (4层, 小水滴, 低模糊, 鼠标交互)');
                     } else {
                         console.warn('⚠️ 雨滴平面初始化失败');
                         if (rainCurtains) {
@@ -5696,16 +5306,15 @@
             }
 
             // ================================================================
-            // ★★★ 核心：加载流程 + 开始页淡入 ★★★
+            // ★★★ 核心：开始页淡入 + 淡出（无硬切）★★★
             // ================================================================
             const startPage = document.getElementById('startPage');
-            let resourcesReady = false;
 
+            // 页面加载后触发淡入
             function triggerStartPageFadeIn() {
-                if (!startPage || resourcesReady === false) return;
+                if (!startPage) return;
                 startPage.classList.remove('fade-out');
                 startPage.classList.add('show');
-                setTimeout(initRainEffect, 300);
             }
 
             function enterSite() {
@@ -5738,59 +5347,25 @@
                 }
             }, { passive: true });
 
-            // ================================================================
-            // ★★★ 主加载流程 ★★★
-            // ================================================================
-            async function startApp() {
-                loadingOverlay.classList.remove('hide');
-                loadingProgressBar.style.width = '0%';
-                loadingDetail.textContent = '准备资源...';
-
-                const loader = buildResourceQueue();
-
-                loader.onProgress = function(pct, id, type) {
-                    loadingProgressBar.style.width = pct + '%';
-                    const label = loader.queue.find(q => q.id === id)?.meta?.label || id;
-                    loadingDetail.textContent = `加载 ${label} (${loader.loadedCount}/${loader.total})`;
-                    if (id.startsWith('wp_')) {
-                        loadedWallpaperResources.add(id);
-                        if (isWallpaperMode) {
-                            const previewGrid = document.getElementById('wallpaperPreviewGrid');
-                            if (previewGrid) {
-                                const items = previewGrid.querySelectorAll('.wp-preview-item');
-                                items.forEach(el => {
-                                    if (el.dataset.id === id.replace('wp_', '') ||
-                                        el.dataset.id === id.replace('wp_d', 'd')) {
-                                        el.classList.remove('loading');
-                                    }
-                                });
-                            }
-                        }
-                    }
-                };
-
-                loader.onComplete = function() {
-                    resourcesReady = true;
-                    loadingDetail.textContent = '加载完成！';
-                    setTimeout(() => {
-                        loadingOverlay.classList.add('hide');
-                        triggerStartPageFadeIn();
-                    }, 400);
-                };
-
-                try {
-                    await loader.loadAll();
-                } catch (e) {
-                    console.warn('⚠️ 资源加载异常:', e);
-                    resourcesReady = true;
-                    loadingOverlay.classList.add('hide');
-                    setTimeout(triggerStartPageFadeIn, 300);
-                }
+            // 页面加载完成后触发淡入
+            if (document.readyState === 'complete') {
+                setTimeout(triggerStartPageFadeIn, 200);
+            } else {
+                window.addEventListener('load', function() {
+                    setTimeout(triggerStartPageFadeIn, 200);
+                });
             }
 
-            // ================================================================
+            // 雨滴特效初始化（页面加载后启动）
+            if (document.readyState === 'complete') {
+                setTimeout(initRainEffect, 200);
+            } else {
+                window.addEventListener('load', function() {
+                    setTimeout(initRainEffect, 200);
+                });
+            }
+
             // 独立雨丝
-            // ================================================================
             function buildRaindrops() {
                 const rainContainer = document.getElementById('rain-container');
                 rainContainer.innerHTML = '';
@@ -5821,7 +5396,95 @@
             buildRaindrops();
 
             // ================================================================
-            // 13. 综合保存/加载
+            // 13. 资源预加载 + 失败提示 (含内存管理)
+            // ================================================================
+            const preloaded = { blobs: {} };
+            let loadedCount = 0;
+            let totalCount = 0;
+            let failedCount = 0;
+            let resourceToastShown = false;
+
+            function updateProgress() {
+                loadedCount++;
+                if (!resourceToastShown && failedCount > 3) {
+                    showToast('部分资源加载失败，请检查网络');
+                    resourceToastShown = true;
+                }
+            }
+
+            async function preloadResources() {
+                totalCount = songs.length + albumImages.length + wallpapers.static.length + wallpapers.dynamic.length;
+
+                for (const song of songs) {
+                    try {
+                        const resp = await fetch('songs/' + song.file);
+                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                        const blob = await resp.blob();
+                        preloaded.blobs[song.file] = URL.createObjectURL(blob);
+                    } catch (e) {
+                        failedCount++;
+                    }
+                    updateProgress();
+                }
+
+                for (const src of albumImages) {
+                    try {
+                        await new Promise((resolve) => {
+                            const img = new Image();
+                            img.onload = () => { updateProgress();
+                                resolve(); };
+                            img.onerror = () => { failedCount++;
+                                updateProgress();
+                                resolve(); };
+                            img.src = src;
+                        });
+                    } catch (e) { failedCount++; updateProgress(); }
+                }
+
+                for (const wp of wallpapers.static) {
+                    try {
+                        await new Promise((resolve) => {
+                            const img = new Image();
+                            img.onload = () => { updateProgress();
+                                resolve(); };
+                            img.onerror = () => { failedCount++;
+                                updateProgress();
+                                resolve(); };
+                            img.src = 'images/' + wp.file;
+                        });
+                    } catch (e) { failedCount++; updateProgress(); }
+                }
+
+                for (const wp of wallpapers.dynamic) {
+                    try {
+                        const resp = await fetch('videos/' + wp.file);
+                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                        const blob = await resp.blob();
+                        preloaded.blobs[wp.id] = URL.createObjectURL(blob);
+                    } catch (e) {
+                        failedCount++;
+                    }
+                    updateProgress();
+                }
+            }
+
+            if (document.readyState === 'complete') {
+                preloadResources();
+            } else {
+                window.addEventListener('load', function() {
+                    preloadResources();
+                });
+            }
+
+            // 页面关闭时释放 Blob URL
+            window.addEventListener('beforeunload', function() {
+                for (const key in preloaded.blobs) {
+                    try { URL.revokeObjectURL(preloaded.blobs[key]); } catch (e) {}
+                }
+            });
+
+            // ================================================================
+            // 14. 综合保存/加载
             // ================================================================
             function saveAllSettings() {
                 try { localStorage.setItem('nightMode', JSON.stringify(currentMode === 'night')); } catch (e) {}
@@ -5859,19 +5522,8 @@
                         isWallpaperMode = true;
                         setTimeout(() => {
                             body.classList.add('wallpaper-mode');
-                            const resId = 'wp_' + (currentWallpaperType === 'dynamic' ? currentWallpaperId :
-                                currentWallpaperId);
-                            if (loadedWallpaperResources.has(resId)) {
-                                applyWallpaper(currentWallpaperType, currentWallpaperId);
-                            } else {
-                                const checkLoaded = setInterval(() => {
-                                    if (loadedWallpaperResources.has(resId)) {
-                                        clearInterval(checkLoaded);
-                                        applyWallpaper(currentWallpaperType, currentWallpaperId);
-                                    }
-                                }, 200);
-                                setTimeout(() => clearInterval(checkLoaded), 10000);
-                            }
+                            if (!currentWallpaperType || !currentWallpaperId) applyWallpaper('static', 's1');
+                            else applyWallpaper(currentWallpaperType, currentWallpaperId);
                             draggableItems.forEach(item => {
                                 if (item.id === 'glassSearch') item.style.display = 'flex';
                                 else if (item.id === 'glassLinks') item.style.display = 'flex';
@@ -5882,7 +5534,7 @@
                             applyElemState();
                             renderSettings();
                             updateModeSwitchUI();
-                        }, 500);
+                        }, 300);
                     }
                 } catch (e) {}
                 try {
@@ -5941,15 +5593,9 @@
             }
 
             // ================================================================
-            // 14. 初始化
+            // 15. 初始化
             // ================================================================
-
-            // 使用 try-catch 包裹 loadAllSettings，防止错误阻断后续流程
-            try {
-                loadAllSettings();
-            } catch (e) {
-                console.warn('加载设置时出现错误，使用默认配置:', e);
-            }
+            loadAllSettings();
 
             if (!isWallpaperMode) {
                 draggableItems.forEach(item => { item.style.display = 'none'; });
@@ -6000,18 +5646,14 @@
                 });
             });
 
-            // ★★★ 启动应用 ★★★
-            startApp();
-
-            console.log('✅ 小永子首页 - 修仙/阴阳版 + 资源顺序加载 + 超时控制 + 错误隔离');
+            console.log('✅ 小永子首页 - 修仙/阴阳版 + 开始页雨滴特效（4层，小水滴，低模糊）');
             console.log('🖱️ 开始页鼠标可影响雨滴');
             console.log('🖱️ 右键锁定/解锁所有元素');
             console.log('⚙️ 点击齿轮打开设置');
             console.log('📱 移动端独立位置存储');
             console.log('🎵 双击屏幕空白处切换播放器');
-            console.log('✨ 资源按顺序加载: 开始页→白背景→黑背景→专辑图→歌曲→静态壁纸→动态壁纸');
-            console.log('🔒 未加载完的壁纸无法选中');
-            console.log('⏱️ 每个资源15秒超时，防止卡死');
+            console.log('✨ 开始页淡入淡出（无硬切）');
+            console.log('🔒 已修复 XSS 和 URL 协议绕过漏洞');
 
         })();
     </script>
