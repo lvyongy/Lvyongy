@@ -1956,7 +1956,9 @@
             }
         }
 
-        /* ===== 开始页（含雨滴特效层） ===== */
+        /* ================================================================
+           开始页 - 雨滴玻璃特效 + 背景图
+           ================================================================ */
         #startPage {
             position: fixed;
             top: 0;
@@ -1966,9 +1968,6 @@
             height: 100dvh;
             z-index: 99999;
             background-color: #0a0c0e;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1980,33 +1979,32 @@
             cursor: pointer;
             overflow: hidden;
         }
-        /* 雨滴canvas容器 — 在背景之上，内容之下 */
-        #rainCanvasContainer {
+        /* 雨滴渲染容器 - 铺满开始页 */
+        #startRainContainer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1;
+            z-index: 0;
             pointer-events: none;
         }
-        #rainCanvasContainer canvas {
-            display: block;
+        #startRainContainer canvas {
             width: 100% !important;
             height: 100% !important;
+            display: block;
         }
-        /* 纹理图片隐藏 */
-        #textureImage {
+        #startRainContainer .plane {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #startRainContainer .plane img {
             display: none;
         }
-        /* 开始页内容层 (z-index高于canvas) */
-        .start-loading,
-        .start-subtitle {
-            position: relative;
-            z-index: 2;
-            pointer-events: none;
-        }
-        #startPage .start-loading {
+
+        /* loading 状态 - 位于雨滴之上 */
+        .start-loading {
             display: none;
             flex-direction: column;
             align-items: center;
@@ -2022,12 +2020,8 @@
             margin-top: auto;
             margin-bottom: 5%;
             pointer-events: none;
-        }
-        #startPage.loading .start-loading {
-            display: flex;
-        }
-        #startPage:not(.loading) .start-loading {
-            display: none;
+            position: relative;
+            z-index: 1;
         }
         .start-loading .spinner {
             width: 28px;
@@ -2053,7 +2047,20 @@
                 opacity: 0.3;
             }
         }
-        #startPage .start-subtitle {
+        #startPage.loading .start-subtitle {
+            display: none;
+        }
+        #startPage.loading .start-loading {
+            display: flex;
+        }
+        #startPage:not(.loading) .start-loading {
+            display: none;
+        }
+        #startPage:not(.loading) .start-subtitle {
+            display: block;
+        }
+
+        .start-subtitle {
             display: none;
             font-size: 1.8rem;
             font-weight: 300;
@@ -2073,9 +2080,8 @@
             margin-top: auto;
             margin-bottom: 5%;
             pointer-events: none;
-        }
-        #startPage:not(.loading) .start-subtitle {
-            display: block;
+            position: relative;
+            z-index: 1;
         }
         @keyframes breath {
             0% {
@@ -2103,7 +2109,7 @@
             display: none !important;
         }
 
-        /* ===== 独立的雨丝容器（进入首页后继续显示） ===== */
+        /* ===== 独立的雨丝容器（进入首页后继续显示，2秒后淡出） ===== */
         #rain-container {
             position: fixed;
             top: 0;
@@ -2401,8 +2407,8 @@
                 width: 16px;
                 height: 16px;
             }
-            #startPage .start-subtitle {
-                font-size: 1.4rem;
+            .start-subtitle {
+                font-size: 1.2rem;
                 letter-spacing: 4px;
             }
         }
@@ -2542,8 +2548,8 @@
                 width: 14px;
                 height: 14px;
             }
-            #startPage .start-subtitle {
-                font-size: 1.2rem;
+            .start-subtitle {
+                font-size: 1rem;
                 letter-spacing: 3px;
             }
         }
@@ -2561,18 +2567,22 @@
 
 <body>
 
-    <!-- ===== 开始页（含雨滴玻璃特效） ===== -->
+    <!-- ============================================================
+    开始页 - 带雨滴玻璃特效
+    ============================================================ -->
     <div id="startPage" class="loading">
-        <!-- 雨滴canvas容器（z-index:1，位于背景之上） -->
-        <div id="rainCanvasContainer"></div>
-        <!-- 纹理图片（隐藏，供Curtains使用） -->
-        <img id="textureImage" src="images/background.png" crossorigin="anonymous" style="display:none;" />
-        <!-- 加载动画（z-index:2） -->
+        <!-- 雨滴渲染容器 -->
+        <div id="startRainContainer">
+            <div class="plane">
+                <img id="startBgImg" src="images/background.png" crossorigin="anonymous" />
+            </div>
+        </div>
+        <!-- loading 状态 -->
         <div class="start-loading">
             <div class="spinner"></div>
             <span>加载中 ...</span>
         </div>
-        <!-- 点击进入文字（z-index:2） -->
+        <!-- 副标题 -->
         <div class="start-subtitle">✦ 点击任意处开启 ✦</div>
     </div>
 
@@ -2693,7 +2703,9 @@
     <!-- Toast -->
     <div id="toastContainer"></div>
 
-    <!-- 引入 Curtains.js -->
+    <!-- ============================================================
+    引入 Curtains.js (用于雨滴玻璃特效)
+    ============================================================ -->
     <script src="https://www.curtainsjs.com/build/curtains.min.js">
     </script>
 
@@ -2725,15 +2737,284 @@
             }
 
             // ================================================================
-            // 0b. 开始页 + 独立雨丝
+            // 0b. 开始页 + 独立雨丝 + 雨滴玻璃特效
             // ================================================================
             const startPage = document.getElementById('startPage');
             const rainContainer = document.getElementById('rain-container');
+            const startBgImg = document.getElementById('startBgImg');
+            const startRainContainer = document.getElementById('startRainContainer');
             let startPageHidden = false;
             let startPageReady = false;
             let rainEffectReady = false;
+            let bgLoaded = false;
+            let curtainsPlane = null;
+            let webGLCurtain = null;
 
-            // 在 rain-container 中生成雨滴（从 startPage 迁移过来）
+            // ---- 雨滴玻璃特效 - 着色器 ----
+            const vertexShader = `
+                    #ifdef GL_ES
+                    precision mediump float;
+                    #endif
+
+                    attribute vec3 aVertexPosition;
+                    attribute vec2 aTextureCoord;
+
+                    uniform mat4 uMVMatrix;
+                    uniform mat4 uPMatrix;
+                    uniform mat4 dispImageMatrix;
+
+                    varying vec3 vVertexPosition;
+                    varying vec2 vTextureCoord;
+
+                    void main() {
+                        vec3 vertexPosition = aVertexPosition;
+                        gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+                        vTextureCoord = (dispImageMatrix * vec4(aTextureCoord, 0., 1.)).xy;
+                        vVertexPosition = vertexPosition;
+                    }
+                `;
+
+            const fragmentShader = `
+                    #ifdef GL_ES
+                    precision mediump float;
+                    #endif
+
+                    #define PI2 6.28318530718
+                    #define PI  3.14159265359
+                    #define S(a,b,n) smoothstep(a,b,n)
+
+                    varying vec3 vVertexPosition;
+                    varying vec2 vTextureCoord;
+
+                    uniform float uTime;
+                    uniform vec2  uReso;
+                    uniform vec2  uMouse;
+
+                    uniform sampler2D dispImage;
+                    uniform sampler2D blurImage;
+
+                    // ---- 噪声 ----
+                    float N12(vec2 p) {
+                        p = fract(p * vec2(123.34, 345.45));
+                        p += dot(p, p + 34.345);
+                        return fract(p.x * p.y);
+                    }
+
+                    // ---- 单层雨滴 (密度降低: 3.0 → 2.2) ----
+                    vec3 Layer(vec2 uv0, float t) {
+                        vec2 asp = vec2(2., 1.);
+                        vec2 uv1 = uv0 * 2.2 * asp;
+                        uv1.y += t * 0.25;
+
+                        vec2 gv = fract(uv1) - 0.5;
+                        vec2 id = floor(uv1);
+
+                        float n = N12(id);
+                        t += n * PI2;
+
+                        float w = uv0.y * 10.0;
+                        float x = (n - 0.5) * 0.8;
+                        x += (0.4 - abs(x)) * sin(3.0 * w) * pow(sin(w), 6.0) * 0.45;
+
+                        float y = -sin(t + sin(t + sin(t) * 0.5)) * (0.5 - 0.06);
+                        y -= (gv.x - x) * (gv.x - x);
+
+                        vec2 dropPos = (gv - vec2(x, y)) / asp;
+                        float drop = S(0.03, 0.02, length(dropPos));
+
+                        vec2 trailPos = (gv - vec2(x, t * 0.25)) / asp;
+                        trailPos.y = (fract(trailPos.y * 8.0) - 0.5) / 8.0;
+                        float trail = S(0.02, 0.015, length(trailPos));
+
+                        float fogTrail = S(-0.05, 0.05, dropPos.y);
+                        fogTrail *= S(0.5, y, gv.y);
+                        trail *= fogTrail;
+                        fogTrail *= S(0.03, 0.015, abs(dropPos.x));
+
+                        vec2 off = drop * dropPos + trail * trailPos;
+                        return vec3(off, fogTrail);
+                    }
+
+                    // ---- 主渲染 ----
+                    void main() {
+                        float dist = 5.0;
+                        float blurSize = 5.0;
+                        // 速度减半: 0.03 → 0.015
+                        float t = mod(uTime * 0.015, 7200.0);
+
+                        vec2 uv = vTextureCoord;
+
+                        // 只保留 2 层雨滴 (原4层 → 2层)
+                        vec3 drops = Layer(uv, t);
+                        drops += Layer(uv * 1.35 + 1.54, t);
+
+                        float blur = blurSize * 7.0 * (1.0 - drops.z);
+                        vec4 col = vec4(0.0);
+
+                        int numSamples = 24;
+                        float a = N12(uv) * PI2;
+
+                        blur *= 0.0005;
+                        uv += drops.xy * dist;
+
+                        for (int n = 0; n < 24; n++) {
+                            vec2 off = vec2(sin(a), cos(a)) * blur;
+                            float d = fract(sin(float(n + 1) * 546.0) * 5424.0);
+                            d = sqrt(d);
+                            off *= d;
+                            col += texture2D(dispImage, uv + off);
+                            a++;
+                        }
+
+                        col /= float(numSamples);
+                        gl_FragColor = col;
+                    }
+                `;
+
+            // ---- 初始化雨滴特效 ----
+            function initRainEffect() {
+                if (webGLCurtain) return;
+                try {
+                    webGLCurtain = new Curtains({
+                        container: 'startRainContainer',
+                        watchScroll: false,
+                    });
+
+                    const planeElement = startRainContainer.querySelector('.plane');
+
+                    const params = {
+                        vertexShader: vertexShader,
+                        fragmentShader: fragmentShader,
+                        widthSegments: 30,
+                        heightSegments: 30,
+                        uniforms: {
+                            time: {
+                                name: 'uTime',
+                                type: '1f',
+                                value: 0,
+                            },
+                            mousepos: {
+                                name: 'uMouse',
+                                type: '2f',
+                                value: [0, 0],
+                            },
+                            resolution: {
+                                name: 'uReso',
+                                type: '2f',
+                                value: [window.innerWidth, window.innerHeight],
+                            },
+                        },
+                    };
+
+                    curtainsPlane = webGLCurtain.addPlane(planeElement, params);
+
+                    if (curtainsPlane) {
+                        curtainsPlane.onRender(() => {
+                            if (curtainsPlane && curtainsPlane.uniforms) {
+                                curtainsPlane.uniforms.time.value++;
+                                curtainsPlane.uniforms.resolution.value = [window.innerWidth, window
+                                .innerHeight];
+                            }
+                        });
+
+                        window.addEventListener('mousemove', (e) => {
+                            if (curtainsPlane && curtainsPlane.uniforms) {
+                                curtainsPlane.uniforms.mousepos.value = [e.clientX, e.clientY];
+                            }
+                        });
+
+                        window.addEventListener('resize', () => {
+                            if (curtainsPlane && curtainsPlane.uniforms) {
+                                curtainsPlane.uniforms.resolution.value = [window.innerWidth, window
+                                    .innerHeight];
+                            }
+                        });
+
+                        rainEffectReady = true;
+                        console.log('🌧️ 雨滴玻璃特效已启动');
+                        checkAllReady();
+                    } else {
+                        console.warn('雨滴平面初始化失败');
+                        // 即使失败也继续，使用降级方案
+                        rainEffectReady = true;
+                        checkAllReady();
+                    }
+                } catch (e) {
+                    console.warn('Curtains.js 初始化失败:', e);
+                    rainEffectReady = true;
+                    checkAllReady();
+                }
+            }
+
+            // ---- 加载背景图 ----
+            function loadBackground() {
+                const img = startBgImg;
+                if (img.complete && img.naturalWidth > 0) {
+                    bgLoaded = true;
+                    checkAllReady();
+                    return;
+                }
+                img.onload = function() {
+                    bgLoaded = true;
+                    checkAllReady();
+                };
+                img.onerror = function() {
+                    console.warn('背景图加载失败，尝试备用路径');
+                    // 尝试根目录
+                    const fallback = new Image();
+                    fallback.crossOrigin = 'anonymous';
+                    fallback.onload = function() {
+                        startBgImg.src = 'background.png';
+                        bgLoaded = true;
+                        checkAllReady();
+                    };
+                    fallback.onerror = function() {
+                        // 最终降级：使用纯色
+                        bgLoaded = true;
+                        checkAllReady();
+                    };
+                    fallback.src = 'background.png';
+                };
+                // 如果src为空，设置默认
+                if (!img.src || img.src === '') {
+                    img.src = 'images/background.png';
+                }
+            }
+
+            // ---- 检查所有资源是否就绪 ----
+            function checkAllReady() {
+                if (bgLoaded && rainEffectReady && !startPageReady) {
+                    startPageReady = true;
+                    startPage.classList.remove('loading');
+                    const loadingEl = document.querySelector('.start-loading span');
+                    if (loadingEl) loadingEl.textContent = '加载完成 ✦ 点击进入';
+                    console.log('✅ 开始页资源加载完成');
+                }
+            }
+
+            // ---- 进入网站 ----
+            function enterSite(e) {
+                if (startPageHidden) return;
+                if (!startPageReady) return;
+                startPageHidden = true;
+                startPage.classList.add('fade-out');
+                // 雨丝淡出
+                setTimeout(function() {
+                    startPage.classList.add('hide');
+                    rainContainer.style.transition = 'opacity 1.2s ease';
+                    rainContainer.style.opacity = '0';
+                    setTimeout(function() {
+                        rainContainer.style.display = 'none';
+                    }, 1200);
+                }, 1200);
+            }
+
+            startPage.addEventListener('click', enterSite);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !startPageHidden && startPageReady) enterSite(e);
+            });
+
+            // ---- 独立雨丝 ----
             function buildRaindrops() {
                 rainContainer.innerHTML = '';
                 const raindropConfigs = [
@@ -2762,331 +3043,26 @@
             }
             buildRaindrops();
 
-            // ================================================================
-            // 0c. 雨滴玻璃特效 (Curtains.js) — 使用更清晰的着色器 + textures 显式绑定
-            // ================================================================
-            let rainCurtains = null;
-            let rainPlane = null;
-            let rainInitialized = false;
+            // ---- 启动资源加载 ----
+            loadBackground();
 
-            // ---- 更清晰的雨滴着色器（密度低、模糊弱、扭曲小） ----
-            const rainVertexShader = `
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-
-                attribute vec3 aVertexPosition;
-                attribute vec2 aTextureCoord;
-
-                uniform mat4 uMVMatrix;
-                uniform mat4 uPMatrix;
-                uniform mat4 dispImageMatrix;
-
-                varying vec3 vVertexPosition;
-                varying vec2 vTextureCoord;
-
-                void main() {
-                    vec3 vertexPosition = aVertexPosition;
-                    gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-                    vTextureCoord = (dispImageMatrix * vec4(aTextureCoord, 0., 1.)).xy;
-                    vVertexPosition = vertexPosition;
-                }
-            `;
-
-            const rainFragmentShader = `
-                #ifdef GL_ES
-                precision mediump float;
-                #endif
-
-                #define PI2 6.28318530718
-                #define PI  3.14159265359
-                #define S(a,b,n) smoothstep(a,b,n)
-
-                varying vec3 vVertexPosition;
-                varying vec2 vTextureCoord;
-
-                uniform float uTime;
-                uniform vec2  uReso;
-                uniform vec2  uMouse;
-
-                uniform sampler2D dispImage;
-
-                // ---- 噪声 ----
-                float N12(vec2 p) {
-                    p = fract(p * vec2(123.34, 345.45));
-                    p += dot(p, p + 34.345);
-                    return fract(p.x * p.y);
-                }
-
-                // ---- 单层雨滴（密度低 → 更稀疏） ----
-                vec3 Layer(vec2 uv0, float t) {
-                    vec2 asp = vec2(2., 1.);
-                    // 密度 2.0（原4.5），雨滴更稀疏
-                    vec2 uv1 = uv0 * 2.0 * asp;
-                    uv1.y += t * 0.25;
-
-                    vec2 gv = fract(uv1) - 0.5;
-                    vec2 id = floor(uv1);
-
-                    float n = N12(id);
-                    t += n * PI2;
-
-                    float w = uv0.y * 10.0;
-                    float x = (n - 0.5) * 0.8;
-                    x += (0.4 - abs(x)) * sin(3.0 * w) * pow(sin(w), 6.0) * 0.45;
-
-                    float y = -sin(t + sin(t + sin(t) * 0.5)) * (0.5 - 0.06);
-                    y -= (gv.x - x) * (gv.x - x);
-
-                    vec2 dropPos = (gv - vec2(x, y)) / asp;
-                    float drop = S(0.015, 0.01, length(dropPos));
-
-                    vec2 trailPos = (gv - vec2(x, t * 0.25)) / asp;
-                    trailPos.y = (fract(trailPos.y * 8.0) - 0.5) / 8.0;
-                    float trail = S(0.01, 0.007, length(trailPos));
-
-                    float fogTrail = S(-0.05, 0.05, dropPos.y);
-                    fogTrail *= S(0.5, y, gv.y);
-                    trail *= fogTrail;
-                    fogTrail *= S(0.015, 0.008, abs(dropPos.x));
-
-                    vec2 off = drop * dropPos + trail * trailPos;
-                    return vec3(off, fogTrail);
-                }
-
-                // ---- 主渲染 ----
-                void main() {
-                    // 速度稍慢 0.015
-                    float t = mod(uTime * 0.015, 7200.0);
-                    // 扭曲减弱
-                    float dist = 1.5;
-                    // 模糊减弱
-                    float blurSize = 1.5;
-
-                    vec2 uv = vTextureCoord;
-
-                    // 4层雨滴，但密度低 → 总体稀疏
-                    vec3 drops = Layer(uv, t);
-                    drops += Layer(uv * 1.25 + 7.54, t);
-                    drops += Layer(uv * 1.35 + 1.54, t);
-                    drops += Layer(uv * 1.57 - 7.54, t);
-
-                    float blur = blurSize * 7.0 * (1.0 - drops.z);
-                    vec4 col = vec4(0.0);
-
-                    int numSamples = 32;
-                    float a = N12(uv) * PI2;
-
-                    blur *= 0.0005;
-                    uv += drops.xy * dist;
-
-                    for (int n = 0; n < 32; n++) {
-                        vec2 off = vec2(sin(a), cos(a)) * blur;
-                        float d = fract(sin(float(n + 1) * 546.0) * 5424.0);
-                        d = sqrt(d);
-                        off *= d;
-                        col += texture2D(dispImage, uv + off);
-                        a++;
-                    }
-
-                    col /= float(numSamples);
-                    gl_FragColor = col;
-                }
-            `;
-
-            // ---- 备用纹理生成 ----
-            function createFallbackTexture() {
-                const canvas = document.createElement('canvas');
-                canvas.width = 512;
-                canvas.height = 512;
-                const ctx = canvas.getContext('2d');
-                const gradient = ctx.createLinearGradient(0, 0, 512, 512);
-                gradient.addColorStop(0, '#2b3a4a');
-                gradient.addColorStop(0.5, '#4a6a7a');
-                gradient.addColorStop(1, '#1a2a3a');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, 512, 512);
-                ctx.fillStyle = 'rgba(255,255,255,0.08)';
-                for (let i = 0; i < 20; i++) {
-                    ctx.beginPath();
-                    ctx.arc(Math.random() * 512, Math.random() * 512, Math.random() * 40 + 10, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                return canvas.toDataURL('image/png');
-            }
-            const fallbackDataUrl = createFallbackTexture();
-
-            // ---- 初始化雨滴特效（返回 Promise） ----
-            function initRainEffect() {
-                return new Promise((resolve) => {
-                    if (rainInitialized) {
-                        resolve();
-                        return;
-                    }
-                    const container = document.getElementById('rainCanvasContainer');
-                    const textureImg = document.getElementById('textureImage');
-                    if (!container || !textureImg) {
-                        console.warn('⚠️ 雨滴容器或纹理图片不存在');
-                        resolve();
-                        return;
-                    }
-
-                    // 确保图片已加载，否则等待
-                    function doInit() {
-                        try {
-                            // 如果图片加载失败或未完成，使用备用纹理
-                            if (!textureImg.complete || textureImg.naturalWidth === 0) {
-                                // 使用备用纹理
-                                textureImg.src = fallbackDataUrl;
-                                // 再次检查，若仍失败则强制重试
-                                if (!textureImg.complete || textureImg.naturalWidth === 0) {
-                                    // 有些浏览器 dataURL 也可能异步，等待一下
-                                    setTimeout(() => {
-                                        doInit();
-                                    }, 100);
-                                    return;
-                                }
-                            }
-
-                            rainCurtains = new Curtains({
-                                container: 'rainCanvasContainer',
-                                watchScroll: false,
-                                pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-                            });
-
-                            const planeEl = document.createElement('div');
-                            planeEl.style.cssText =
-                                'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
-                            container.appendChild(planeEl);
-
-                            const mouse = { x: 0, y: 0 };
-
-                            // 使用 textures 数组显式传递纹理
-                            rainPlane = new Plane(rainCurtains, planeEl, {
-                                vertexShader: rainVertexShader,
-                                fragmentShader: rainFragmentShader,
-                                textures: [
-                                    {
-                                        sampler: 'dispImage',
-                                        source: textureImg,
-                                    }
-                                ],
-                                uniforms: {
-                                    uTime: { name: 'uTime', type: '1f', value: 0 },
-                                    uReso: { name: 'uReso', type: '2f', value: [window.innerWidth, window
-                                            .innerHeight] },
-                                    uMouse: { name: 'uMouse', type: '2f', value: [mouse.x, mouse.y] },
-                                }
-                            });
-
-                            if (rainPlane) {
-                                rainPlane.onRender(() => {
-                                    rainPlane.uniforms.uTime.value++;
-                                    rainPlane.uniforms.uReso.value = [window.innerWidth, window.innerHeight];
-                                });
-
-                                const onMouseMove = (e) => {
-                                    mouse.x = e.clientX;
-                                    mouse.y = e.clientY;
-                                    if (rainPlane) {
-                                        rainPlane.uniforms.uMouse.value = [mouse.x, mouse.y];
-                                    }
-                                };
-                                window.addEventListener('mousemove', onMouseMove);
-                                rainPlane._mouseListener = onMouseMove;
-
-                                rainInitialized = true;
-                                rainEffectReady = true;
-                                console.log('🌧️ 雨滴玻璃特效已启动（清晰版）');
-                                resolve();
-                            } else {
-                                console.warn('⚠️ 雨滴平面初始化失败');
-                                if (rainCurtains) {
-                                    rainCurtains.dispose();
-                                    rainCurtains = null;
-                                }
-                                resolve();
-                            }
-                        } catch (e) {
-                            console.warn('⚠️ 雨滴特效初始化异常:', e);
-                            if (rainCurtains) {
-                                rainCurtains.dispose();
-                                rainCurtains = null;
-                            }
-                            resolve();
-                        }
-                    }
-
-                    // 检查图片状态
-                    if (textureImg.complete && textureImg.naturalWidth > 0) {
-                        // 已加载，直接初始化
-                        doInit();
-                    } else {
-                        // 等待加载
-                        textureImg.onload = function() {
-                            doInit();
-                        };
-                        textureImg.onerror = function() {
-                            // 加载失败，使用备用纹理
-                            textureImg.src = fallbackDataUrl;
-                            // 但 dataURL 可能立即加载，也可能需要等待
-                            if (textureImg.complete && textureImg.naturalWidth > 0) {
-                                doInit();
-                            } else {
-                                textureImg.onload = function() { doInit(); };
-                                // 超时保护
-                                setTimeout(() => {
-                                    if (!rainInitialized) {
-                                        console.warn('⚠️ 备用纹理加载超时，强制初始化');
-                                        doInit();
-                                    }
-                                }, 500);
-                            }
-                        };
-                        // 如果图片已经加载但 naturalWidth === 0（可能跨域或损坏），直接触发 onerror
-                        if (textureImg.complete && textureImg.naturalWidth === 0) {
-                            textureImg.onerror();
-                        }
-                    }
+            // 等待 DOM 和 Curtains.js 就绪
+            if (document.readyState === 'complete') {
+                setTimeout(initRainEffect, 200);
+            } else {
+                window.addEventListener('load', function() {
+                    setTimeout(initRainEffect, 300);
                 });
             }
 
-            // ---- 销毁雨滴特效 ----
-            function destroyRainEffect() {
-                if (rainPlane) {
-                    try {
-                        if (rainPlane._mouseListener) {
-                            window.removeEventListener('mousemove', rainPlane._mouseListener);
-                        }
-                        rainPlane.remove();
-                    } catch (e) {}
-                    rainPlane = null;
+            // 备用：如果 Curtains.js 未加载，5秒后强制就绪
+            setTimeout(function() {
+                if (!rainEffectReady) {
+                    rainEffectReady = true;
+                    checkAllReady();
+                    console.warn('⚠️ Curtains.js 加载超时，强制进入');
                 }
-                if (rainCurtains) {
-                    try {
-                        rainCurtains.dispose();
-                    } catch (e) {}
-                    rainCurtains = null;
-                }
-                rainInitialized = false;
-                rainEffectReady = false;
-                const container = document.getElementById('rainCanvasContainer');
-                if (container) {
-                    container.innerHTML = '';
-                    const img = document.getElementById('textureImage');
-                    if (img && !container.contains(img)) {
-                        container.appendChild(img);
-                    }
-                }
-                console.log('🌧️ 雨滴特效已销毁');
-            }
-
-            // ---- 窗口 resize ----
-            function handleRainResize() {
-                if (rainPlane) {
-                    rainPlane.uniforms.uReso.value = [window.innerWidth, window.innerHeight];
-                }
-            }
+            }, 5000);
 
             // ================================================================
             // 1. 预置链接
@@ -3434,7 +3410,8 @@
             // 5. 经典语录 (原名人名言)
             // ================================================================
             const DEFAULT_QUOTES = [
-                { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。', author: '孙孙浩' },
+                { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。',
+                author: '孙孙浩' },
                 { text: '杀人放火厉飞雨，万人敬仰韩天尊', author: '阿青' },
                 { text: '你倒是个有情有义之人。可惜在这乱世之中，最不值钱的便是情义。且看我那两个逆徒，本座养育他们两百年，却轻易背叛。',
                     author: '玄骨上人' },
@@ -4024,6 +4001,7 @@
                 const isWp = isWallpaperMode;
                 let html = '';
 
+                // ---- 模块1: 模式切换 ----
                 html += `
                         <div class="settings-module" data-module="mode">
                             <div class="settings-module-header" data-module-toggle="mode">
@@ -4044,6 +4022,7 @@
                         </div>
                     `;
 
+                // ---- 模块2: 修仙 (仅修仙模式显示) ----
                 if (isWp) {
                     html += `
                             <div class="settings-module" data-module="wallpaper">
@@ -4070,6 +4049,7 @@
                         `;
                 }
 
+                // ---- 模块3: 元素控制 ----
                 const defs = isWp ? elemDefs.wallpaper : elemDefs.simple;
                 let elemHtml = '';
                 defs.forEach(def => {
@@ -4097,6 +4077,7 @@
                         </div>
                     `;
 
+                // ---- 模块4: 经典语录管理 ----
                 let quoteHtml = '';
                 quotes.forEach((q, i) => {
                     quoteHtml += `
@@ -4138,6 +4119,7 @@
 
                 settingsDynamic.innerHTML = html;
 
+                // ---- 绑定事件 ----
                 document.querySelectorAll('[data-module-toggle]').forEach(header => {
                     header.addEventListener('click', function(e) {
                         e.stopPropagation();
@@ -4145,7 +4127,7 @@
                         if (moduleStates[moduleName] !== undefined) {
                             moduleStates[moduleName] = !moduleStates[moduleName];
                             const body = this.closest('.settings-module').querySelector(
-                                '.settings-module-body');
+                            '.settings-module-body');
                             const arrow = this.querySelector('.arrow');
                             if (body) body.classList.toggle('collapsed', !moduleStates[moduleName]);
                             if (arrow) arrow.classList.toggle('collapsed', !moduleStates[moduleName]);
@@ -5244,45 +5226,39 @@
             updateClock();
 
             // ================================================================
-            // 12. 资源预加载 + 雨滴初始化（含等待逻辑）
+            // 12. 资源预加载
             // ================================================================
             const preloaded = { blobs: {} };
             let loadedCount = 0;
             let totalCount = 0;
             let failedCount = 0;
-            let rainInitAttempted = false;
 
             function updateProgress() {
                 loadedCount++;
                 const loadingEl = document.querySelector('.start-loading span');
-                if (loadingEl) loadingEl.textContent =
-                    `加载中 ... ${loadedCount}/${totalCount}${failedCount ? ` (失败 ${failedCount})` : ''}`;
-                // 当所有资源加载完成且雨滴特效已就绪时，自动进入可点击状态
-                if (loadedCount >= totalCount && rainEffectReady) {
+                if (loadingEl) loadingEl.textContent = `加载中 ... ${loadedCount}/${totalCount}${failedCount ? ` (失败 ${failedCount})` : ''}`;
+                if (loadedCount >= totalCount) {
                     if (loadingEl) loadingEl.textContent = '加载完成 ✦ 点击进入';
-                    startPage.classList.remove('loading');
-                    startPageReady = true;
                 }
             }
 
             async function preloadAllResources() {
                 totalCount = songs.length + albumImages.length + wallpapers.static.length + wallpapers.dynamic.length + 2;
-                // 先加载背景图
+                // 背景图由 loadBackground 单独处理
                 await new Promise((resolve) => {
                     const bgImg = new Image();
                     bgImg.onload = function() {
-                        startPage.style.backgroundImage = 'url(images/background.png)';
+                        // 背景图已由 startBgImg 加载，这里只是额外预加载
+                        updateProgress();
                         resolve();
                     };
                     bgImg.onerror = function() {
-                        // 加载失败，使用纯色背景
-                        startPage.style.backgroundImage = 'linear-gradient(135deg, #0a0c0e, #1a2a3a)';
+                        updateProgress();
                         resolve();
                     };
                     bgImg.src = 'images/background.png';
                 });
 
-                // 加载其他图片
                 await new Promise((resolve) => {
                     const img = new Image();
                     img.onload = () => { updateProgress();
@@ -5292,6 +5268,7 @@
                         resolve(); };
                     img.src = 'images/bg_day.png';
                 });
+
                 await new Promise((resolve) => {
                     const img = new Image();
                     img.onload = () => { updateProgress();
@@ -5302,7 +5279,6 @@
                     img.src = 'images/bg_night.png';
                 });
 
-                // 加载歌曲
                 for (const song of songs) {
                     try {
                         const resp = await fetch('songs/' + song.file);
@@ -5315,7 +5291,6 @@
                     updateProgress();
                 }
 
-                // 加载专辑封面
                 for (const src of albumImages) {
                     try {
                         await new Promise((resolve) => {
@@ -5330,7 +5305,6 @@
                     } catch (e) { failedCount++; updateProgress(); }
                 }
 
-                // 加载壁纸（静态）
                 for (const wp of wallpapers.static) {
                     try {
                         await new Promise((resolve) => {
@@ -5345,7 +5319,6 @@
                     } catch (e) { failedCount++; updateProgress(); }
                 }
 
-                // 加载壁纸（动态）
                 for (const wp of wallpapers.dynamic) {
                     try {
                         const resp = await fetch('videos/' + wp.file);
@@ -5357,56 +5330,13 @@
                     }
                     updateProgress();
                 }
-
-                // ===== 关键：初始化雨滴特效并等待完成 =====
-                if (!rainInitAttempted) {
-                    rainInitAttempted = true;
-                    await initRainEffect();
-                    // 雨滴特效初始化完成，更新状态
-                    rainEffectReady = true;
-                    // 检查是否所有资源都已加载
-                    if (loadedCount >= totalCount) {
-                        startPage.classList.remove('loading');
-                        startPageReady = true;
-                        const loadingEl = document.querySelector('.start-loading span');
-                        if (loadingEl) loadingEl.textContent = '加载完成 ✦ 点击进入';
-                    } else {
-                        // 资源尚未全部加载，但雨滴已就绪，等资源加载完成
-                        // 在 updateProgress 中会检测 rainEffectReady 和 loadedCount
-                    }
-                }
             }
 
-            // ================================================================
-            // 13. 开始页点击进入 + 雨滴销毁
-            // ================================================================
-            function enterSite(e) {
-                if (startPageHidden) return;
-                if (!startPageReady) return;
-                startPageHidden = true;
-                startPage.classList.add('fade-out');
-                // 销毁雨滴特效（释放资源）
-                setTimeout(function() {
-                    destroyRainEffect();
-                }, 300);
-                // 雨丝淡出
-                setTimeout(function() {
-                    startPage.classList.add('hide');
-                    rainContainer.style.transition = 'opacity 1.2s ease';
-                    rainContainer.style.opacity = '0';
-                    setTimeout(function() {
-                        rainContainer.style.display = 'none';
-                    }, 1200);
-                }, 1200);
-            }
-
-            startPage.addEventListener('click', enterSite);
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !startPageHidden && startPageReady) enterSite(e);
-            });
+            if (document.readyState === 'complete') setTimeout(preloadAllResources, 100);
+            else window.addEventListener('load', function() { setTimeout(preloadAllResources, 100); });
 
             // ================================================================
-            // 14. 综合保存/加载
+            // 13. 综合保存/加载
             // ================================================================
             function saveAllSettings() {
                 try { localStorage.setItem('nightMode', JSON.stringify(currentMode === 'night')); } catch (e) {}
@@ -5509,11 +5439,8 @@
             }
 
             // ================================================================
-            // 15. 初始化
+            // 14. 初始化
             // ================================================================
-            if (document.readyState === 'complete') setTimeout(preloadAllResources, 100);
-            else window.addEventListener('load', function() { setTimeout(preloadAllResources, 100); });
-
             loadAllSettings();
 
             if (!isWallpaperMode) {
@@ -5525,7 +5452,6 @@
             });
 
             window.addEventListener('resize', function() {
-                handleRainResize();
                 draggableItems.forEach(item => {
                     if (item.style.display !== 'none') {
                         const rect = item.getBoundingClientRect();
@@ -5561,12 +5487,14 @@
                 });
             });
 
-            console.log('✅ 小永子首页 - 修仙/阴阳版 + 雨滴玻璃特效（清晰版）');
-            console.log('🌧️ 雨量：低密度·4层·速度0.015 · 模糊弱·扭曲小');
-            console.log('🖱️ 右键锁定/解锁所有元素');
-            console.log('⚙️ 点击齿轮打开设置');
-            console.log('📱 移动端独立位置存储');
+            console.log('✅ 小永子首页 - 修仙/阴阳版 (含雨滴玻璃特效)');
+            console.log('🖱️ 右键锁定/解锁所有元素（锁定时仍可搜索）');
+            console.log('⚙️ 点击齿轮打开设置 (模块化可折叠)');
+            console.log('📱 移动端独立位置存储，不干扰PC');
             console.log('🎵 双击屏幕空白处切换播放器');
+            console.log('🖼️ 切换壁纸类型不自动换壁纸，点击预览才换');
+            console.log('💾 所有设置自动保存到 localStorage');
+            console.log('🌧️ 雨滴玻璃特效已叠加到开始页背景图，雨量少、速度慢');
 
         })();
     </script>
