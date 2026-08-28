@@ -159,53 +159,6 @@
             transform: scale(1.04);
         }
 
-        /* ===== 开始页（雨滴背景层） ===== */
-        #startPage {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            z-index: 0; /* 背景层，主界面在其上 */
-            background-color: #0a0c0e;
-            overflow: hidden;
-            pointer-events: none; /* 让点击穿透到主界面 */
-        }
-        #startPage #canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-        #startPage .plane {
-            width: 100%;
-            height: 100vh;
-            position: relative;
-            z-index: 0;
-            pointer-events: none;
-        }
-        #startPage .plane img {
-            display: none; /* 原始图片隐藏，由 WebGL 渲染 */
-        }
-        /* 保证主界面在雨滴之上 */
-        .simple-mode,
-        .wallpaper-container,
-        #rope-container,
-        #settingsPanelWrapper,
-        .draggable-item,
-        #musicPlayer {
-            z-index: 2;
-            position: relative;
-        }
-        /* 拉绳特殊处理，提高一点 */
-        #rope-container {
-            z-index: 10;
-        }
-
         /* ===== 拉绳 (左上角) ===== */
         #rope-container {
             position: fixed;
@@ -2003,6 +1956,138 @@
             }
         }
 
+        /* ===== 开始页（顶层覆盖层，含雨滴） ===== */
+        #startPage {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            z-index: 99999;
+            background-color: #0a0c0e;
+            overflow: hidden;
+            cursor: pointer;
+            transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: opacity, transform;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        #startPage.fade-out {
+            opacity: 0;
+            transform: scale(1.04);
+            pointer-events: none;
+        }
+        #startPage.hide {
+            display: none !important;
+        }
+        #startPage #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+        #startPage .plane {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            z-index: 0;
+            pointer-events: none;
+        }
+        #startPage .plane img {
+            display: none;
+        }
+        /* 开始页底部文字 */
+        .start-subtitle {
+            position: relative;
+            z-index: 2;
+            font-size: 1.8rem;
+            font-weight: 300;
+            letter-spacing: 6px;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+            font-family: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+            animation: breath 2.8s ease-in-out infinite;
+            user-select: none;
+            -webkit-user-select: none;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin-bottom: 8%;
+            pointer-events: none;
+            text-align: center;
+        }
+        @keyframes breath {
+            0% {
+                opacity: 0.4;
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+                transform: scale(0.98);
+            }
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 40px rgba(255, 255, 255, 0.15);
+                transform: scale(1.02);
+            }
+            100% {
+                opacity: 0.4;
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+                transform: scale(0.98);
+            }
+        }
+
+        /* ===== 独立雨丝容器（进入首页后出现并淡出） ===== */
+        #rain-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            pointer-events: none;
+            z-index: 99998;
+            overflow: hidden;
+            transition: opacity 1.2s ease;
+            opacity: 0;
+            display: none;
+        }
+        #rain-container.active {
+            display: block;
+            opacity: 1;
+        }
+        #rain-container.fade-out {
+            opacity: 0;
+        }
+        #rain-container .raindrop {
+            position: absolute;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            animation: rainFall linear infinite;
+            pointer-events: none;
+        }
+        @keyframes rainFall {
+            0% {
+                transform: translateY(-10vh) scaleY(1);
+                opacity: 0.2;
+            }
+            50% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(110vh) scaleY(0.6);
+                opacity: 0;
+            }
+        }
+
         /* ===== 阴阳模式拖拽 ===== */
         .simple-mode .clock-area.dragging-simple,
         .simple-mode .quote-area.dragging-simple,
@@ -2265,6 +2350,10 @@
                 width: 16px;
                 height: 16px;
             }
+            .start-subtitle {
+                font-size: 1.4rem;
+                letter-spacing: 4px;
+            }
         }
         @media (max-width: 400px) {
             .simple-mode {
@@ -2402,6 +2491,10 @@
                 width: 14px;
                 height: 14px;
             }
+            .start-subtitle {
+                font-size: 1.2rem;
+                letter-spacing: 3px;
+            }
         }
 
         .hidden {
@@ -2417,14 +2510,17 @@
 
 <body>
 
-    <!-- ===== 开始页（雨滴背景） ===== -->
+    <!-- ===== 开始页（顶层覆盖层，WebGL 雨滴特效） ===== -->
     <div id="startPage">
         <div id="canvas"></div>
         <div class="plane">
-            <!-- 背景图片，由 WebGL 渲染 -->
             <img data-sampler="dispImage" id="texture" src="images/background.png" crossorigin="anonymous" />
         </div>
+        <div class="start-subtitle">✦ 点击任意处开启 ✦</div>
     </div>
+
+    <!-- 独立雨丝容器（进入首页后出现并淡出） -->
+    <div id="rain-container"></div>
 
     <!-- 修仙容器 (原壁纸容器) -->
     <div class="wallpaper-container" id="wallpaperContainer">
@@ -4727,11 +4823,12 @@
             updateClock();
 
             // ================================================================
-            // 12. 雨滴特效初始化 (使用 index01 配置)
+            // 12. 开始页雨滴特效 (使用 index01 配置)
             // ================================================================
             let rainCurtains = null;
             let rainPlane = null;
             let rainInitialized = false;
+            let rainDestroyed = false;
             let mouse = { x: 0, y: 0 };
 
             // 着色器（来自 index01，4层、小水滴、低模糊）
@@ -4855,7 +4952,7 @@
             `;
 
             function initRainEffect() {
-                if (rainInitialized) return;
+                if (rainInitialized || rainDestroyed) return;
                 const canvasContainer = document.getElementById('canvas');
                 const textureImg = document.getElementById('texture');
                 if (!canvasContainer || !textureImg) return;
@@ -4906,9 +5003,9 @@
 
                     if (rainPlane) {
                         rainPlane.onRender(() => {
+                            if (rainDestroyed) return;
                             rainPlane.uniforms.time.value++;
                             rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
-                            // 更新鼠标位置（实时）
                             rainPlane.uniforms.mousepos.value = [mouse.x, mouse.y];
                         });
 
@@ -4920,13 +5017,13 @@
 
                         // 窗口自适应
                         window.addEventListener('resize', () => {
-                            if (rainPlane) {
+                            if (rainPlane && !rainDestroyed) {
                                 rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
                             }
                         });
 
                         rainInitialized = true;
-                        console.log('🌧️ 雨滴特效已启动 (4层, 小水滴, 低模糊, 鼠标交互)');
+                        console.log('🌧️ 开始页雨滴特效已启动 (4层, 小水滴, 低模糊, 鼠标交互)');
                     } else {
                         console.warn('⚠️ 雨滴平面初始化失败');
                         if (rainCurtains) {
@@ -4943,15 +5040,95 @@
                 }
             }
 
-            // 直接初始化，无需等待点击
-            // 等待 DOM 完全加载后执行
+            function destroyRainEffect() {
+                if (rainDestroyed) return;
+                rainDestroyed = true;
+                if (rainPlane) {
+                    try {
+                        rainPlane.remove();
+                    } catch (e) {}
+                    rainPlane = null;
+                }
+                if (rainCurtains) {
+                    try {
+                        rainCurtains.dispose();
+                    } catch (e) {}
+                    rainCurtains = null;
+                }
+                rainInitialized = false;
+                console.log('🌧️ 开始页雨滴特效已销毁');
+            }
+
+            // 开始页点击进入
+            const startPage = document.getElementById('startPage');
+
+            function enterSite() {
+                if (startPage.classList.contains('fade-out') || startPage.classList.contains('hide')) return;
+                // 销毁雨滴特效
+                destroyRainEffect();
+
+                // 开始页淡出
+                startPage.classList.add('fade-out');
+                setTimeout(() => {
+                    startPage.classList.add('hide');
+                }, 1200);
+
+                // 独立雨丝出现并淡出
+                const rainContainer = document.getElementById('rain-container');
+                rainContainer.classList.add('active');
+                setTimeout(() => {
+                    rainContainer.classList.add('fade-out');
+                    setTimeout(() => {
+                        rainContainer.classList.remove('active');
+                        rainContainer.style.display = 'none';
+                    }, 1200);
+                }, 300);
+            }
+
+            startPage.addEventListener('click', enterSite);
+            startPage.addEventListener('touchstart', function(e) {
+                // 防止误触，但仍然是点击进入
+                if (!startPage.classList.contains('fade-out')) enterSite();
+            }, { passive: true });
+
+            // 初始化雨滴
             if (document.readyState === 'complete') {
-                initRainEffect();
+                setTimeout(initRainEffect, 200);
             } else {
                 window.addEventListener('load', function() {
-                    initRainEffect();
+                    setTimeout(initRainEffect, 200);
                 });
             }
+
+            // 构建独立雨丝
+            function buildRaindrops() {
+                const rainContainer = document.getElementById('rain-container');
+                rainContainer.innerHTML = '';
+                const configs = [
+                    { left: 10, duration: 2.4, delay: 0.2, height: 60 },
+                    { left: 22, duration: 3.0, delay: 0.8, height: 80 },
+                    { left: 35, duration: 2.0, delay: 0.0, height: 50 },
+                    { left: 48, duration: 2.8, delay: 0.5, height: 70 },
+                    { left: 60, duration: 2.2, delay: 1.0, height: 55 },
+                    { left: 73, duration: 3.2, delay: 0.3, height: 90 },
+                    { left: 85, duration: 2.6, delay: 0.7, height: 65 },
+                    { left: 92, duration: 2.0, delay: 1.2, height: 45 },
+                    { left: 15, duration: 2.9, delay: 0.9, height: 75 },
+                    { left: 42, duration: 2.1, delay: 0.1, height: 50 },
+                    { left: 68, duration: 3.1, delay: 0.6, height: 85 },
+                    { left: 78, duration: 2.3, delay: 1.1, height: 60 },
+                ];
+                configs.forEach(cfg => {
+                    const el = document.createElement('div');
+                    el.className = 'raindrop';
+                    el.style.left = cfg.left + '%';
+                    el.style.animationDuration = cfg.duration + 's';
+                    el.style.animationDelay = cfg.delay + 's';
+                    el.style.height = cfg.height + 'px';
+                    rainContainer.appendChild(el);
+                });
+            }
+            buildRaindrops();
 
             // ================================================================
             // 13. 资源预加载（仅保留必要部分）
@@ -4963,13 +5140,12 @@
 
             function updateProgress() {
                 loadedCount++;
-                // 不再显示加载进度，仅预加载
+                // 不做 UI 更新，仅预加载
             }
 
             async function preloadResources() {
                 totalCount = songs.length + albumImages.length + wallpapers.static.length + wallpapers.dynamic.length;
 
-                // 预加载歌曲
                 for (const song of songs) {
                     try {
                         const resp = await fetch('songs/' + song.file);
@@ -4982,7 +5158,6 @@
                     updateProgress();
                 }
 
-                // 预加载专辑封面
                 for (const src of albumImages) {
                     try {
                         await new Promise((resolve) => {
@@ -4997,7 +5172,6 @@
                     } catch (e) { failedCount++; updateProgress(); }
                 }
 
-                // 预加载静态壁纸
                 for (const wp of wallpapers.static) {
                     try {
                         await new Promise((resolve) => {
@@ -5012,7 +5186,6 @@
                     } catch (e) { failedCount++; updateProgress(); }
                 }
 
-                // 预加载动态壁纸
                 for (const wp of wallpapers.dynamic) {
                     try {
                         const resp = await fetch('videos/' + wp.file);
@@ -5026,7 +5199,6 @@
                 }
             }
 
-            // 启动预加载
             if (document.readyState === 'complete') {
                 preloadResources();
             } else {
@@ -5187,8 +5359,8 @@
                 });
             });
 
-            console.log('✅ 小永子首页 - 修仙/阴阳版 + 新雨滴特效（4层，小水滴，低模糊）');
-            console.log('🖱️ 鼠标移动可影响雨滴（预留交互）');
+            console.log('✅ 小永子首页 - 修仙/阴阳版 + 开始页雨滴特效（4层，小水滴，低模糊）');
+            console.log('🖱️ 开始页鼠标可影响雨滴');
             console.log('🖱️ 右键锁定/解锁所有元素');
             console.log('⚙️ 点击齿轮打开设置');
             console.log('📱 移动端独立位置存储');
