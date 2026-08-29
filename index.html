@@ -1960,7 +1960,7 @@
         }
 
         /* ================================================================
-           开始页（顶层覆盖层，含雨滴）—— 全新淡入淡出设计
+           开始页（顶层覆盖层，含雨滴）—— 只有淡出，没有淡入
            ================================================================ */
         #startPage {
             position: fixed;
@@ -1973,29 +1973,32 @@
             background-color: #0a0c0e;
             overflow: hidden;
             cursor: pointer;
-            /* 关键：淡入淡出过渡 */
-            transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            /* 默认隐藏：无过渡，直接隐藏 */
+            opacity: 0;
+            transform: scale(1);
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            /* 初始透明——等待 JS 触发淡入 */
+            transition: none;
+        }
+        /* 显示状态：直接显示，无过渡（没有淡入） */
+        #startPage.show {
             opacity: 1;
             transform: scale(1);
             pointer-events: auto;
-            /* 透明时不可交互 */;
+            transition: none;
         }
-        /* 淡入状态：可见 + 可交互 */
-        #startPage.show {
-        }
-        /* 淡出状态：透明 + 不可交互 */
+        /* 淡出状态：有过渡（只有淡出） */
         #startPage.fade-out {
             opacity: 0;
             transform: scale(1.04);
             pointer-events: none;
+            transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        /* 隐藏状态（完全不可见，保留在 DOM 中） */
+        /* 完全隐藏 */
         #startPage.hide {
             display: none;
         }
@@ -3605,7 +3608,8 @@
                     el.dataset.type = type;
                     if (type === 'dynamic') {
                         const vid = document.createElement('video');
-                        vid.src = preloaded.blobs[wp.id] || 'videos/' + wp.file;
+                        const src = preloaded.blobs[wp.id] || 'videos/' + wp.file;
+                        vid.src = src;
                         vid.muted = true;
                         vid.playsInline = true;
                         vid.preload = 'metadata';
@@ -5055,15 +5059,130 @@
             updateClock();
 
             // ================================================================
-            // 12. 开始页雨滴特效 (修复: Curtains.js 加载失败回退)
+            // 12. 资源加载管理器（核心修改）
             // ================================================================
-            let rainCurtains = null;
-            let rainPlane = null;
+
+            // --- 关键资源：开始页必需 ---
+            const criticalResources = [
+                'images/bg_day.png',
+                'images/bg_night.png',
+                'images/background.png'
+            ];
+
+            // --- 后台资源：按顺序下载 ---
+            const backgroundResources = {
+                static: wallpapers.static.map(w => 'images/' + w.file),
+                album: albumImages.map(src => src),
+                songs: songs.map(s => 'songs/' + s.file),
+                dynamic: wallpapers.dynamic.map(w => 'videos/' + w.file)
+            };
+
+            // 预加载存储
+            const preloaded = { blobs: {} };
+            let criticalLoaded = false;
+            let bgDownloadStarted = false;
+            let bgDownloadComplete = false;
+
+            // 加载关键资源（并行）
+            function loadCriticalResources() {
+                return new Promise((resolve) => {
+                    let loaded = 0;
+                    const total = criticalResources.length;
+                    const onLoad = () => {
+                        loaded++;
+                        if (loaded >= total) {
+                            resolve();
+                        }
+                    };
+                    criticalResources.forEach(url => {
+                        const img = new Image();
+                        img.onload = onLoad;
+                        img.onerror = () => {
+                            // 即使失败也继续
+                            onLoad();
+                        };
+                        img.src = url;
+                    });
+                });
+            }
+
+            // 后台下载：串行一个一个下载
+            async function downloadBackgroundResources() {
+                if (bgDownloadStarted) return;
+                bgDownloadStarted = true;
+                console.log('📦 开始后台下载资源 (串行)');
+
+                // 1. 静态壁纸
+                for (const wp of wallpapers.static) {
+                    try {
+                        const resp = await fetch('images/' + wp.file);
+                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                        const blob = await resp.blob();
+                        preloaded.blobs[wp.id] = URL.createObjectURL(blob);
+                        console.log('✅ 静态壁纸:', wp.file);
+                    } catch (e) {
+                        console.warn('⚠️ 静态壁纸加载失败:', wp.file, e);
+                    }
+                }
+
+                // 2. 专辑图片（预缓存，不存储blob）
+                for (const src of albumImages) {
+                    try {
+                        await new Promise((resolve) => {
+                            const img = new Image();
+                            img.onload = () => resolve();
+                            img.onerror = () => resolve();
+                            img.src = src;
+                        });
+                        console.log('✅ 专辑图片:', src);
+                    } catch (e) {
+                        console.warn('⚠️ 专辑图片加载失败:', src);
+                    }
+                }
+
+                // 3. 歌曲
+                for (const song of songs) {
+                    try {
+                        const resp = await fetch('songs/' + song.file);
+                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                        const blob = await resp.blob();
+                        preloaded.blobs[song.file] = URL.createObjectURL(blob);
+                        console.log('✅ 歌曲:', song.file);
+                    } catch (e) {
+                        console.warn('⚠️ 歌曲加载失败:', song.file, e);
+                    }
+                }
+
+                // 4. 动态壁纸
+                for (const wp of wallpapers.dynamic) {
+                    try {
+                        const resp = await fetch('videos/' + wp.file);
+                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                        const blob = await resp.blob();
+                        preloaded.blobs[wp.id] = URL.createObjectURL(blob);
+                        console.log('✅ 动态壁纸:', wp.file);
+                    } catch (e) {
+                        console.warn('⚠️ 动态壁纸加载失败:', wp.file, e);
+                    }
+                }
+
+                bgDownloadComplete = true;
+                console.log('🎉 后台资源下载完成');
+            }
+
+            // ================================================================
+            // 13. 开始页控制（只有淡出，没有淡入）
+            // ================================================================
+            const startPage = document.getElementById('startPage');
+            let startPageVisible = false;
             let rainInitialized = false;
             let rainDestroyed = false;
-            let mouse = { x: 0, y: 0 };
             let rainInitFailed = false;
+            let rainCurtains = null;
+            let rainPlane = null;
+            let mouse = { x: 0, y: 0 };
 
+            // 雨滴特效 Shader
             const rainVertexShader = `
                 #ifdef GL_ES
                 precision mediump float;
@@ -5253,7 +5372,7 @@
                         });
 
                         rainInitialized = true;
-                        console.log('🌧️ 开始页雨滴特效已启动 (4层, 小水滴, 低模糊, 鼠标交互)');
+                        console.log('🌧️ 开始页雨滴特效已启动');
                     } else {
                         console.warn('⚠️ 雨滴平面初始化失败');
                         if (rainCurtains) {
@@ -5272,54 +5391,40 @@
                 }
             }
 
-            let rainInitTimeout = setTimeout(() => {
-                if (!rainInitialized && !rainDestroyed) {
-                    console.warn('⚠️ 雨滴特效初始化超时，跳过');
-                    rainInitFailed = true;
-                }
-            }, 5000);
-
             function destroyRainEffect() {
                 if (rainDestroyed) return;
                 rainDestroyed = true;
-                if (rainInitTimeout) {
-                    clearTimeout(rainInitTimeout);
-                    rainInitTimeout = null;
-                }
                 if (rainPlane) {
-                    try {
-                        rainPlane.remove();
-                    } catch (e) {}
+                    try { rainPlane.remove(); } catch (e) {}
                     rainPlane = null;
                 }
                 if (rainCurtains) {
-                    try {
-                        rainCurtains.dispose();
-                    } catch (e) {}
+                    try { rainCurtains.dispose(); } catch (e) {}
                     rainCurtains = null;
                 }
                 rainInitialized = false;
                 console.log('🌧️ 开始页雨滴特效已销毁');
             }
 
-            // ================================================================
-            // ★★★ 核心：开始页淡入 + 淡出（无硬切）★★★
-            // ================================================================
-            const startPage = document.getElementById('startPage');
-
-            // 页面加载后触发淡入
-            function triggerStartPageFadeIn() {
+            // --- 显示开始页（无淡入，直接显示） ---
+            function showStartPage() {
                 if (!startPage) return;
-                startPage.classList.remove('fade-out');
+                // 直接显示，无淡入
+                startPage.classList.remove('fade-out', 'hide');
                 startPage.classList.add('show');
+                startPageVisible = true;
+                console.log('🌟 开始页已显示（无淡入）');
             }
 
-            function enterSite() {
-                if (!startPage) return;
-                if (startPage.classList.contains('fade-out')) return;
+            // --- 隐藏开始页（淡出） ---
+            function hideStartPage() {
+                if (!startPage || !startPageVisible) return;
                 startPage.classList.remove('show');
                 startPage.classList.add('fade-out');
+                startPageVisible = false;
+                console.log('🌙 开始页淡出');
 
+                // 触发独立雨丝
                 const rainContainer = document.getElementById('rain-container');
                 if (rainContainer) {
                     rainContainer.classList.add('active');
@@ -5332,37 +5437,34 @@
                     }, 300);
                 }
 
+                // 延迟销毁雨滴特效
                 setTimeout(() => {
                     destroyRainEffect();
                 }, 1300);
+
+                // 启动后台下载（如果还没开始）
+                if (!bgDownloadStarted) {
+                    downloadBackgroundResources();
+                }
+            }
+
+            // --- 点击开始页进入 ---
+            function enterSite() {
+                if (!startPageVisible) return;
+                if (startPage.classList.contains('fade-out')) return;
+                hideStartPage();
             }
 
             startPage.addEventListener('click', enterSite);
             startPage.addEventListener('touchstart', function(e) {
-                if (!startPage.classList.contains('fade-out')) {
+                if (startPageVisible && !startPage.classList.contains('fade-out')) {
                     enterSite();
                 }
             }, { passive: true });
 
-            // 页面加载完成后触发淡入
-            if (document.readyState === 'complete') {
-                setTimeout(triggerStartPageFadeIn, 200);
-            } else {
-                window.addEventListener('load', function() {
-                    setTimeout(triggerStartPageFadeIn, 200);
-                });
-            }
-
-            // 雨滴特效初始化（页面加载后启动）
-            if (document.readyState === 'complete') {
-                setTimeout(initRainEffect, 200);
-            } else {
-                window.addEventListener('load', function() {
-                    setTimeout(initRainEffect, 200);
-                });
-            }
-
-            // 独立雨丝
+            // ================================================================
+            // 14. 独立雨丝（进入后短暂出现）
+            // ================================================================
             function buildRaindrops() {
                 const rainContainer = document.getElementById('rain-container');
                 rainContainer.innerHTML = '';
@@ -5393,95 +5495,42 @@
             buildRaindrops();
 
             // ================================================================
-            // 13. 资源预加载 + 失败提示 (含内存管理)
+            // 15. 启动流程（核心）
             // ================================================================
-            const preloaded = { blobs: {} };
-            let loadedCount = 0;
-            let totalCount = 0;
-            let failedCount = 0;
-            let resourceToastShown = false;
 
-            function updateProgress() {
-                loadedCount++;
-                if (!resourceToastShown && failedCount > 3) {
-                    showToast('部分资源加载失败，请检查网络');
-                    resourceToastShown = true;
-                }
+            // 阶段1：加载关键资源 → 初始化雨滴 → 显示开始页
+            async function boot() {
+                console.log('🚀 启动中...');
+
+                // 1. 加载关键资源（bg_day, bg_night, background）
+                await loadCriticalResources();
+                console.log('✅ 关键资源加载完成');
+
+                // 2. 初始化雨滴特效
+                initRainEffect();
+
+                // 3. 显示开始页（无淡入）
+                showStartPage();
+
+                // 4. 开始页显示后，延迟启动后台下载（让页面先稳定）
+                setTimeout(() => {
+                    if (!bgDownloadStarted) {
+                        downloadBackgroundResources();
+                    }
+                }, 800);
             }
 
-            async function preloadResources() {
-                totalCount = songs.length + albumImages.length + wallpapers.static.length + wallpapers.dynamic.length;
-
-                for (const song of songs) {
-                    try {
-                        const resp = await fetch('songs/' + song.file);
-                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                        const blob = await resp.blob();
-                        preloaded.blobs[song.file] = URL.createObjectURL(blob);
-                    } catch (e) {
-                        failedCount++;
-                    }
-                    updateProgress();
-                }
-
-                for (const src of albumImages) {
-                    try {
-                        await new Promise((resolve) => {
-                            const img = new Image();
-                            img.onload = () => { updateProgress();
-                                resolve(); };
-                            img.onerror = () => { failedCount++;
-                                updateProgress();
-                                resolve(); };
-                            img.src = src;
-                        });
-                    } catch (e) { failedCount++; updateProgress(); }
-                }
-
-                for (const wp of wallpapers.static) {
-                    try {
-                        await new Promise((resolve) => {
-                            const img = new Image();
-                            img.onload = () => { updateProgress();
-                                resolve(); };
-                            img.onerror = () => { failedCount++;
-                                updateProgress();
-                                resolve(); };
-                            img.src = 'images/' + wp.file;
-                        });
-                    } catch (e) { failedCount++; updateProgress(); }
-                }
-
-                for (const wp of wallpapers.dynamic) {
-                    try {
-                        const resp = await fetch('videos/' + wp.file);
-                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                        const blob = await resp.blob();
-                        preloaded.blobs[wp.id] = URL.createObjectURL(blob);
-                    } catch (e) {
-                        failedCount++;
-                    }
-                    updateProgress();
-                }
-            }
-
+            // 页面加载完成后启动
             if (document.readyState === 'complete') {
-                preloadResources();
+                boot();
             } else {
                 window.addEventListener('load', function() {
-                    preloadResources();
+                    boot();
                 });
             }
 
-            // 页面关闭时释放 Blob URL
-            window.addEventListener('beforeunload', function() {
-                for (const key in preloaded.blobs) {
-                    try { URL.revokeObjectURL(preloaded.blobs[key]); } catch (e) {}
-                }
-            });
-
             // ================================================================
-            // 14. 综合保存/加载
+            // 16. 综合保存/加载
             // ================================================================
             function saveAllSettings() {
                 try { localStorage.setItem('nightMode', JSON.stringify(currentMode === 'night')); } catch (e) {}
@@ -5590,7 +5639,7 @@
             }
 
             // ================================================================
-            // 15. 初始化
+            // 17. 最终初始化
             // ================================================================
             loadAllSettings();
 
@@ -5643,13 +5692,21 @@
                 });
             });
 
-            console.log('✅ 小永子首页 - 修仙/阴阳版 + 开始页雨滴特效（4层，小水滴，低模糊）');
-            console.log('🖱️ 开始页鼠标可影响雨滴');
+            // 页面关闭时释放 Blob URL
+            window.addEventListener('beforeunload', function() {
+                for (const key in preloaded.blobs) {
+                    try { URL.revokeObjectURL(preloaded.blobs[key]); } catch (e) {}
+                }
+            });
+
+            console.log('✅ 小永子首页 - 修仙/阴阳版');
+            console.log('🖱️ 开始页只有淡出，没有淡入');
+            console.log('📦 关键资源加载完成后显示开始页');
+            console.log('⬇️ 后台按顺序下载：静态壁纸 → 专辑图片 → 歌曲 → 动态壁纸');
             console.log('🖱️ 右键锁定/解锁所有元素');
             console.log('⚙️ 点击齿轮打开设置');
             console.log('📱 移动端独立位置存储');
             console.log('🎵 双击屏幕空白处切换播放器');
-            console.log('✨ 开始页淡入淡出（无硬切）');
             console.log('🔒 已修复 XSS 和 URL 协议绕过漏洞');
 
         })();
