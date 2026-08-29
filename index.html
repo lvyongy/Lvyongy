@@ -1980,7 +1980,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: none; /* 无淡入 */
+            transition: none;
+            /* 无淡入 */;
         }
         /* 淡出状态 */
         #startPage.fade-out {
@@ -1988,7 +1989,7 @@
             transform: scale(1.04);
             pointer-events: none;
             transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                        transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         /* 完全隐藏 */
         #startPage.hide {
@@ -4613,6 +4614,87 @@
 
             draggableItems.forEach(item => initDraggable(item));
 
+            // ================================================================
+            // ★★★ 核心修改：修仙模式默认布局（分散）★★★
+            // ================================================================
+            function loadWallpaperPositions() {
+                const key = getStorageKey('wallpaperPositions');
+                let storedData = {};
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        storedData = JSON.parse(raw);
+                    }
+                } catch (e) {}
+
+                const isMobile = window.innerWidth <= 768;
+                const defaultItems = ['wallpaperTimeDisplay', 'wallpaperQuoteDisplay', 'glassSearch', 'glassLinks'];
+
+                draggableItems.forEach(item => {
+                    const id = item.id;
+                    if (!id || !defaultItems.includes(id)) {
+                        return;
+                    }
+
+                    let pos = storedData[id];
+                    if (!pos) {
+                        // 设置默认位置（分散布局）
+                        switch (id) {
+                            case 'wallpaperTimeDisplay':
+                                item.style.left = '50%';
+                                item.style.top = isMobile ? '6%' : '8%';
+                                item.style.transform = 'translateX(-50%)';
+                                break;
+                            case 'wallpaperQuoteDisplay':
+                                item.style.right = '5%';
+                                item.style.top = '50%';
+                                item.style.transform = 'translateY(-50%)';
+                                item.style.maxWidth = isMobile ? '200px' : '300px';
+                                break;
+                            case 'glassSearch':
+                                item.style.left = '50%';
+                                item.style.bottom = isMobile ? '10%' : '12%';
+                                item.style.transform = 'translateX(-50%)';
+                                break;
+                            case 'glassLinks':
+                                item.style.left = '5%';
+                                item.style.bottom = isMobile ? '12%' : '15%';
+                                break;
+                        }
+
+                        // 获取实际矩形并存储为像素值
+                        const rect = item.getBoundingClientRect();
+                        const newPos = {
+                            left: rect.left,
+                            top: rect.top
+                        };
+                        storedData[id] = newPos;
+                        pos = newPos;
+                    }
+
+                    // 应用存储的位置（像素值），并确保 transform 正确
+                    if (pos) {
+                        item.style.right = '';
+                        item.style.bottom = '';
+                        item.style.left = pos.left + 'px';
+                        item.style.top = pos.top + 'px';
+
+                        if (id === 'wallpaperTimeDisplay' || id === 'glassSearch') {
+                            item.style.transform = 'translateX(-50%)';
+                        } else if (id === 'wallpaperQuoteDisplay') {
+                            item.style.transform = 'translateY(-50%)';
+                        } else {
+                            item.style.transform = '';
+                        }
+                    }
+                });
+
+                // 保存更新后的数据（包含默认位置）
+                try {
+                    localStorage.setItem(key, JSON.stringify(storedData));
+                } catch (e) {}
+            }
+
             function saveWallpaperPositions() {
                 const data = {};
                 draggableItems.forEach(item => {
@@ -4628,33 +4710,6 @@
                 try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
             }
 
-            function loadWallpaperPositions() {
-                const key = getStorageKey('wallpaperPositions');
-                try {
-                    const raw = localStorage.getItem(key);
-                    if (raw) {
-                        const data = JSON.parse(raw);
-                        draggableItems.forEach(item => {
-                            const id = item.id;
-                            if (id && data[id]) {
-                                item.style.left = data[id].left + 'px';
-                                item.style.top = data[id].top + 'px';
-                                positions[id] = data[id];
-                            }
-                        });
-                    }
-                } catch (e) {}
-            }
-
-            function saveWallpaperLock(id, locked) {
-                const key = getStorageKey('wallpaperLocks');
-                try {
-                    const data = JSON.parse(localStorage.getItem(key) || '{}');
-                    data[id] = locked;
-                    localStorage.setItem(key, JSON.stringify(data));
-                } catch (e) {}
-            }
-
             function loadWallpaperLocks() {
                 const key = getStorageKey('wallpaperLocks');
                 try {
@@ -4666,6 +4721,15 @@
                             item.style.cursor = 'default';
                         }
                     });
+                } catch (e) {}
+            }
+
+            function saveWallpaperLock(id, locked) {
+                const key = getStorageKey('wallpaperLocks');
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    data[id] = locked;
+                    localStorage.setItem(key, JSON.stringify(data));
                 } catch (e) {}
             }
 
@@ -5174,7 +5238,7 @@
             let rainPlane = null;
             let mouse = { x: 0, y: 0 };
 
-            // 雨滴特效 Shader (与之前相同，省略)
+            // 雨滴特效 Shader
             const rainVertexShader = `
                 #ifdef GL_ES
                 precision mediump float;
