@@ -1973,30 +1973,22 @@
             background-color: #0a0c0e;
             overflow: hidden;
             cursor: pointer;
-            /* 默认隐藏：无过渡，直接隐藏 */
-            opacity: 0;
-            transform: scale(1);
-            pointer-events: none;
+            /* 默认可见，不透明，完全遮挡首页 */
+            opacity: 1;
+            pointer-events: auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: none;
+            transition: none; /* 无淡入 */
         }
-        /* 显示状态：直接显示，无过渡（没有淡入） */
-        #startPage.show {
-            opacity: 1;
-            transform: scale(1);
-            pointer-events: auto;
-            transition: none;
-        }
-        /* 淡出状态：有过渡（只有淡出） */
+        /* 淡出状态 */
         #startPage.fade-out {
             opacity: 0;
             transform: scale(1.04);
             pointer-events: none;
             transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                        transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         /* 完全隐藏 */
         #startPage.hide {
@@ -5174,7 +5166,7 @@
             // 13. 开始页控制（只有淡出，没有淡入）
             // ================================================================
             const startPage = document.getElementById('startPage');
-            let startPageVisible = false;
+            let startPageVisible = true; // 默认可见（不透明）
             let rainInitialized = false;
             let rainDestroyed = false;
             let rainInitFailed = false;
@@ -5182,7 +5174,7 @@
             let rainPlane = null;
             let mouse = { x: 0, y: 0 };
 
-            // 雨滴特效 Shader
+            // 雨滴特效 Shader (与之前相同，省略)
             const rainVertexShader = `
                 #ifdef GL_ES
                 precision mediump float;
@@ -5406,20 +5398,9 @@
                 console.log('🌧️ 开始页雨滴特效已销毁');
             }
 
-            // --- 显示开始页（无淡入，直接显示） ---
-            function showStartPage() {
-                if (!startPage) return;
-                // 直接显示，无淡入
-                startPage.classList.remove('fade-out', 'hide');
-                startPage.classList.add('show');
-                startPageVisible = true;
-                console.log('🌟 开始页已显示（无淡入）');
-            }
-
             // --- 隐藏开始页（淡出） ---
             function hideStartPage() {
-                if (!startPage || !startPageVisible) return;
-                startPage.classList.remove('show');
+                if (!startPageVisible) return;
                 startPage.classList.add('fade-out');
                 startPageVisible = false;
                 console.log('🌙 开始页淡出');
@@ -5437,9 +5418,11 @@
                     }, 300);
                 }
 
-                // 延迟销毁雨滴特效
+                // 延迟销毁雨滴特效，并隐藏开始页
                 setTimeout(() => {
                     destroyRainEffect();
+                    // 淡出结束后彻底隐藏开始页，释放交互
+                    startPage.classList.add('hide');
                 }, 1300);
 
                 // 启动后台下载（如果还没开始）
@@ -5498,7 +5481,7 @@
             // 15. 启动流程（核心）
             // ================================================================
 
-            // 阶段1：加载关键资源 → 初始化雨滴 → 显示开始页
+            // 阶段1：加载关键资源 → 初始化雨滴 → 开始页已可见（不透明）
             async function boot() {
                 console.log('🚀 启动中...');
 
@@ -5509,8 +5492,8 @@
                 // 2. 初始化雨滴特效
                 initRainEffect();
 
-                // 3. 显示开始页（无淡入）
-                showStartPage();
+                // 3. 开始页默认可见（已通过 CSS 设置 opacity:1, pointer-events:auto）
+                // 无需额外操作
 
                 // 4. 开始页显示后，延迟启动后台下载（让页面先稳定）
                 setTimeout(() => {
@@ -5699,9 +5682,9 @@
                 }
             });
 
-            console.log('✅ 小永子首页 - 修仙/阴阳版');
+            console.log('✅ 小永子首页 - 修仙/阴阳版 (开始页默认不透明，无淡入)');
             console.log('🖱️ 开始页只有淡出，没有淡入');
-            console.log('📦 关键资源加载完成后显示开始页');
+            console.log('📦 关键资源加载完成后开始页内容可见（雨滴 + 文字）');
             console.log('⬇️ 后台按顺序下载：静态壁纸 → 专辑图片 → 歌曲 → 动态壁纸');
             console.log('🖱️ 右键锁定/解锁所有元素');
             console.log('⚙️ 点击齿轮打开设置');
