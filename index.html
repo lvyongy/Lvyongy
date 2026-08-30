@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <!-- CSP 使用 nonce，将在页面加载时由 JavaScript 动态生成并注入 -->
     <meta http-equiv="Content-Security-Policy" id="cspMeta" content="default-src 'self'; script-src 'nonce-INIT' https://www.curtainsjs.com https://lvyy.cc.cd https://static.cloudflareinsights.com; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self';">
     <title>小永子の首页</title>
     <style>
@@ -2607,6 +2606,27 @@
         .no-pointer-events {
             pointer-events: none !important;
         }
+
+        /* ===== 设置面板打开时，壁纸容器硬件加速 ===== */
+        body.settings-open .wallpaper-container {
+            will-change: transform;
+            transform: translateZ(0);
+        }
+        body.settings-open .wallpaper-container video,
+        body.settings-open .wallpaper-container img {
+            will-change: transform;
+            transform: translateZ(0);
+        }
+        /* 预览网格硬件加速 */
+        #wallpaperPreviewGrid {
+            will-change: transform;
+            transform: translateZ(0);
+        }
+        #wallpaperPreviewGrid .wp-preview-item {
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
     </style>
 </head>
 
@@ -2768,15 +2788,13 @@
                 el._timer = timer;
             }
 
-            // 判断是否为真正的触屏设备（不再依赖屏幕宽度）
             function isTouchDevice() {
                 return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) ||
                     window.matchMedia('(pointer: coarse)').matches;
             }
 
-            // 统一存储键名（不再区分移动/桌面）
             function getStorageKey(baseKey) {
-                return baseKey; // 统一键名
+                return baseKey;
             }
 
             // ================================================================
@@ -2833,14 +2851,9 @@
             let wallpaperTimeout = null;
             let wallpaperBrightness = 'dark';
 
-            // ---- 占位图（Base64 1x1 透明 PNG，作为 fallback） ----
             const PLACEHOLDER_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-            // 视频占位：使用一个极小 MP4（或直接用图片替代，但视频元素需要有效 src）
-            // 这里我们使用一个 1x1 像素的黑色视频（通过 canvas 生成），但更简单是让视频元素显示 poster
-            // 为了简化，在 fallback 时我们将动态壁纸视为静态图处理，但会保留类型标记
             const PLACEHOLDER_VIDEO = 'data:video/mp4;base64,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';
 
-            // ---- 智能亮度检测 ----
             function detectBrightnessFromImage(img) {
                 return new Promise((resolve) => {
                     const canvas = document.createElement('canvas');
@@ -2903,7 +2916,6 @@
                 else body.removeAttribute('data-brightness');
             }
 
-            // ---- 壁纸缓存管理（修复：清理时检查是否正在使用） ----
             const MAX_BLOB_CACHE = 20;
             const blobCache = {};
             const blobOrder = [];
@@ -2942,16 +2954,13 @@
                 return blobCache[id] || null;
             }
 
-            // ---- 应用壁纸（增加 fallback，并匹配类型） ----
             function applyWallpaper(type, id) {
-                // 清除之前的定时器
                 if (wallpaperTimeout) {
                     clearTimeout(wallpaperTimeout);
                     wallpaperTimeout = null;
                 }
 
                 let blobUrl = getBlob(id);
-                // 如果没有缓存，尝试使用原始路径
                 if (!blobUrl) {
                     const list = wallpapers[type];
                     if (!list) return;
@@ -2965,7 +2974,6 @@
                             imgEl.classList.add('active');
                             detectBrightnessFromImage(imgEl).then(b => applyBrightnessClass(b)).catch(() => {});
                             isWallpaperTransitioning = false;
-                            // 缓存成功加载的图片
                             fetch(fallbackUrl).then(r => r.blob()).then(blob => {
                                 const url = URL.createObjectURL(blob);
                                 cacheBlob(id, url);
@@ -2977,12 +2985,10 @@
                             applyBrightnessClass('dark');
                             isWallpaperTransitioning = false;
                             showToast('壁纸加载失败，使用占位图');
-                            // 缓存占位图
                             cacheBlob(id, PLACEHOLDER_IMAGE);
                         };
                         return;
                     } else {
-                        // 动态壁纸 fallback：尝试用视频，失败则用图片占位
                         const source = document.createElement('source');
                         source.setAttribute('src', fallbackUrl);
                         source.setAttribute('type', 'video/mp4');
@@ -2991,7 +2997,6 @@
                         videoEl.loop = true;
                         videoEl.play().catch(() => {});
                         videoEl.oncanplaythrough = function() {
-                            // 修复：清除超时
                             if (wallpaperTimeout) {
                                 clearTimeout(wallpaperTimeout);
                                 wallpaperTimeout = null;
@@ -2999,27 +3004,22 @@
                             videoEl.classList.add('active');
                             detectBrightnessFromVideo(videoEl).then(b => applyBrightnessClass(b)).catch(() => {});
                             isWallpaperTransitioning = false;
-                            // 缓存视频
                             fetch(fallbackUrl).then(r => r.blob()).then(blob => {
                                 const url = URL.createObjectURL(blob);
                                 cacheBlob(id, url);
                             }).catch(() => {});
                         };
                         videoEl.onerror = function() {
-                            // 视频加载失败，使用图片占位（但保留视频元素，显示 poster 或黑屏）
                             videoEl.poster = PLACEHOLDER_IMAGE;
                             videoEl.load();
                             videoEl.classList.add('active');
                             applyBrightnessClass('dark');
                             isWallpaperTransitioning = false;
                             showToast('视频壁纸加载失败，使用占位图');
-                            // 缓存图片占位（但标记为动态类型，实际使用图片显示）
                             cacheBlob(id, PLACEHOLDER_IMAGE);
                         };
-                        // 设置超时保护
                         wallpaperTimeout = setTimeout(() => {
                             if (isWallpaperTransitioning) {
-                                // 如果还没加载完成，强制完成
                                 videoEl.classList.add('active');
                                 applyBrightnessClass('dark');
                                 isWallpaperTransitioning = false;
@@ -3084,9 +3084,7 @@
                     };
 
                     if (type === 'dynamic') {
-                        // 检查 blobUrl 是否为图片（可能是占位图），如果是，则改用 img 显示
                         if (blobUrl.startsWith('data:image/') || blobUrl.startsWith('blob:') && blobUrl.includes('image')) {
-                            // 用图片显示
                             imgEl.src = blobUrl;
                             imgEl.onload = function() {
                                 onLoaded();
@@ -3144,9 +3142,7 @@
                 }, 800);
             }
 
-            // ---- 壁纸下载（增加重试和并发控制） ----
             let bgDownloadStarted = false;
-            // 并发控制：同时最多 3 个请求
             const concurrencyLimit = 3;
             let activeDownloads = 0;
             const downloadQueue = [];
@@ -3195,7 +3191,6 @@
                             await new Promise(r => setTimeout(r, 800 + attempt * 200));
                         } else {
                             console.error('下载失败:', item.file);
-                            // 使用对应类型的占位符
                             const placeholder = type === 'static' ? PLACEHOLDER_IMAGE : PLACEHOLDER_VIDEO;
                             if (!blobCache[item.id]) {
                                 cacheBlob(item.id, placeholder);
@@ -3212,7 +3207,6 @@
                                     img.loading = 'lazy';
                                     previewEl.prepend(img);
                                 } else {
-                                    // 动态壁纸占位：显示一个图片
                                     const img = document.createElement('img');
                                     img.src = PLACEHOLDER_IMAGE;
                                     img.alt = item.name;
@@ -3226,7 +3220,6 @@
                 return false;
             }
 
-            // ---- 音乐缓存 ----
             const musicBlobCache = {};
 
             async function downloadMusicFiles() {
@@ -3262,14 +3255,13 @@
                         allTasks.push({ item: wp, type: type });
                     }
                 }
-                // 使用并发队列处理
                 const queue = [...allTasks];
                 const promises = [];
                 while (queue.length > 0) {
                     const batch = queue.splice(0, concurrencyLimit);
                     promises.push(...batch.map(task => downloadSingle(task.item, task.type)));
                     if (queue.length > 0) {
-                        await Promise.all(promises.slice(-concurrencyLimit)); // 等待当前批次
+                        await Promise.all(promises.slice(-concurrencyLimit));
                     }
                 }
                 await Promise.allSettled(promises);
@@ -3279,7 +3271,7 @@
             }
 
             // ================================================================
-            // 3. 日夜切换 (拉绳) - 无变化
+            // 3. 日夜切换 (拉绳)
             // ================================================================
             const body = document.body;
             let currentMode = 'day';
@@ -3299,7 +3291,7 @@
             }
 
             // ================================================================
-            // 4. 拉绳交互 - 修复：清理事件监听器
+            // 4. 拉绳交互
             // ================================================================
             const ropeHandle = document.getElementById('rope-handle');
             const ropeLine = document.getElementById('rope-line');
@@ -3417,7 +3409,7 @@
             resetRope(false);
 
             // ================================================================
-            // 5. 经典语录 - 修复：增加长度限制、防竞态
+            // 5. 经典语录
             // ================================================================
             const DEFAULT_QUOTES = [
                 { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。',
@@ -3440,7 +3432,7 @@
             let quoteClickTimer = null;
             let quoteClickCount = 0;
             let lastQuoteToggleTime = 0;
-            let isQuoteTransitioning = false; // 防竞态
+            let isQuoteTransitioning = false;
 
             const quoteText = document.getElementById('quoteText');
             const quoteAuthor = document.getElementById('quoteAuthor');
@@ -3489,7 +3481,6 @@
                     return;
                 }
                 const q = quotes[index % quotes.length];
-                // 限制长度
                 const MAX_QUOTE_LENGTH = 300;
                 if (q.text.length > MAX_QUOTE_LENGTH) {
                     q.text = q.text.substring(0, MAX_QUOTE_LENGTH) + '...';
@@ -3581,7 +3572,7 @@
             }
 
             // ================================================================
-            // 6. 快捷链接 - 修复：输入验证加强（XSS防护）
+            // 6. 快捷链接
             // ================================================================
             const linksGrid = document.getElementById('linksGrid');
             const glassLinks = document.getElementById('glassLinks');
@@ -3602,7 +3593,6 @@
             let searchVisible = true;
             let searchBtnEndExists = false;
 
-            // ---- 安全工具：HTML实体编码 ----
             function escapeHtml(text) {
                 if (!text) return '';
                 const div = document.createElement('div');
@@ -3870,7 +3860,6 @@
                 if (e.key === 'Enter') glassSearch();
             });
 
-            // ---- 软键盘适配 ----
             const glassSearchWrapper = document.getElementById('glassSearch');
             glassSearchInput.addEventListener('focus', function() {
                 glassSearchWrapper.classList.add('input-focused');
@@ -3879,7 +3868,6 @@
                 glassSearchWrapper.classList.remove('input-focused');
             });
 
-            // ---- 设置面板输入框滚动可见 ----
             function scrollInputIntoView(input) {
                 if (!input) return;
                 input.addEventListener('focus', function() {
@@ -3888,10 +3876,9 @@
                     }, 300);
                 });
             }
-            // 将在渲染设置面板后调用
 
             // ================================================================
-            // 7. 设置面板 - 修复：清理observer，统一状态管理
+            // 7. 设置面板
             // ================================================================
             const settingsToggleBtn = document.getElementById('wallpaperSettingsBtn');
             const settingsPanel = document.getElementById('settingsPanel');
@@ -4040,19 +4027,22 @@
                 }
             }
 
-            // ---- 壁纸预览：懒加载优化，修复observer泄露 ----
+            // ---- 壁纸预览：优化 DOM 操作，使用 DocumentFragment，复用 Observer ----
             let previewObserver = null;
 
             function updateWallpaperPreview(type, id) {
                 const previewGrid = document.getElementById('wallpaperPreviewGrid');
                 if (!previewGrid) return;
-                // 断开旧observer
+                // 断开旧 observer
                 if (previewObserver) {
                     previewObserver.disconnect();
                     previewObserver = null;
                 }
                 const items = wallpapers[type] || [];
                 previewGrid.innerHTML = '';
+
+                // 使用 DocumentFragment 批量构建
+                const fragment = document.createDocumentFragment();
 
                 previewObserver = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
@@ -4124,8 +4114,10 @@
                         });
                     });
 
-                    previewGrid.appendChild(el);
+                    fragment.appendChild(el);
                 });
+
+                previewGrid.appendChild(fragment);
             }
 
             function renderPreviewItem(el, type) {
@@ -4151,7 +4143,11 @@
                         vid.playsInline = true;
                         vid.preload = 'metadata';
                         vid.loop = true;
-                        vid.addEventListener('loadedmetadata', function() { this.play().catch(() => {}); });
+                        // 不自动播放，避免多个视频同时播放导致花屏
+                        vid.addEventListener('loadedmetadata', function() {
+                            // 暂停所有动态预览视频，只显示封面帧
+                            this.pause();
+                        });
                         el.prepend(vid);
                     }
                 } else {
@@ -4163,7 +4159,7 @@
                 }
             }
 
-            // ---- 渲染设置（简化，保持原有逻辑） ----
+            // ---- 渲染设置 ----
             function renderSettings() {
                 const content = document.getElementById('settingsDynamicContent');
                 content.innerHTML = '';
@@ -4257,9 +4253,15 @@
                 restoreLocks();
                 updateModeSwitchUI();
 
-                // 为设置面板内的输入框添加焦点滚动
                 const inputs = content.querySelectorAll('input');
                 inputs.forEach(input => scrollInputIntoView(input));
+
+                // 设置面板打开时，对壁纸容器启用硬件加速
+                if (settingsOpen) {
+                    document.body.classList.add('settings-open');
+                } else {
+                    document.body.classList.remove('settings-open');
+                }
             }
 
             // ---- 语录模块渲染 ----
@@ -4293,7 +4295,6 @@
 
                     const textSpan = document.createElement('span');
                     textSpan.className = 'q-text';
-                    // 限制显示长度
                     const displayText = q.text.length > 80 ? q.text.substring(0, 80) + '...' : q.text;
                     textSpan.textContent = displayText;
 
@@ -4561,7 +4562,10 @@
                 settingsOpen = !settingsOpen;
                 settingsPanel.classList.toggle('open', settingsOpen);
                 if (settingsOpen) {
+                    document.body.classList.add('settings-open');
                     renderSettings();
+                } else {
+                    document.body.classList.remove('settings-open');
                 }
             }
 
@@ -4572,11 +4576,12 @@
                     e.target !== settingsToggleBtn && !settingsToggleBtn.contains(e.target)) {
                     settingsPanel.classList.remove('open');
                     settingsOpen = false;
+                    document.body.classList.remove('settings-open');
                 }
             });
 
             // ================================================================
-            // 8. 音乐播放器 - 修复：状态同步
+            // 8. 音乐播放器
             // ================================================================
             const musicPlayer = document.getElementById('musicPlayer');
             const playerCover = document.getElementById('playerCover');
@@ -4677,7 +4682,6 @@
                     audioPlayer.preload = 'auto';
                     audioPlayer.addEventListener('ended', function() {
                         isPlaying = false;
-                        // 可以更新UI，但当前无播放状态指示
                     });
                     audioPlayer.addEventListener('error', function(e) {
                         console.warn('音频播放错误:', e);
@@ -4698,7 +4702,7 @@
                     showToast('音乐播放失败');
                 });
                 isPlaying = true;
-                currentSongIndex = index; // 统一索引
+                currentSongIndex = index;
             }
 
             function togglePlay() {
@@ -4808,7 +4812,6 @@
             });
 
             function togglePlayerVisibility() {
-                // 统一由 elemState 控制
                 const state = elemState['musicPlayer'];
                 if (!state) return;
                 const newVis = !state.visible;
@@ -4891,7 +4894,7 @@
             updatePlayerCover();
 
             // ================================================================
-            // 9. 修仙模式拖拽系统 - 修复：事件清理 + RAF优化
+            // 9. 修仙模式拖拽系统
             // ================================================================
             const draggableItems = document.querySelectorAll('.draggable-item');
             const positions = {};
@@ -5130,7 +5133,7 @@
 
             draggableItems.forEach(item => initDraggable(item));
 
-            // ---- 保存/加载壁纸位置 ----
+            // ---- 保存/加载壁纸位置（修复：默认位置：时间左上角，语录右下角，链接左边） ----
             function saveWallpaperPositions() {
                 const data = {};
                 draggableItems.forEach(item => {
@@ -5156,17 +5159,12 @@
 
                 const w = window.innerWidth,
                     h = window.innerHeight;
+                // 修复：时间左上角，语录右下角，链接左边，搜索框中间偏下
                 const defaults = {
-                    'wallpaperTimeDisplay': {
-                        left: Math.max(0, Math.min(w - 200, w * 0.85)),
-                        top: h * 0.05
-                    },
-                    'wallpaperQuoteDisplay': { left: w * 0.05, top: h * 0.25 },
-                    'glassSearch': { left: (w - 360) / 2, top: h * 0.70 },
-                    'glassLinks': {
-                        left: Math.max(0, Math.min(w - 180, w * 0.85)),
-                        top: Math.min(h * 0.70, h - 200)
-                    },
+                    'wallpaperTimeDisplay': { left: 20, top: 20 },
+                    'wallpaperQuoteDisplay': { left: Math.max(20, w - 380), top: Math.max(20, h - 220) },
+                    'glassSearch': { left: (w - 360) / 2, top: Math.min(h * 0.70, h - 120) },
+                    'glassLinks': { left: 20, top: Math.min(h * 0.55, h - 300) },
                 };
 
                 draggableItems.forEach(item => {
@@ -5212,7 +5210,7 @@
             }
 
             // ================================================================
-            // 10. 阴阳模式拖拽 - 修复：RAF优化 + 事件清理
+            // 10. 阴阳模式拖拽
             // ================================================================
             const simpleDragTargets = document.querySelectorAll('.simple-draggable');
             const dragStateMap = new WeakMap();
@@ -5498,7 +5496,7 @@
             loadSimplePositions();
 
             // ================================================================
-            // 11. 时钟 - 优化：使用 requestAnimationFrame 降低频率
+            // 11. 时钟
             // ================================================================
             const timeEl = document.getElementById('time');
             const dateEl = document.getElementById('date');
@@ -5536,7 +5534,7 @@
             setTimeout(scheduleClockUpdate, 1000 - (Date.now() % 1000) + 50);
 
             // ================================================================
-            // 12. 资源加载（关键资源 + 壁纸后台下载）
+            // 12. 资源加载
             // ================================================================
             const criticalResources = [
                 'images/bg_day.png',
@@ -5571,7 +5569,7 @@
             }
 
             // ================================================================
-            // 13. 开始页控制 - 修复：采样率降低
+            // 13. 开始页控制
             // ================================================================
             const startPage = document.getElementById('startPage');
             let startPageVisible = false;
@@ -5582,7 +5580,6 @@
             let rainPlane = null;
             let mouse = { x: 0, y: 0 };
 
-            // ---- 降低采样率（根据设备性能动态调整） ----
             function getOptimalSamples() {
                 const cores = navigator.hardwareConcurrency || 4;
                 const isTouch = isTouchDevice();
@@ -6077,7 +6074,6 @@
                 e.stopPropagation();
             });
 
-            // ---- 窗口尺寸变化适配（具名函数以便移除） ----
             let resizeHandler = null;
 
             function handleResize() {
@@ -6125,7 +6121,6 @@
             resizeHandler = handleResize;
             window.addEventListener('resize', resizeHandler);
 
-            // ---- 页面卸载时清理所有资源 ----
             window.addEventListener('beforeunload', function() {
                 if (intervalTimer) {
                     clearInterval(intervalTimer);
