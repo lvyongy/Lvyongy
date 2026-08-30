@@ -2689,6 +2689,10 @@
         .wallpaper-container video {
             background-color: #000;
         }
+        /* 预览视频背景黑色 */
+        .wp-preview-item video {
+            background-color: #000;
+        }
     </style>
 </head>
 
@@ -2988,33 +2992,6 @@
             // 下载进度跟踪
             let downloadProgress = {};
 
-            // 判断资源是否已通过浏览器缓存（通过加载测试）
-            function isResourceCached(url, type) {
-                return new Promise((resolve) => {
-                    if (type === 'static') {
-                        const img = new Image();
-                        img.crossOrigin = 'anonymous';
-                        img.onload = () => resolve(true);
-                        img.onerror = () => resolve(false);
-                        img.src = url;
-                        // 超时处理
-                        setTimeout(() => resolve(false), 3000);
-                    } else if (type === 'dynamic') {
-                        const video = document.createElement('video');
-                        video.muted = true;
-                        video.playsInline = true;
-                        video.preload = 'metadata';
-                        video.onloadedmetadata = () => resolve(true);
-                        video.onerror = () => resolve(false);
-                        video.src = url;
-                        video.load();
-                        setTimeout(() => resolve(false), 3000);
-                    } else {
-                        resolve(false);
-                    }
-                });
-            }
-
             // ---- 主壁纸加载（直接使用原始路径） ----
             function applyWallpaper(type, id) {
                 if (isWallpaperTransitioning) {
@@ -3275,7 +3252,6 @@
                     img.loading = 'lazy';
                     img.onload = () => {
                         el.classList.add('downloaded');
-                        // 确保进度条移除
                         const ov = el.querySelector('.progress-overlay');
                         if (ov) ov.remove();
                     };
@@ -3287,7 +3263,7 @@
                     };
                     el.prepend(img);
                 } else {
-                    // 动态
+                    // 动态：使用 video 显示第一帧
                     const vid = document.createElement('video');
                     vid.src = url;
                     vid.muted = true;
@@ -3296,17 +3272,22 @@
                     vid.loop = true;
                     vid.poster = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
                     vid.style.backgroundColor = '#000';
+                    vid.crossOrigin = 'anonymous';
                     vid.addEventListener('loadedmetadata', function() {
                         this.pause();
                         el.classList.add('downloaded');
                         const ov = el.querySelector('.progress-overlay');
                         if (ov) ov.remove();
+                        // 移除占位符
+                        const ph = el.querySelector('.wp-placeholder');
+                        if (ph) ph.remove();
                     });
                     vid.addEventListener('error', function() {
                         const placeholder = document.createElement('div');
                         placeholder.className = 'wp-placeholder';
                         placeholder.textContent = '加载失败';
                         el.prepend(placeholder);
+                        el.classList.remove('downloaded');
                     });
                     el.prepend(vid);
                 }
@@ -3323,77 +3304,39 @@
                     downloadProgress[t.id] = 0;
                 });
 
-                // 更新所有预览项，显示进度条和占位符
+                // 更新所有预览项，显示进度条和占位符（不尝试预加载）
                 document.querySelectorAll('.wp-preview-item').forEach(el => {
                     const id = el.dataset.id;
                     if (id && downloadProgress[id] !== undefined) {
-                        // 检查是否已经缓存（通过尝试加载）
-                        const url = (el.dataset.type === 'static' ? 'images/' : 'videos/') + el.dataset.file;
-                        // 先尝试直接加载，如果成功则标记为已下载
-                        if (el.dataset.type === 'static') {
-                            const testImg = new Image();
-                            testImg.onload = () => {
-                                el.classList.add('downloaded');
-                                const ov = el.querySelector('.progress-overlay');
-                                if (ov) ov.remove();
-                                refreshPreviewItem(el, el.dataset.type);
-                            };
-                            testImg.onerror = () => {
-                                // 未缓存，显示进度条
-                                if (!el.querySelector('.progress-overlay')) {
-                                    const overlay = document.createElement('div');
-                                    overlay.className = 'progress-overlay';
-                                    const progress = document.createElement('progress');
-                                    progress.value = 0;
-                                    progress.max = 1;
-                                    const text = document.createElement('div');
-                                    text.className = 'progress-text';
-                                    text.textContent = '0%';
-                                    overlay.appendChild(progress);
-                                    overlay.appendChild(text);
-                                    el.prepend(overlay);
-                                    // 占位符
-                                    const placeholder = document.createElement('div');
-                                    placeholder.className = 'wp-placeholder';
-                                    placeholder.textContent = '等待下载';
-                                    el.prepend(placeholder);
-                                }
-                            };
-                            testImg.src = url;
-                        } else {
-                            // 动态视频
-                            const testVid = document.createElement('video');
-                            testVid.muted = true;
-                            testVid.playsInline = true;
-                            testVid.preload = 'metadata';
-                            testVid.onloadedmetadata = () => {
-                                el.classList.add('downloaded');
-                                const ov = el.querySelector('.progress-overlay');
-                                if (ov) ov.remove();
-                                refreshPreviewItem(el, el.dataset.type);
-                            };
-                            testVid.onerror = () => {
-                                if (!el.querySelector('.progress-overlay')) {
-                                    const overlay = document.createElement('div');
-                                    overlay.className = 'progress-overlay';
-                                    const progress = document.createElement('progress');
-                                    progress.value = 0;
-                                    progress.max = 1;
-                                    const text = document.createElement('div');
-                                    text.className = 'progress-text';
-                                    text.textContent = '0%';
-                                    overlay.appendChild(progress);
-                                    overlay.appendChild(text);
-                                    el.prepend(overlay);
-                                    const placeholder = document.createElement('div');
-                                    placeholder.className = 'wp-placeholder';
-                                    placeholder.textContent = '等待下载';
-                                    el.prepend(placeholder);
-                                }
-                            };
-                            testVid.src = url;
-                            testVid.load();
+                        // 如果已经下载完成（进度为1），直接刷新预览
+                        if (downloadProgress[id] === 1) {
+                            refreshPreviewItem(el, el.dataset.type);
+                            return;
                         }
+                        // 否则显示占位符+进度条
+                        // 先清除已有内容
+                        const existing = el.querySelector('img, video, .wp-placeholder');
+                        if (existing) existing.remove();
+                        const ov = el.querySelector('.progress-overlay');
+                        if (ov) ov.remove();
+
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'wp-placeholder';
+                        placeholder.textContent = '等待下载';
+                        el.prepend(placeholder);
+
+                        const overlay = document.createElement('div');
+                        overlay.className = 'progress-overlay';
+                        const progress = document.createElement('progress');
+                        progress.value = 0;
+                        progress.max = 1;
+                        const text = document.createElement('div');
+                        text.className = 'progress-text';
+                        text.textContent = '0%';
+                        overlay.appendChild(progress);
+                        overlay.appendChild(text);
+                        el.prepend(overlay);
+                        el.classList.remove('downloaded');
                     }
                 });
 
@@ -4226,100 +4169,32 @@
                     el.dataset.file = wp.file;
                     el.dataset.name = wp.name;
 
-                    const url = (type === 'static' ? 'images/' : 'videos/') + wp.file;
+                    // 检查是否已下载（通过 downloadProgress）
+                    const prog = downloadProgress[wp.id];
+                    if (prog === 1) {
+                        // 已下载，直接渲染预览（使用缓存）
+                        refreshPreviewItem(el, type);
+                    } else {
+                        // 未下载或下载中，显示占位符和进度条
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'wp-placeholder';
+                        placeholder.textContent = '等待下载';
+                        el.prepend(placeholder);
 
-                    // 尝试加载预览，如果成功则标记为已下载
-                    const testLoad = () => {
-                        if (type === 'static') {
-                            const img = document.createElement('img');
-                            img.className = 'wp-thumbnail';
-                            img.src = url;
-                            img.alt = wp.name || '';
-                            img.loading = 'lazy';
-                            img.onload = () => {
-                                el.classList.add('downloaded');
-                                const ov = el.querySelector('.progress-overlay');
-                                if (ov) ov.remove();
-                                // 移除占位符
-                                const ph = el.querySelector('.wp-placeholder');
-                                if (ph) ph.remove();
-                                // 添加图片
-                                if (!el.querySelector('img')) {
-                                    el.prepend(img);
-                                }
-                            };
-                            img.onerror = () => {
-                                // 加载失败，显示占位符和进度条
-                                if (!el.querySelector('.wp-placeholder')) {
-                                    const placeholder = document.createElement('div');
-                                    placeholder.className = 'wp-placeholder';
-                                    placeholder.textContent = '等待下载';
-                                    el.prepend(placeholder);
-                                }
-                                if (!el.querySelector('.progress-overlay')) {
-                                    const overlay = document.createElement('div');
-                                    overlay.className = 'progress-overlay';
-                                    const progress = document.createElement('progress');
-                                    progress.value = downloadProgress[wp.id] || 0;
-                                    progress.max = 1;
-                                    const text = document.createElement('div');
-                                    text.className = 'progress-text';
-                                    const pct = downloadProgress[wp.id] ? Math.round(downloadProgress[wp.id] * 100) : 0;
-                                    text.textContent = pct + '%';
-                                    overlay.appendChild(progress);
-                                    overlay.appendChild(text);
-                                    el.prepend(overlay);
-                                }
-                            };
-                            el.prepend(img);
-                        } else {
-                            // 动态
-                            const vid = document.createElement('video');
-                            vid.src = url;
-                            vid.muted = true;
-                            vid.playsInline = true;
-                            vid.preload = 'metadata';
-                            vid.loop = true;
-                            vid.poster = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-                            vid.style.backgroundColor = '#000';
-                            vid.addEventListener('loadedmetadata', function() {
-                                this.pause();
-                                el.classList.add('downloaded');
-                                const ov = el.querySelector('.progress-overlay');
-                                if (ov) ov.remove();
-                                const ph = el.querySelector('.wp-placeholder');
-                                if (ph) ph.remove();
-                                if (!el.querySelector('video')) {
-                                    el.prepend(vid);
-                                }
-                            });
-                            vid.addEventListener('error', function() {
-                                if (!el.querySelector('.wp-placeholder')) {
-                                    const placeholder = document.createElement('div');
-                                    placeholder.className = 'wp-placeholder';
-                                    placeholder.textContent = '等待下载';
-                                    el.prepend(placeholder);
-                                }
-                                if (!el.querySelector('.progress-overlay')) {
-                                    const overlay = document.createElement('div');
-                                    overlay.className = 'progress-overlay';
-                                    const progress = document.createElement('progress');
-                                    progress.value = downloadProgress[wp.id] || 0;
-                                    progress.max = 1;
-                                    const text = document.createElement('div');
-                                    text.className = 'progress-text';
-                                    const pct = downloadProgress[wp.id] ? Math.round(downloadProgress[wp.id] * 100) : 0;
-                                    text.textContent = pct + '%';
-                                    overlay.appendChild(progress);
-                                    overlay.appendChild(text);
-                                    el.prepend(overlay);
-                                }
-                            });
-                            el.prepend(vid);
-                        }
-                    };
-
-                    testLoad();
+                        const overlay = document.createElement('div');
+                        overlay.className = 'progress-overlay';
+                        const progress = document.createElement('progress');
+                        progress.value = prog || 0;
+                        progress.max = 1;
+                        const text = document.createElement('div');
+                        text.className = 'progress-text';
+                        const pct = prog ? Math.round(prog * 100) : 0;
+                        text.textContent = pct + '%';
+                        overlay.appendChild(progress);
+                        overlay.appendChild(text);
+                        el.prepend(overlay);
+                        el.classList.remove('downloaded');
+                    }
 
                     const label = document.createElement('div');
                     label.className = 'wp-label';
