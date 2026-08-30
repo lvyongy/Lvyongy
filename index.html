@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- CSP 使用 nonce，将在页面加载时由 JavaScript 动态生成并注入 -->
     <meta http-equiv="Content-Security-Policy" id="cspMeta" content="default-src 'self'; script-src 'nonce-INIT' https://www.curtainsjs.com https://lvyy.cc.cd https://static.cloudflareinsights.com; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self';">
     <title>小永子の首页</title>
     <style>
@@ -39,11 +40,7 @@
             --wallpaper-text-secondary: rgba(255, 255, 255, 0.7);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-top: env(safe-area-inset-top, 0px);
-<<<<<<< HEAD
             --safe-right: 0px;
-=======
-            --safe-right: 0px; /* 新增 */
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
         }
         html,
         body {
@@ -54,6 +51,7 @@
             height: 100%;
             min-height: 100vh;
             min-height: 100dvh;
+            min-height: 100vh;
             overscroll-behavior: none;
             -webkit-touch-callout: none;
         }
@@ -922,7 +920,7 @@
         }
 
         /* ================================================================
-           设置面板 - 全新设计 （修复花屏：添加回退背景 + 强制GPU加速）
+           设置面板 - 全新设计
            ================================================================ */
         #settingsPanelWrapper {
             position: fixed;
@@ -933,7 +931,6 @@
             flex-direction: column;
             align-items: flex-end;
             gap: 8px;
-            pointer-events: auto;
         }
         .settings-toggle {
             width: 44px;
@@ -941,7 +938,6 @@
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.10);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.04);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
             cursor: pointer;
@@ -951,9 +947,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s, color 0.6s ease;
-            aria-label: "设置面板开关";
-            transform: translateZ(0);
-            will-change: transform;
+            aria-label: "设置面板开关"
         }
         body.night-mode .settings-toggle {
             color: var(--wallpaper-text);
@@ -973,7 +967,6 @@
         }
 
         .settings-panel {
-            background: rgba(255, 255, 255, 0.85); /* 回退纯色 */
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
@@ -996,13 +989,8 @@
             position: absolute;
             top: 52px;
             right: 0;
-            transform: translateZ(0);
-            will-change: transform, backdrop-filter;
-            /* 强制创建独立图层 */
-            isolation: isolate;
         }
         body.night-mode .settings-panel {
-            background: rgba(0, 0, 0, 0.85); /* 回退深色 */
             background: rgba(0, 0, 0, 0.25);
             border-color: rgba(255, 255, 255, 0.03);
         }
@@ -1035,7 +1023,6 @@
             border: 1px solid rgba(255, 255, 255, 0.03);
             overflow: hidden;
             transition: all 0.2s;
-            transform: translateZ(0);
         }
         body:not(.wallpaper-mode) .settings-module {
             background: rgba(0, 0, 0, 0.02);
@@ -1107,7 +1094,6 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
-            transform: translateZ(0);
         }
         body.night-mode .mode-switch-big {
             background: rgba(0, 0, 0, 0.20);
@@ -1203,7 +1189,6 @@
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
             border: 1px solid rgba(255, 255, 255, 0.03);
-            transform: translateZ(0);
         }
         body.night-mode .wallpaper-scroll-container {
             background: rgba(0, 0, 0, 0.08);
@@ -1239,7 +1224,6 @@
             transition: all 0.3s ease;
             background: rgba(0, 0, 0, 0.06);
             position: relative;
-            transform: translateZ(0);
         }
         .wallpaper-scroll-container .wp-preview-item img,
         .wallpaper-scroll-container .wp-preview-item video {
@@ -1424,7 +1408,7 @@
             flex-shrink: 0;
             border: none;
             padding: 0;
-            aria-label: "切换元素可见性";
+            aria-label: "切换元素可见性"
         }
         .elem-control .elem-toggle.active {
             background: rgba(100, 200, 255, 0.35);
@@ -1559,7 +1543,7 @@
             cursor: pointer;
             color: inherit;
             transition: background 0.2s;
-            aria-label: "编辑或删除语录";
+            aria-label: "编辑或删除语录"
         }
         .quote-item .q-actions button:hover {
             background: rgba(255, 255, 255, 0.15);
@@ -1662,7 +1646,6 @@
             transition: opacity 0.3s ease;
             overscroll-behavior: none;
             -webkit-touch-callout: none;
-            transform: translateZ(0);
         }
         #musicPlayer.active {
             display: flex;
@@ -1681,7 +1664,6 @@
             cursor: pointer;
             transition: transform 0.2s;
             position: relative;
-            transform: translateZ(0);
         }
         .player-cover:hover {
             transform: scale(1.02);
@@ -2059,10 +2041,6 @@
             background-color: #0a0c0e;
             overflow: hidden;
             cursor: pointer;
-<<<<<<< HEAD
-=======
-            /* 默认隐藏，加载完成后显示 */
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
             display: none;
             opacity: 1;
             pointer-events: auto;
@@ -2070,17 +2048,9 @@
             align-items: center;
             justify-content: center;
         }
-<<<<<<< HEAD
         #startPage.show {
             display: flex;
         }
-=======
-        /* 显示状态 */
-        #startPage.show {
-            display: flex;
-        }
-        /* 淡出状态 */
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
         #startPage.fade-out {
             opacity: 0;
             transform: scale(1.04);
@@ -2088,10 +2058,6 @@
             transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                         transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-<<<<<<< HEAD
-=======
-        /* 完全隐藏 */
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
         #startPage.hide {
             display: none;
         }
@@ -2782,7 +2748,6 @@
     <script src="https://www.curtainsjs.com/build/curtains.min.js" nonce="INIT">
     </script>
 
-<<<<<<< HEAD
     <script nonce="INIT">
         (function() {
             'use strict';
@@ -2803,68 +2768,41 @@
                 el._timer = timer;
             }
 
+            // 判断是否为真正的触屏设备（不再依赖屏幕宽度）
             function isTouchDevice() {
                 return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) ||
                     window.matchMedia('(pointer: coarse)').matches;
             }
 
+            // 统一存储键名（不再区分移动/桌面）
             function getStorageKey(baseKey) {
-                return baseKey;
+                return baseKey; // 统一键名
             }
-=======
-    <script>
-    (function() {
-        'use strict';
 
-        // ================================================================
-        // 0. 工具
-        // ================================================================
-        function showToast(msg, duration) {
-            duration = duration || 1800;
-            const container = document.getElementById('toastContainer');
-            const el = document.createElement('div');
-            el.className = 'toast';
-            el.textContent = msg;
-            container.appendChild(el);
-            setTimeout(function() {
-                if (el.parentNode) el.parentNode.removeChild(el);
-            }, duration);
-        }
-
-        function isMobile() {
-            return window.innerWidth <= 768 || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        }
-
-        function getStorageKey(baseKey) {
-            return isMobile() ? baseKey + '_mobile' : baseKey + '_desktop';
-        }
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
-
-        // ================================================================
-        // 1. 预置链接
-        // ================================================================
-        const DEFAULT_LINKS = [
-            { text: '我的简历', url: 'https://lvyyjianli.netlify.app/' },
-            { text: '中国色', url: 'https://zhongguose.com/' },
-            { text: '在线音乐', url: 'https://www.qqmp3.vip/' },
-            { text: '小霸王', url: 'https://www.yikm.net/' },
-            { text: '乡间郎中', url: 'https://www.xjlz365.com/' },
-            { text: 'A站', url: 'https://www.acfun.cn/' },
-            { text: '八门全开', url: 'https://kms.cx/' },
-            { text: 'MC', url: 'https://mcjs.link/' },
-            { text: 'CS', url: 'https://webcs.xyz/' },
-            { text: '装机儿', url: 'https://zhuangit.ababtools.com/' },
-            { text: '天阶功法', url: 'https://www.shidianguji.com/' },
-            { text: '世界名画', url: 'https://www.nbfox.com/' },
-            { text: '焚决', url: 'https://fmhy.net/' },
-            { text: '人造灵根', url: 'https://codernav.com/' },
-            { text: '全球电台', url: 'https://radiocast.co/' }
-        ];
-        let links = [...DEFAULT_LINKS];
-
-<<<<<<< HEAD
             // ================================================================
-            // 2. 修仙系统 (原壁纸系统) 
+            // 1. 预置链接
+            // ================================================================
+            const DEFAULT_LINKS = [
+                { text: '我的简历', url: 'https://lvyyjianli.netlify.app/' },
+                { text: '中国色', url: 'https://zhongguose.com/' },
+                { text: '在线音乐', url: 'https://www.qqmp3.vip/' },
+                { text: '小霸王', url: 'https://www.yikm.net/' },
+                { text: '乡间郎中', url: 'https://www.xjlz365.com/' },
+                { text: 'A站', url: 'https://www.acfun.cn/' },
+                { text: '八门全开', url: 'https://kms.cx/' },
+                { text: 'MC', url: 'https://mcjs.link/' },
+                { text: 'CS', url: 'https://webcs.xyz/' },
+                { text: '装机儿', url: 'https://zhuangit.ababtools.com/' },
+                { text: '天阶功法', url: 'https://www.shidianguji.com/' },
+                { text: '世界名画', url: 'https://www.nbfox.com/' },
+                { text: '焚决', url: 'https://fmhy.net/' },
+                { text: '人造灵根', url: 'https://codernav.com/' },
+                { text: '全球电台', url: 'https://radiocast.co/' }
+            ];
+            let links = [...DEFAULT_LINKS];
+
+            // ================================================================
+            // 2. 修仙系统 (原壁纸系统) - 修复：资源回退 + 缓存管理 + 类型匹配
             // ================================================================
             const wallpapers = {
                 dynamic: [
@@ -2886,44 +2824,23 @@
                     { id: 's12', name: '宋玉', file: 'static_12.png' },
                 ]
             };
-=======
-        // ================================================================
-        // 2. 修仙系统 (原壁纸系统)
-        // ================================================================
-        const wallpapers = {
-            dynamic: [
-                { id: 'd1', name: '老婆', file: 'dynamic_01.mp4' },
-                { id: 'd2', name: '师姐', file: 'dynamic_02.mp4' },
-            ],
-            static: [
-                { id: 's1', name: '韩立', file: 'static_01.png' },
-                { id: 's2', name: '夫妻照', file: 'static_02.png' },
-                { id: 's3', name: '天南双圣', file: 'static_03.png' },
-                { id: 's4', name: '亲亲', file: 'static_04.png' },
-                { id: 's5', name: '极阴岛传人', file: 'static_05.png' },
-                { id: 's6', name: '老婆', file: 'static_06.png' },
-                { id: 's7', name: '初恋', file: 'static_07.png' },
-                { id: 's8', name: '徒儿', file: 'static_08.png' },
-                { id: 's9', name: '小梅凝', file: 'static_09.png' },
-                { id: 's10', name: '云梦山第一美人', file: 'static_10.png' },
-                { id: 's11', name: '银月', file: 'static_11.png' },
-                { id: 's12', name: '宋玉', file: 'static_12.png' },
-            ]
-        };
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
 
-        const videoEl = document.getElementById('wallpaperVideo');
-        const imgEl = document.getElementById('wallpaperImg');
-        let currentWallpaperType = 'static';
-        let currentWallpaperId = 's1';
-        let isWallpaperTransitioning = false;
-        let wallpaperTimeout = null;
-        let wallpaperBrightness = 'dark';
+            const videoEl = document.getElementById('wallpaperVideo');
+            const imgEl = document.getElementById('wallpaperImg');
+            let currentWallpaperType = 'static';
+            let currentWallpaperId = 's1';
+            let isWallpaperTransitioning = false;
+            let wallpaperTimeout = null;
+            let wallpaperBrightness = 'dark';
 
-<<<<<<< HEAD
+            // ---- 占位图（Base64 1x1 透明 PNG，作为 fallback） ----
             const PLACEHOLDER_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+            // 视频占位：使用一个极小 MP4（或直接用图片替代，但视频元素需要有效 src）
+            // 这里我们使用一个 1x1 像素的黑色视频（通过 canvas 生成），但更简单是让视频元素显示 poster
+            // 为了简化，在 fallback 时我们将动态壁纸视为静态图处理，但会保留类型标记
             const PLACEHOLDER_VIDEO = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAQxtZGF0AAAQrAAAABkAAAABAAAAAwAAEAAAABcAAAABAAAANAA8AAADAAAACgAAABoAAAABAAAACgAAAQQAAAAFAAAAAgAAAAYAAAABAAAAGgAAAAEAAAAQAAAAGgAAAAEAAAAcAAAAGgAAAAEAAAAYAAAAGgAAAAEAAAAeAAAAGgAAAAEAAAAgAAAAGgAAAAEAAAAiAAAAGgAAAAEAAAAkAAAAGgAAAAEAAAAmAAAAGgAAAAEAAAAoAAAAGgAAAAEAAAAqAAAAGgAAAAEAAAAsAAAAGgAAAAEAAAAuAAAAGgAAAAEAAAAwAAAAGgAAAAEAAAAyAAAAGgAAAAEAAAA0AAAAGgAAAAEAAAA2AAAAGgAAAAEAAAA4AAAAGgAAAAEAAAA6AAAAGgAAAAEAAAA8AAAAGgAAAAEAAAA+AAAAGgAAAAEAAABAAAAAGgAAAAEAAABCAAAAGgAAAAEAAABEAAAAGgAAAAEAAABGAAAAGgAAAAEAAABIAAAAGgAAAAEAAABKAAAAGgAAAAEAAABMAAAAGgAAAAEAAABOAAAAGgAAAAEAAABQAAAAGgAAAAEAAABSAAAAGgAAAAEAAABUAAAAGgAAAAEAAABWAAAAGgAAAAEAAABYAAAAGgAAAAEAAABaAAAAGgAAAAEAAABcAAAAGgAAAAEAAABeAAAAGgAAAAEAAABgAAAAGgAAAAEAAABiAAAAGgAAAAEAAABkAAAAGgAAAAEAAABmAAAAGgAAAAEAAABoAAAAGgAAAAEAAABqAAAAGgAAAAEAAABsAAAAGgAAAAEAAABuAAAAGgAAAAEAAABwAAAAGgAAAAEAAAByAAAAGgAAAAEAAAB0AAAAGgAAAAEAAAB2AAAAGgAAAAEAAAB4AAAAGgAAAAEAAAB6AAAAGgAAAAEAAAB8AAAAGgAAAAEAAAB+AAAAGgAAAAEAAACAAAAAGgAAAAEAAACCAAAAGgAAAAEAAACEAAAAGgAAAAEAAACGAAAAGgAAAAEAAACIAAAAGgAAAAEAAACKAAAAGgAAAAEAAACMAAAAGgAAAAEAAACOAAAAGgAAAAEAAACQAAAAGgAAAAEAAACSAAAAGgAAAAEAAACUAAAAGgAAAAEAAACWAAAAGgAAAAEAAACYAAAAGgAAAAEAAACaAAAAGgAAAAEAAACcAAAAGgAAAAEAAACeAAAAGgAAAAEAAACgAAAAGgAAAAEAAACiAAAAGgAAAAEAAACkAAAAGgAAAAEAAACmAAAAGgAAAAEAAACoAAAAGgAAAAEAAACqAAAAGgAAAAEAAACsAAAAGgAAAAEAAACuAAAAGgAAAAEAAACwAAAAGgAAAAEAAACyAAAAGgAAAAEAAAC0AAAAGgAAAAEAAAC2AAAAGgAAAAEAAAC4AAAAGgAAAAEAAAC6AAAAGgAAAAEAAAC8AAAAGgAAAAEAAAC+AAAAGgAAAAEAAADAAAAAGgAAAAEAAADCAAAAGgAAAAEAAADEAAAAGgAAAAEAAADGAAAAGgAAAAEAAADIAAAAGgAAAAEAAADKAAAAGgAAAAEAAADMAAAAGgAAAAEAAADOAAAAGgAAAAEAAADQAAAAGgAAAAEAAADSAAAAGgAAAAEAAADUAAAAGgAAAAEAAADWAAAAGgAAAAEAAADYAAAAGgAAAAEAAADaAAAAGgAAAAEAAADcAAAAGgAAAAEAAADeAAAAGgAAAAEAAADgAAAAGgAAAAEAAADiAAAAGgAAAAEAAADkAAAAGgAAAAEAAADmAAAAGgAAAAEAAADoAAAAGgAAAAEAAADqAAAAGgAAAAEAAADsAAAAGgAAAAEAAADuAAAAGgAAAAEAAADwAAAAGgAAAAEAAADyAAAAGgAAAAEAAAD0AAAAGgAAAAEAAAD2AAAAGgAAAAEAAAD4AAAAGgAAAAEAAAD6AAAAGgAAAAEAAAD8AAAAGgAAAAEAAAD+AAAAGgAAAAEAAAEAAAAAGgAAAAEAAAEAAAAAIAAAAQAAAAEAAAAEAAAABQAAAAIAAAAGAAAAAgAAAAcAAAABAAAACAAAAAEAAAAJAAAAAQAAAAoAAAABAAAACwAAAAEAAAAMAAAAAQAAAA0AAAABAAAADgAAAAEAAAAPAAAAAQAAABAAAAABAAAAEQAAAAEAAAASAAAAAQAAABMAAAABAAAAFAAAAAEAAAAVAAAAAQAAABYAAAABAAAAFwAAAAEAAAAYAAAAAQAAABkAAAABAAAAGgAAAAEAAAAbAAAAAQAAABwAAAABAAAAHQAAAAEAAAAeAAAAAQAAAB8AAAABAAAAIAAAAAEAAAAhAAAAAQAAACIAAAABAAAAIwAAAAEAAAAkAAAAAQAAACUAAAABAAAAJgAAAAEAAAAnAAAAAQAAACgAAAABAAAAKQAAAAEAAAAqAAAAAQAAACsAAAABAAAALAAAAAEAAAAtAAAAAQAAAC4AAAABAAAALwAAAAEAAAAwAAAAAQAAADEAAAABAAAAMgAAAAEAAAAzAAAAAQAAADQAAAABAAAANQAAAAEAAAA2AAAAAQAAADcAAAABAAAAOAAAAAEAAAA5AAAAAQAAADoAAAABAAAAOwAAAAEAAAA8AAAAAQAAAD0AAAABAAAAPgAAAAEAAAA/AAAAAQAAAEAAAAABAAAAQQAAAAEAAABCAAAAAQAAADw=';
 
+            // ---- 智能亮度检测 ----
             function detectBrightnessFromImage(img) {
                 return new Promise((resolve) => {
                     const canvas = document.createElement('canvas');
@@ -2986,6 +2903,7 @@
                 else body.removeAttribute('data-brightness');
             }
 
+            // ---- 壁纸缓存管理（修复：清理时检查是否正在使用） ----
             const MAX_BLOB_CACHE = 20;
             const blobCache = {};
             const blobOrder = [];
@@ -3024,13 +2942,16 @@
                 return blobCache[id] || null;
             }
 
+            // ---- 应用壁纸（增加 fallback，并匹配类型） ----
             function applyWallpaper(type, id) {
+                // 清除之前的定时器
                 if (wallpaperTimeout) {
                     clearTimeout(wallpaperTimeout);
                     wallpaperTimeout = null;
                 }
 
                 let blobUrl = getBlob(id);
+                // 如果没有缓存，尝试使用原始路径
                 if (!blobUrl) {
                     const list = wallpapers[type];
                     if (!list) return;
@@ -3044,6 +2965,7 @@
                             imgEl.classList.add('active');
                             detectBrightnessFromImage(imgEl).then(b => applyBrightnessClass(b)).catch(() => {});
                             isWallpaperTransitioning = false;
+                            // 缓存成功加载的图片
                             fetch(fallbackUrl).then(r => r.blob()).then(blob => {
                                 const url = URL.createObjectURL(blob);
                                 cacheBlob(id, url);
@@ -3055,10 +2977,12 @@
                             applyBrightnessClass('dark');
                             isWallpaperTransitioning = false;
                             showToast('壁纸加载失败，使用占位图');
+                            // 缓存占位图
                             cacheBlob(id, PLACEHOLDER_IMAGE);
                         };
                         return;
                     } else {
+                        // 动态壁纸 fallback：尝试用视频，失败则用图片占位
                         const source = document.createElement('source');
                         source.setAttribute('src', fallbackUrl);
                         source.setAttribute('type', 'video/mp4');
@@ -3067,6 +2991,7 @@
                         videoEl.loop = true;
                         videoEl.play().catch(() => {});
                         videoEl.oncanplaythrough = function() {
+                            // 修复：清除超时
                             if (wallpaperTimeout) {
                                 clearTimeout(wallpaperTimeout);
                                 wallpaperTimeout = null;
@@ -3074,22 +2999,27 @@
                             videoEl.classList.add('active');
                             detectBrightnessFromVideo(videoEl).then(b => applyBrightnessClass(b)).catch(() => {});
                             isWallpaperTransitioning = false;
+                            // 缓存视频
                             fetch(fallbackUrl).then(r => r.blob()).then(blob => {
                                 const url = URL.createObjectURL(blob);
                                 cacheBlob(id, url);
                             }).catch(() => {});
                         };
                         videoEl.onerror = function() {
+                            // 视频加载失败，使用图片占位（但保留视频元素，显示 poster 或黑屏）
                             videoEl.poster = PLACEHOLDER_IMAGE;
                             videoEl.load();
                             videoEl.classList.add('active');
                             applyBrightnessClass('dark');
                             isWallpaperTransitioning = false;
                             showToast('视频壁纸加载失败，使用占位图');
+                            // 缓存图片占位（但标记为动态类型，实际使用图片显示）
                             cacheBlob(id, PLACEHOLDER_IMAGE);
                         };
+                        // 设置超时保护
                         wallpaperTimeout = setTimeout(() => {
                             if (isWallpaperTransitioning) {
+                                // 如果还没加载完成，强制完成
                                 videoEl.classList.add('active');
                                 applyBrightnessClass('dark');
                                 isWallpaperTransitioning = false;
@@ -3154,7 +3084,9 @@
                     };
 
                     if (type === 'dynamic') {
+                        // 检查 blobUrl 是否为图片（可能是占位图），如果是，则改用 img 显示
                         if (blobUrl.startsWith('data:image/') || blobUrl.startsWith('blob:') && blobUrl.includes('image')) {
+                            // 用图片显示
                             imgEl.src = blobUrl;
                             imgEl.onload = function() {
                                 onLoaded();
@@ -3212,8 +3144,9 @@
                 }, 800);
             }
 
-            // ---- 壁纸下载 ----
+            // ---- 壁纸下载（增加重试和并发控制） ----
             let bgDownloadStarted = false;
+            // 并发控制：同时最多 3 个请求
             const concurrencyLimit = 3;
             let activeDownloads = 0;
             const downloadQueue = [];
@@ -3262,6 +3195,7 @@
                             await new Promise(r => setTimeout(r, 800 + attempt * 200));
                         } else {
                             console.error('下载失败:', item.file);
+                            // 使用对应类型的占位符
                             const placeholder = type === 'static' ? PLACEHOLDER_IMAGE : PLACEHOLDER_VIDEO;
                             if (!blobCache[item.id]) {
                                 cacheBlob(item.id, placeholder);
@@ -3278,6 +3212,7 @@
                                     img.loading = 'lazy';
                                     previewEl.prepend(img);
                                 } else {
+                                    // 动态壁纸占位：显示一个图片
                                     const img = document.createElement('img');
                                     img.src = PLACEHOLDER_IMAGE;
                                     img.alt = item.name;
@@ -3291,6 +3226,7 @@
                 return false;
             }
 
+            // ---- 音乐缓存 ----
             const musicBlobCache = {};
 
             async function downloadMusicFiles() {
@@ -3326,13 +3262,14 @@
                         allTasks.push({ item: wp, type: type });
                     }
                 }
+                // 使用并发队列处理
                 const queue = [...allTasks];
                 const promises = [];
                 while (queue.length > 0) {
                     const batch = queue.splice(0, concurrencyLimit);
                     promises.push(...batch.map(task => downloadSingle(task.item, task.type)));
                     if (queue.length > 0) {
-                        await Promise.all(promises.slice(-concurrencyLimit));
+                        await Promise.all(promises.slice(-concurrencyLimit)); // 等待当前批次
                     }
                 }
                 await Promise.allSettled(promises);
@@ -3342,78 +3279,27 @@
             }
 
             // ================================================================
-            // 3. 日夜切换 (拉绳)
+            // 3. 日夜切换 (拉绳) - 无变化
             // ================================================================
-=======
-        function detectBrightnessFromImage(img) {
-            return new Promise((resolve) => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const w = 64,
-                    h = 64;
-                canvas.width = w;
-                canvas.height = h;
-                ctx.drawImage(img, 0, 0, w, h);
-                const data = ctx.getImageData(0, 0, w, h).data;
-                let sum = 0,
-                    count = 0;
-                for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i],
-                        g = data[i + 1],
-                        b = data[i + 2];
-                    const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-                    sum += luma;
-                    count++;
-                }
-                const avg = sum / count;
-                resolve(avg < 128 ? 'dark' : 'light');
-            });
-        }
-
-        function detectBrightnessFromVideo(video) {
-            return new Promise((resolve) => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const w = 64,
-                    h = 64;
-                canvas.width = w;
-                canvas.height = h;
-                ctx.drawImage(video, 0, 0, w, h);
-                const data = ctx.getImageData(0, 0, w, h).data;
-                let sum = 0,
-                    count = 0;
-                for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i],
-                        g = data[i + 1],
-                        b = data[i + 2];
-                    const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-                    sum += luma;
-                    count++;
-                }
-                const avg = sum / count;
-                resolve(avg < 128 ? 'dark' : 'light');
-            });
-        }
-
-        function applyBrightnessClass(brightness) {
-            wallpaperBrightness = brightness || 'dark';
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
             const body = document.body;
-            if (brightness === 'dark') body.setAttribute('data-brightness', 'dark');
-            else if (brightness === 'light') body.setAttribute('data-brightness', 'light');
-            else body.removeAttribute('data-brightness');
-        }
+            let currentMode = 'day';
 
-        // 释放 Blob URL
-        function revokeBlobUrl(url) {
-            if (url && url.startsWith('blob:')) {
-                try { URL.revokeObjectURL(url); } catch (e) {}
+            function setDayNight(mode) {
+                if (mode === currentMode) return;
+                currentMode = mode;
+                if (mode === 'day') body.classList.remove('night-mode');
+                else body.classList.add('night-mode');
+                const sun = document.querySelector('.icon-sun');
+                const moon = document.querySelector('.icon-moon');
+                if (sun && moon) {
+                    sun.style.display = mode === 'day' ? 'inline-block' : 'none';
+                    moon.style.display = mode === 'night' ? 'inline-block' : 'none';
+                }
+                saveAllSettings();
             }
-        }
 
-<<<<<<< HEAD
             // ================================================================
-            // 4. 拉绳交互
+            // 4. 拉绳交互 - 修复：清理事件监听器
             // ================================================================
             const ropeHandle = document.getElementById('rope-handle');
             const ropeLine = document.getElementById('rope-line');
@@ -3424,154 +3310,31 @@
             const THRESHOLD = 70;
             let hasTriggered = false;
             let ropeRafId = null;
-=======
-        function applyWallpaper(type, id) {
-            if (isWallpaperTransitioning) return;
-            const list = wallpapers[type];
-            if (!list) return;
-            const item = list.find(w => w.id === id);
-            if (!item) return;
-            isWallpaperTransitioning = true;
-            if (wallpaperTimeout) {
-                clearTimeout(wallpaperTimeout);
-                wallpaperTimeout = null;
-            }
-            const activeEl = videoEl.classList.contains('active') ? videoEl :
-                (imgEl.classList.contains('active') ? imgEl : null);
-            if (activeEl) {
-                activeEl.classList.remove('active');
-                activeEl.classList.add('fade-out');
-                // 释放旧的 blob URL
-                if (activeEl === videoEl && videoEl.src) {
-                    revokeBlobUrl(videoEl.src);
+
+            function resetRope(animate) {
+                if (ropeRafId) {
+                    cancelAnimationFrame(ropeRafId);
+                    ropeRafId = null;
                 }
-                if (activeEl === imgEl && imgEl.src) {
-                    revokeBlobUrl(imgEl.src);
-                }
-            }
-            setTimeout(() => {
-                videoEl.classList.remove('active', 'fade-out');
-                imgEl.classList.remove('active', 'fade-out');
-                const onLoaded = () => {
-                    if (type === 'dynamic') {
-                        videoEl.classList.add('active');
-                        try {
-                            detectBrightnessFromVideo(videoEl).then(brightness => {
-                                applyBrightnessClass(brightness);
-                            }).catch(() => {});
-                        } catch (_) {}
-                    } else {
-                        imgEl.classList.add('active');
-                        try {
-                            detectBrightnessFromImage(imgEl).then(brightness => {
-                                applyBrightnessClass(brightness);
-                            }).catch(() => {});
-                        } catch (_) {}
-                    }
-                    isWallpaperTransitioning = false;
-                };
-                if (type === 'dynamic') {
-                    let src = preloaded.blobs[item.id] || 'videos/' + item.file;
-                    // 释放旧的 src 如果存在
-                    if (videoEl.src) revokeBlobUrl(videoEl.src);
-                    const source = videoEl.querySelector('source');
-                    if (source) source.setAttribute('src', src);
-                    else {
-                        const newSource = document.createElement('source');
-                        newSource.setAttribute('src', src);
-                        newSource.setAttribute('type', 'video/mp4');
-                        videoEl.appendChild(newSource);
-                    }
-                    videoEl.load();
-                    videoEl.loop = true;
-                    videoEl.play().catch(() => {});
-                    videoEl.oncanplaythrough = function() {
-                        onLoaded();
-                        videoEl.oncanplaythrough = null;
-                    };
-                    wallpaperTimeout = setTimeout(() => {
-                        if (isWallpaperTransitioning) onLoaded();
-                    }, 2000);
+                if (animate !== false) {
+                    ropeLine.style.transition = 'height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    ropeHandle.style.transition = 'top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
                 } else {
-                    const src = 'images/' + item.file;
-                    if (imgEl.src) revokeBlobUrl(imgEl.src);
-                    imgEl.src = src;
-                    imgEl.onload = function() {
-                        onLoaded();
-                        imgEl.onload = null;
-                    };
-                    imgEl.onerror = function() {
-                        onLoaded();
-                        imgEl.onerror = null;
-                    };
-                    wallpaperTimeout = setTimeout(() => {
-                        if (isWallpaperTransitioning) onLoaded();
-                    }, 2000);
+                    ropeLine.style.transition = 'none';
+                    ropeHandle.style.transition = 'none';
                 }
-                document.querySelectorAll('.wp-preview-item').forEach(el => {
-                    el.classList.toggle('active', el.dataset.id === id && el.dataset.type === type);
-                });
-                currentWallpaperType = type;
-                currentWallpaperId = id;
-                saveAllSettings();
-            }, 800);
-        }
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
-
-        // ================================================================
-        // 3. 日夜切换 (拉绳)
-        // ================================================================
-        const body = document.body;
-        let currentMode = 'day';
-
-        function setDayNight(mode) {
-            if (mode === currentMode) return;
-            currentMode = mode;
-            if (mode === 'day') body.classList.remove('night-mode');
-            else body.classList.add('night-mode');
-            const sun = document.querySelector('.icon-sun');
-            const moon = document.querySelector('.icon-moon');
-            if (sun && moon) {
-                sun.style.display = mode === 'day' ? 'inline-block' : 'none';
-                moon.style.display = mode === 'night' ? 'inline-block' : 'none';
-            }
-            saveAllSettings();
-        }
-
-        // ================================================================
-        // 4. 拉绳交互 - 优化版（修复 touchmove passive）
-        // ================================================================
-        const ropeHandle = document.getElementById('rope-handle');
-        const ropeLine = document.getElementById('rope-line');
-        let isDraggingRope = false;
-        let dragStartY = 0;
-        let currentPull = 0;
-        const MAX_PULL = 120;
-        const THRESHOLD = 70;
-        let hasTriggered = false;
-        let ropeRafId = null;
-
-        function resetRope(animate) {
-            if (ropeRafId) {
-                cancelAnimationFrame(ropeRafId);
-                ropeRafId = null;
-            }
-            if (animate !== false) {
-                ropeLine.style.transition = 'height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                ropeHandle.style.transition = 'top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            } else {
-                ropeLine.style.transition = 'none';
-                ropeHandle.style.transition = 'none';
-            }
-            ropeLine.style.height = '60px';
-            ropeHandle.style.top = '72px';
-            currentPull = 0;
-            hasTriggered = false;
-            if (animate !== false) {
-                setTimeout(() => {
+                ropeLine.style.height = '60px';
+                ropeHandle.style.top = '72px';
+                currentPull = 0;
+                hasTriggered = false;
+                if (animate !== false) {
+                    setTimeout(() => {
+                        ropeLine.style.transition = 'height 0.15s ease-out';
+                        ropeHandle.style.transition = 'none';
+                    }, 550);
+                } else {
                     ropeLine.style.transition = 'height 0.15s ease-out';
                     ropeHandle.style.transition = 'none';
-<<<<<<< HEAD
                 }
             }
 
@@ -3619,101 +3382,14 @@
 
             function ropePointerUp(e) {
                 if (!isDraggingRope) return;
-=======
-                }, 550);
-            } else {
-                ropeLine.style.transition = 'height 0.15s ease-out';
-                ropeHandle.style.transition = 'none';
-            }
-        }
-
-        function updateRope(pull) {
-            const clamped = Math.min(Math.max(pull, 0), MAX_PULL);
-            if (ropeRafId) {
-                cancelAnimationFrame(ropeRafId);
-                ropeRafId = null;
-            }
-            ropeRafId = requestAnimationFrame(() => {
-                ropeLine.style.height = (60 + clamped) + 'px';
-                ropeHandle.style.top = (72 + clamped) + 'px';
-                currentPull = clamped;
-                ropeRafId = null;
-            });
-        }
-
-        function triggerSwitch() {
-            if (hasTriggered) return;
-            hasTriggered = true;
-            const target = currentMode === 'day' ? 'night' : 'day';
-            setDayNight(target);
-        }
-
-        ropeHandle.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            isDraggingRope = true;
-            dragStartY = e.clientY;
-            hasTriggered = false;
-            ropeLine.style.transition = 'none';
-            ropeHandle.style.transition = 'none';
-            ropeHandle.style.cursor = 'grabbing';
-        });
-        window.addEventListener('mousemove', function(e) {
-            if (!isDraggingRope) return;
-            const delta = e.clientY - dragStartY;
-            const pull = Math.max(0, delta);
-            updateRope(pull);
-            if (pull >= THRESHOLD && !hasTriggered) triggerSwitch();
-        });
-        window.addEventListener('mouseup', function(e) {
-            if (!isDraggingRope) return;
-            isDraggingRope = false;
-            ropeHandle.style.cursor = 'grab';
-            if (currentPull >= THRESHOLD && !hasTriggered) triggerSwitch();
-            resetRope(true);
-            if (ropeRafId) {
-                cancelAnimationFrame(ropeRafId);
-                ropeRafId = null;
-            }
-        });
-        ropeHandle.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            isDraggingRope = true;
-            dragStartY = touch.clientY;
-            hasTriggered = false;
-            ropeLine.style.transition = 'none';
-            ropeHandle.style.transition = 'none';
-        }, { passive: false });
-        window.addEventListener('touchmove', function(e) {
-            if (!isDraggingRope) return;
-            e.preventDefault(); // 阻止滚动
-            const touch = e.touches[0];
-            const delta = touch.clientY - dragStartY;
-            const pull = Math.max(0, delta);
-            updateRope(pull);
-            if (pull >= THRESHOLD && !hasTriggered) triggerSwitch();
-        }, { passive: false });
-        window.addEventListener('touchend', function(e) {
-            if (!isDraggingRope) return;
-            isDraggingRope = false;
-            if (currentPull >= THRESHOLD && !hasTriggered) triggerSwitch();
-            resetRope(true);
-            if (ropeRafId) {
-                cancelAnimationFrame(ropeRafId);
-                ropeRafId = null;
-            }
-        }, { passive: true });
-        window.addEventListener('touchcancel', function(e) {
-            if (isDraggingRope) {
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                 isDraggingRope = false;
                 ropeHandle.style.cursor = 'grab';
+                if (currentPull >= THRESHOLD && !hasTriggered) triggerSwitch();
                 resetRope(true);
                 if (ropeRafId) {
                     cancelAnimationFrame(ropeRafId);
                     ropeRafId = null;
                 }
-<<<<<<< HEAD
             }
 
             function ropePointerCancel(e) {
@@ -3741,7 +3417,7 @@
             resetRope(false);
 
             // ================================================================
-            // 5. 经典语录
+            // 5. 经典语录 - 修复：增加长度限制、防竞态
             // ================================================================
             const DEFAULT_QUOTES = [
                 { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。',
@@ -3764,7 +3440,7 @@
             let quoteClickTimer = null;
             let quoteClickCount = 0;
             let lastQuoteToggleTime = 0;
-            let isQuoteTransitioning = false;
+            let isQuoteTransitioning = false; // 防竞态
 
             const quoteText = document.getElementById('quoteText');
             const quoteAuthor = document.getElementById('quoteAuthor');
@@ -3786,44 +3462,23 @@
                 } catch (e) {}
                 quotes = DEFAULT_QUOTES.map(q => ({ ...q }));
                 saveQuotes();
-=======
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
             }
-        }, { passive: true });
-        resetRope(false);
 
-        // ================================================================
-        // 5. 经典语录 (原名人名言)
-        // ================================================================
-        const DEFAULT_QUOTES = [
-            { text: '人生百年，蜉蝣一日，长生与我何有哉？纵使蹉跎一生，也要争那一线天机，只因幼师便知，人生如棋，落子无悔。', author: '孙孙浩' },
-            { text: '杀人放火厉飞雨，万人敬仰韩天尊', author: '阿青' },
-            { text: '你倒是个有情有义之人。可惜在这乱世之中，最不值钱的便是情义。且看我那两个逆徒，本座养育他们两百年，却轻易背叛。',
-                author: '玄骨上人' },
-            { text: '立哥哥,立giegie', author: '小佳乐' },
-            { text: '什么不会抹杀我的存在？没有了自主意识后的我，还会是我吗？和从这世间消失，有什么区别。', author: '小二黑' },
-            { text: '到头来,无非是求个念头通达罢liao。', author: '李化元' },
-            { text: '所谓元婴之下第一人，也不过就是个结丹修士而已，不如温少主的性命，就交予在下如何。', author: '吕少主' },
-            { text: '韩大哥，没有灵根真的不能成为修仙者么？', author: '墨彩环' },
-        ];
+            function saveQuotes() {
+                try { localStorage.setItem('quotesData', JSON.stringify(quotes)); } catch (e) {}
+            }
 
-        let quotes = [];
-        let quoteIndex = 0;
-        let quoteLocked = false;
-        let quoteInterval = 5000;
-        let intervalTimer = null;
-        let quoteClickTimer = null;
-        let quoteClickCount = 0;
-        let lastQuoteToggleTime = 0;
+            function loadInterval() {
+                try {
+                    const val = parseInt(localStorage.getItem('quoteInterval'));
+                    if (val && val > 0) quoteInterval = val;
+                } catch (e) {}
+            }
 
-        const quoteText = document.getElementById('quoteText');
-        const quoteAuthor = document.getElementById('quoteAuthor');
-        const quoteArea = document.getElementById('quoteArea');
-        const wqText = document.getElementById('wqText');
-        const wqAuthor = document.getElementById('wqAuthor');
-        const wqDisplay = document.getElementById('wallpaperQuoteDisplay');
+            function saveInterval() {
+                try { localStorage.setItem('quoteInterval', String(quoteInterval)); } catch (e) {}
+            }
 
-<<<<<<< HEAD
             function showQuote(index) {
                 if (isQuoteTransitioning) return;
                 if (quotes.length === 0) {
@@ -3834,6 +3489,7 @@
                     return;
                 }
                 const q = quotes[index % quotes.length];
+                // 限制长度
                 const MAX_QUOTE_LENGTH = 300;
                 if (q.text.length > MAX_QUOTE_LENGTH) {
                     q.text = q.text.substring(0, MAX_QUOTE_LENGTH) + '...';
@@ -3922,70 +3578,10 @@
             quoteArea.addEventListener('contextmenu', handleQuoteContextMenu);
             if (wqDisplay) {
                 wqDisplay.addEventListener('contextmenu', handleQuoteContextMenu);
-=======
-        function loadQuotes() {
-            try {
-                const data = localStorage.getItem('quotesData');
-                if (data) {
-                    const parsed = JSON.parse(data);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        quotes = parsed;
-                        return;
-                    }
-                }
-            } catch (e) {}
-            quotes = DEFAULT_QUOTES.map(q => ({ ...q }));
-            saveQuotes();
-        }
-
-        function saveQuotes() {
-            try { localStorage.setItem('quotesData', JSON.stringify(quotes)); } catch (e) {}
-        }
-
-        function loadInterval() {
-            try {
-                const val = parseInt(localStorage.getItem('quoteInterval'));
-                if (val && val > 0) quoteInterval = val;
-            } catch (e) {}
-        }
-
-        function saveInterval() {
-            try { localStorage.setItem('quoteInterval', String(quoteInterval)); } catch (e) {}
-        }
-
-        function showQuote(index) {
-            if (quotes.length === 0) {
-                quoteText.textContent = '暂无名言';
-                quoteAuthor.textContent = '';
-                wqText.textContent = '暂无名言';
-                wqAuthor.textContent = '';
-                return;
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
             }
-            const q = quotes[index % quotes.length];
-            quoteText.textContent = q.text;
-            quoteAuthor.textContent = '— ' + q.author;
-            quoteText.classList.remove('fade');
-            void quoteText.offsetWidth;
-            quoteText.classList.add('fade');
-            setTimeout(() => {
-                quoteText.textContent = q.text;
-                quoteText.classList.remove('fade');
-            }, 50);
-            wqText.textContent = q.text;
-            wqAuthor.textContent = '— ' + q.author;
-            wqText.classList.remove('fade');
-            void wqText.offsetWidth;
-            wqText.classList.add('fade');
-            setTimeout(() => {
-                wqText.textContent = q.text;
-                wqText.classList.remove('fade');
-            }, 50);
-        }
 
-<<<<<<< HEAD
             // ================================================================
-            // 6. 快捷链接
+            // 6. 快捷链接 - 修复：输入验证加强（XSS防护）
             // ================================================================
             const linksGrid = document.getElementById('linksGrid');
             const glassLinks = document.getElementById('glassLinks');
@@ -4001,23 +3597,12 @@
             const searchInput = document.getElementById('searchInput');
             const glassSearchInput = document.getElementById('glassSearchInput');
             const glassSearchBtn = document.getElementById('glassSearchBtn');
-=======
-        function nextQuote() {
-            if (!quoteLocked && quotes.length > 0) {
-                quoteIndex = (quoteIndex + 1) % quotes.length;
-                showQuote(quoteIndex);
-            }
-        }
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
 
-        function restartInterval() {
-            if (intervalTimer) clearInterval(intervalTimer);
-            if (quoteInterval > 0 && quotes.length > 1) {
-                intervalTimer = setInterval(nextQuote, quoteInterval);
-            }
-        }
+            let editingIndex = -1;
+            let searchVisible = true;
+            let searchBtnEndExists = false;
 
-<<<<<<< HEAD
+            // ---- 安全工具：HTML实体编码 ----
             function escapeHtml(text) {
                 if (!text) return '';
                 const div = document.createElement('div');
@@ -4044,105 +3629,9 @@
                     } catch {
                         return false;
                     }
-=======
-        loadQuotes();
-        loadInterval();
-        if (quotes.length === 0) quotes = DEFAULT_QUOTES.map(q => ({ ...q }));
-        showQuote(0);
-        restartInterval();
-
-        // 双击逻辑（使用点击计数）
-        function handleQuoteClick(e) {
-            if (quoteLocked) return;
-            quoteClickCount++;
-            if (quoteClickTimer) clearTimeout(quoteClickTimer);
-            quoteClickTimer = setTimeout(() => {
-                if (quoteClickCount === 1) {
-                    // 单击
-                    nextQuote();
-                }
-                quoteClickCount = 0;
-                quoteClickTimer = null;
-            }, 250);
-        }
-
-        // 右键锁定（防重复）
-        function toggleQuoteLock() {
-            const now = Date.now();
-            if (now - lastQuoteToggleTime < 300) return; // 防抖
-            lastQuoteToggleTime = now;
-            quoteLocked = !quoteLocked;
-            if (quoteLocked) {
-                quoteArea.classList.add('locked');
-                quoteArea.style.cursor = 'default';
-                if (wqDisplay) wqDisplay.classList.add('locked');
-            } else {
-                quoteArea.classList.remove('locked');
-                quoteArea.style.cursor = 'pointer';
-                if (wqDisplay) wqDisplay.classList.remove('locked');
-            }
-            saveAllSettings();
-        }
-
-        // 统一处理右键
-        function handleQuoteContextMenu(e) {
-            e.preventDefault();
-            // 只处理一次
-            if (e.target.closest('.quote-area') || e.target.closest('#wallpaperQuoteDisplay')) {
-                toggleQuoteLock();
-            }
-        }
-
-        quoteArea.addEventListener('click', handleQuoteClick);
-        if (wqDisplay) {
-            wqDisplay.addEventListener('click', handleQuoteClick);
-        }
-        quoteArea.addEventListener('contextmenu', handleQuoteContextMenu);
-        if (wqDisplay) {
-            wqDisplay.addEventListener('contextmenu', handleQuoteContextMenu);
-        }
-
-        // ================================================================
-        // 6. 快捷链接 (修复: URL 安全校验)
-        // ================================================================
-        const linksGrid = document.getElementById('linksGrid');
-        const glassLinks = document.getElementById('glassLinks');
-        const modalOverlay = document.getElementById('modalOverlay');
-        const modalText = document.getElementById('modalText');
-        const modalUrl = document.getElementById('modalUrl');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalSave = document.getElementById('modalSave');
-        const modalCancel = document.getElementById('modalCancel');
-        const modalDelete = document.getElementById('modalDelete');
-        const searchWrapper = document.getElementById('searchWrapper');
-        const searchBtn = document.getElementById('searchBtn');
-        const searchInput = document.getElementById('searchInput');
-        const glassSearchInput = document.getElementById('glassSearchInput');
-        const glassSearchBtn = document.getElementById('glassSearchBtn');
-
-        let editingIndex = -1;
-        let searchVisible = true;
-        let searchBtnEndExists = false;
-
-        function isValidUrl(url) {
-            if (!url) return false;
-            let trimmed = url.trim();
-            if (/^(javascript|data|vbscript):/i.test(trimmed)) return false;
-            try {
-                const parsed = new URL(trimmed);
-                return ['http:', 'https:', 'ftp:', 'mailto:', 'tel:'].includes(parsed.protocol);
-            } catch (_) {
-                try {
-                    const parsed2 = new URL('http://' + trimmed);
-                    return ['http:', 'https:', 'ftp:'].includes(parsed2.protocol);
-                } catch {
-                    return false;
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                 }
             }
-        }
 
-<<<<<<< HEAD
             function sanitizeUrl(url) {
                 const trimmed = url.trim();
                 if (!trimmed) return '';
@@ -4158,114 +3647,14 @@
                 } catch (_) {
                     return '';
                 }
-=======
-        function sanitizeUrl(url) {
-            const trimmed = url.trim();
-            if (!trimmed) return '';
-            if (!trimmed.includes('://') && !trimmed.startsWith('mailto:') && !trimmed.startsWith('tel:')) {
-                return 'http://' + trimmed;
-            }
-            return trimmed;
-        }
-
-        function renderAllLinks() {
-            const existingMobile = document.getElementById('searchBtnMobile');
-            if (existingMobile) existingMobile.remove();
-            const existingEnd = document.querySelector('.search-btn-end');
-            if (existingEnd) existingEnd.remove();
-            searchBtnEndExists = false;
-
-            linksGrid.innerHTML = '';
-            links.forEach((link, index) => {
-                const a = document.createElement('a');
-                a.className = 'link-item';
-                a.href = link.url;
-                a.target = '_blank';
-                a.textContent = link.text;
-                a.dataset.index = index;
-                a.addEventListener('contextmenu', function(e) {
-                    e.preventDefault();
-                    openEditor(index);
-                });
-                a.addEventListener('mousedown', function(e) {
-                    if (e.button === 0) this.classList.add('pressed');
-                });
-                a.addEventListener('mouseup', function(e) {
-                    if (e.button === 0) this.classList.remove('pressed');
-                });
-                a.addEventListener('mouseleave', function(e) {
-                    this.classList.remove('pressed');
-                });
-                linksGrid.appendChild(a);
-            });
-            const addBtn = document.createElement('button');
-            addBtn.className = 'add-link-btn';
-            addBtn.textContent = '＋';
-            addBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                openEditor(-1);
-            });
-            addBtn.addEventListener('mousedown', function() { this.classList.add('pressed'); });
-            addBtn.addEventListener('mouseup', function() { this.classList.remove('pressed'); });
-            addBtn.addEventListener('mouseleave', function() { this.classList.remove('pressed'); });
-            linksGrid.appendChild(addBtn);
-
-            if (!searchVisible) {
-                const endBtn = document.createElement('button');
-                endBtn.className = 'search-btn-end';
-                endBtn.innerHTML =
-                    `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>`;
-                endBtn.addEventListener('click', toggleSearch);
-                endBtn.addEventListener('mousedown', function() { this.classList.add('pressed'); });
-                endBtn.addEventListener('mouseup', function() { this.classList.remove('pressed'); });
-                endBtn.addEventListener('mouseleave', function() { this.classList.remove('pressed'); });
-                linksGrid.appendChild(endBtn);
-                searchBtnEndExists = true;
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
             }
 
-            glassLinks.innerHTML = '';
-            links.forEach((link, index) => {
-                const a = document.createElement('a');
-                a.className = 'glass-link';
-                a.href = link.url;
-                a.target = '_blank';
-                a.textContent = link.text;
-                a.dataset.index = index;
-                a.addEventListener('contextmenu', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openEditor(index);
-                });
-                a.addEventListener('mousedown', function(e) {
-                    e.stopPropagation();
-                }, true);
-                glassLinks.appendChild(a);
-            });
-            const glassAdd = document.createElement('button');
-            glassAdd.className = 'glass-add';
-            glassAdd.textContent = '＋';
-            glassAdd.addEventListener('click', function(e) {
-                e.stopPropagation();
-                openEditor(-1);
-            });
-            glassLinks.appendChild(glassAdd);
-
-            if (searchVisible) {
-                const wrapper = document.getElementById('searchWrapper');
-                const existingBtn = wrapper.querySelector('.search-btn');
-                if (!existingBtn) wrapper.appendChild(searchBtn);
-            }
-        }
-
-        function toggleSearch() {
-            searchVisible = !searchVisible;
-            if (searchVisible) {
-                searchWrapper.classList.remove('hidden');
-                const endBtn = document.querySelector('.search-btn-end');
-                if (endBtn) endBtn.remove();
+            function renderAllLinks() {
+                const existingMobile = document.getElementById('searchBtnMobile');
+                if (existingMobile) existingMobile.remove();
+                const existingEnd = document.querySelector('.search-btn-end');
+                if (existingEnd) existingEnd.remove();
                 searchBtnEndExists = false;
-<<<<<<< HEAD
 
                 linksGrid.innerHTML = '';
                 links.forEach((link, index) => {
@@ -4347,57 +3736,41 @@
                     const existingBtn = wrapper.querySelector('.search-btn');
                     if (!existingBtn) wrapper.appendChild(searchBtn);
                 }
-=======
-                if (!searchWrapper.contains(searchBtn)) searchWrapper.appendChild(searchBtn);
-            } else {
-                searchWrapper.classList.add('hidden');
-                if (searchWrapper.contains(searchBtn)) searchWrapper.removeChild(searchBtn);
-                renderAllLinks();
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
             }
-            saveAllSettings();
-        }
 
-        function openEditor(index) {
-            editingIndex = index;
-            if (index === -1) {
-                modalTitle.textContent = '添加新链接';
-                modalText.value = '';
-                modalUrl.value = '';
-                modalDelete.style.display = 'none';
-            } else {
-                modalTitle.textContent = '编辑链接';
-                modalText.value = links[index].text;
-                modalUrl.value = links[index].url;
-                modalDelete.style.display = 'inline-block';
+            function toggleSearch() {
+                searchVisible = !searchVisible;
+                if (searchVisible) {
+                    searchWrapper.classList.remove('hidden');
+                    const endBtn = document.querySelector('.search-btn-end');
+                    if (endBtn) endBtn.remove();
+                    searchBtnEndExists = false;
+                    if (!searchWrapper.contains(searchBtn)) searchWrapper.appendChild(searchBtn);
+                } else {
+                    searchWrapper.classList.add('hidden');
+                    if (searchWrapper.contains(searchBtn)) searchWrapper.removeChild(searchBtn);
+                    renderAllLinks();
+                }
+                saveAllSettings();
             }
-            modalOverlay.classList.add('active');
-            modalText.focus();
-        }
 
-        function closeEditor() {
-            modalOverlay.classList.remove('active');
-            editingIndex = -1;
-        }
-
-        function saveLink() {
-            const text = modalText.value.trim();
-            const url = modalUrl.value.trim();
-            if (!text || !url) { showToast('请填写完整信息'); return; }
-            if (!isValidUrl(url)) {
-                showToast('链接地址无效，仅支持 http, https, ftp, mailto, tel 协议');
-                return;
+            function openEditor(index) {
+                editingIndex = index;
+                if (index === -1) {
+                    modalTitle.textContent = '添加新链接';
+                    modalText.value = '';
+                    modalUrl.value = '';
+                    modalDelete.style.display = 'none';
+                } else {
+                    modalTitle.textContent = '编辑链接';
+                    modalText.value = links[index].text;
+                    modalUrl.value = links[index].url;
+                    modalDelete.style.display = 'inline-block';
+                }
+                modalOverlay.classList.add('active');
+                modalText.focus();
             }
-            const safeUrl = sanitizeUrl(url);
-            if (editingIndex === -1) links.push({ text, url: safeUrl });
-            else links[editingIndex] = { text, url: safeUrl };
-            renderAllLinks();
-            closeEditor();
-            saveLinksToStorage();
-            saveAllSettings();
-        }
 
-<<<<<<< HEAD
             function closeEditor() {
                 modalOverlay.classList.remove('active');
                 editingIndex = -1;
@@ -4417,533 +3790,77 @@
                 const safeText = sanitizeText(text);
                 if (editingIndex === -1) links.push({ text: safeText, url: safeUrl });
                 else links[editingIndex] = { text: safeText, url: safeUrl };
-=======
-        function deleteLink() {
-            if (editingIndex === -1) return;
-            if (confirm('确定删除？')) {
-                links.splice(editingIndex, 1);
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                 renderAllLinks();
                 closeEditor();
                 saveLinksToStorage();
                 saveAllSettings();
             }
-        }
 
-        function saveLinksToStorage() {
-            try { localStorage.setItem('quickLinks', JSON.stringify(links)); } catch (e) {}
-        }
-
-        function loadLinksFromStorage() {
-            try {
-                const data = localStorage.getItem('quickLinks');
-                if (data) {
-                    const parsed = JSON.parse(data);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        const hasOld = parsed.some(l =>
-                            l.text === '百度' || l.text === 'B站' ||
-                            (l.url && (l.url.includes('baidu') || l.url.includes('bilibili')))
-                        );
-                        if (!hasOld) {
-                            links = parsed;
-                            return;
-                        }
-                    }
-                }
-                links = [...DEFAULT_LINKS];
-                saveLinksToStorage();
-            } catch (e) {
-                links = [...DEFAULT_LINKS];
-            }
-        }
-
-        modalSave.addEventListener('click', saveLink);
-        modalCancel.addEventListener('click', closeEditor);
-        modalDelete.addEventListener('click', deleteLink);
-        modalOverlay.addEventListener('click', function(e) {
-            if (e.target === this) closeEditor();
-        });
-        modalText.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') saveLink();
-            if (e.key === 'Escape') closeEditor();
-        });
-        modalUrl.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') saveLink();
-            if (e.key === 'Escape') closeEditor();
-        });
-        loadLinksFromStorage();
-        renderAllLinks();
-
-        function search() {
-            const query = searchInput.value.trim();
-            if (query) window.location.href = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
-            else if (searchVisible) toggleSearch();
-        }
-        searchBtn.addEventListener('click', search);
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') search();
-        });
-
-        function glassSearch() {
-            const query = glassSearchInput.value.trim();
-            if (query) window.location.href = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
-        }
-        glassSearchBtn.addEventListener('click', glassSearch);
-        glassSearchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') glassSearch();
-        });
-
-        // ================================================================
-        // 7. 设置面板 - 模块化设计 (使用事件委托)
-        // ================================================================
-        const settingsToggleBtn = document.getElementById('wallpaperSettingsBtn');
-        const settingsPanel = document.getElementById('settingsPanel');
-        const settingsDynamic = document.getElementById('settingsDynamicContent');
-        let settingsOpen = false;
-
-        let moduleStates = {
-            mode: true,
-            wallpaper: true,
-            elements: true,
-            quotes: true,
-        };
-
-        const elemDefs = {
-            simple: [
-                { id: 'simpleClock', name: '阴阳·时钟', defaultVisible: true, defaultOpacity: 1, getEl: () => document
-                        .getElementById('clockArea') },
-                { id: 'simpleQuote', name: '阴阳·语录', defaultVisible: true, defaultOpacity: 1, getEl: () => document
-                        .getElementById('quoteArea') },
-                { id: 'simpleBottom', name: '阴阳·底部', defaultVisible: true, defaultOpacity: 1, getEl: () => document
-                        .getElementById('bottomArea') },
-            ],
-            wallpaper: [
-                { id: 'wpTime', name: '修仙·时间', defaultVisible: true, defaultOpacity: 1, getEl: () => document
-                        .getElementById('wallpaperTimeDisplay') },
-                { id: 'wpQuote', name: '修仙·语录', defaultVisible: true, defaultOpacity: 1, getEl: () => document
-                        .getElementById('wallpaperQuoteDisplay') },
-                { id: 'wpSearch', name: '修仙·搜索', defaultVisible: true, defaultOpacity: 1, getEl: () => document
-                        .getElementById('glassSearch') },
-                { id: 'wpLinks', name: '修仙·链接', defaultVisible: true, defaultOpacity: 1, getEl: () => document
-                        .getElementById('glassLinks') },
-                { id: 'musicPlayer', name: '音乐播放器', defaultVisible: false, defaultOpacity: 0.9, getEl: () =>
-                        document.getElementById('musicPlayer') },
-            ]
-        };
-
-        let elemState = {};
-
-        function getDefaultElemState() {
-            const s = {};
-            [...elemDefs.simple, ...elemDefs.wallpaper].forEach(def => {
-                s[def.id] = {
-                    visible: def.defaultVisible,
-                    opacity: def.defaultOpacity
-                };
-            });
-            return s;
-        }
-
-        function loadElemState() {
-            try {
-                const raw = localStorage.getItem('elemState');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    const defs = getDefaultElemState();
-                    for (const key in defs) {
-                        if (parsed[key]) {
-                            defs[key].visible = (parsed[key].visible !== undefined) ? parsed[key].visible : defs[key]
-                                .visible;
-                            defs[key].opacity = (parsed[key].opacity !== undefined) ? parsed[key].opacity : defs[key]
-                                .opacity;
-                        }
-                    }
-                    elemState = defs;
-                    return;
-                }
-            } catch (e) {}
-            elemState = getDefaultElemState();
-            if (elemState['musicPlayer']) elemState['musicPlayer'].visible = false;
-        }
-
-        function saveElemState() {
-            try { localStorage.setItem('elemState', JSON.stringify(elemState)); } catch (e) {}
-        }
-
-        function applyElemState() {
-            const allDefs = [...elemDefs.simple, ...elemDefs.wallpaper];
-            allDefs.forEach(def => {
-                const state = elemState[def.id];
-                if (!state) return;
-                const el = def.getEl();
-                if (!el) return;
-                if (state.visible) {
-                    if (el.classList.contains('hidden')) el.classList.remove('hidden');
-                    if (def.id === 'musicPlayer') {
-                        if (!el.classList.contains('active')) el.classList.add('active');
-                    }
-                } else {
-                    if (def.id === 'musicPlayer') {
-                        el.classList.remove('active');
-                    } else {
-                        el.classList.add('hidden');
-                    }
-                }
-                el.style.opacity = state.opacity;
-            });
-        }
-
-        let isWallpaperMode = false;
-
-        function toggleMode() {
-            isWallpaperMode = !isWallpaperMode;
-            if (isWallpaperMode) {
-                body.classList.add('wallpaper-mode');
-                if (!currentWallpaperType || !currentWallpaperId) applyWallpaper('static', 's1');
-                else applyWallpaper(currentWallpaperType, currentWallpaperId);
-                draggableItems.forEach(item => {
-                    if (item.id === 'glassSearch') item.style.display = 'flex';
-                    else if (item.id === 'glassLinks') item.style.display = 'flex';
-                    else item.style.display = 'block';
-                });
-                loadWallpaperPositions();
-                loadWallpaperLocks();
-            } else {
-                body.classList.remove('wallpaper-mode');
-                videoEl.classList.remove('active', 'fade-out');
-                imgEl.classList.remove('active', 'fade-out');
-                setDayNight(currentMode);
-                body.removeAttribute('data-brightness');
-                draggableItems.forEach(item => { item.style.display = 'none'; });
-            }
-            applyElemState();
-            const wasOpen = settingsOpen;
-            renderSettings();
-            if (wasOpen) {
-                settingsPanel.classList.add('open');
-            }
-            saveAllSettings();
-            updateModeSwitchUI();
-        }
-
-        function updateModeSwitchUI() {
-            const bigSwitch = document.getElementById('modeSwitchBig');
-            if (bigSwitch) {
-                bigSwitch.classList.toggle('wallpaper', isWallpaperMode);
-                const leftLabel = bigSwitch.querySelector('.mode-label-left');
-                const rightLabel = bigSwitch.querySelector('.mode-label-right');
-                if (leftLabel) leftLabel.classList.toggle('active', !isWallpaperMode);
-                if (rightLabel) rightLabel.classList.toggle('active', isWallpaperMode);
-            }
-            const statusText = document.querySelector('.mode-status-text');
-            if (statusText) {
-                statusText.textContent = isWallpaperMode ? '修仙' : '阴阳';
-            }
-        }
-
-        function updateWallpaperPreview(type, id) {
-            const previewGrid = document.getElementById('wallpaperPreviewGrid');
-            if (!previewGrid) return;
-            const items = wallpapers[type] || [];
-            previewGrid.innerHTML = '';
-            items.forEach(wp => {
-                const el = document.createElement('div');
-                el.className = 'wp-preview-item' + (type === currentWallpaperType && id === wp.id ? ' active' :
-                    '');
-                el.dataset.id = wp.id;
-                el.dataset.type = type;
-                if (type === 'dynamic') {
-                    const vid = document.createElement('video');
-                    const src = preloaded.blobs[wp.id] || 'videos/' + wp.file;
-                    vid.src = src;
-                    vid.muted = true;
-                    vid.playsInline = true;
-                    vid.preload = 'metadata';
-                    vid.loop = true;
-                    vid.addEventListener('loadedmetadata', function() { this.play().catch(() => {}); });
-                    el.appendChild(vid);
-                } else {
-                    const img = document.createElement('img');
-                    img.src = 'images/' + wp.file;
-                    img.alt = wp.name;
-                    img.loading = 'lazy';
-                    el.appendChild(img);
-                }
-                const label = document.createElement('div');
-                label.className = 'wp-label';
-                label.textContent = wp.name;
-                el.appendChild(label);
-                const check = document.createElement('div');
-                check.className = 'check-mark';
-                check.textContent = '✓';
-                el.appendChild(check);
-                el.addEventListener('click', function() {
-                    applyWallpaper(type, wp.id);
-                    document.querySelectorAll('.type-btn').forEach(b => {
-                        b.classList.toggle('active', b.dataset.type === type);
-                    });
-                    document.querySelectorAll('.wp-preview-item').forEach(item => {
-                        item.classList.toggle('active', item.dataset.id === wp.id &&
-                            item.dataset.type === type);
-                    });
-                });
-                previewGrid.appendChild(el);
-            });
-        }
-
-        // ---- 安全构建语录模块 (完全使用 DOM) ----
-        function renderQuotesModule() {
-            const container = document.createElement('div');
-            container.className = 'settings-module';
-            container.dataset.module = 'quotes';
-
-            const header = document.createElement('div');
-            header.className = 'settings-module-header';
-            header.dataset.moduleToggle = 'quotes';
-            const headerSpan = document.createElement('span');
-            headerSpan.textContent = '❝ 经典语录';
-            const arrow = document.createElement('span');
-            arrow.className = 'arrow' + (moduleStates.quotes ? '' : ' collapsed');
-            arrow.textContent = '▾';
-            header.appendChild(headerSpan);
-            header.appendChild(arrow);
-            container.appendChild(header);
-
-            const body = document.createElement('div');
-            body.className = 'settings-module-body' + (moduleStates.quotes ? '' : ' collapsed');
-
-            const manager = document.createElement('div');
-            manager.className = 'quote-manager';
-            manager.id = 'quoteManager';
-            quotes.forEach((q, i) => {
-                const item = document.createElement('div');
-                item.className = 'quote-item';
-                item.dataset.index = i;
-
-                const textSpan = document.createElement('span');
-                textSpan.className = 'q-text';
-                textSpan.textContent = q.text;
-
-                const authorSpan = document.createElement('span');
-                authorSpan.className = 'q-author';
-                authorSpan.textContent = '— ' + q.author;
-
-                const actions = document.createElement('div');
-                actions.className = 'q-actions';
-                const editBtn = document.createElement('button');
-                editBtn.className = 'edit-btn';
-                editBtn.textContent = '✎';
-                editBtn.dataset.index = i;
-                const delBtn = document.createElement('button');
-                delBtn.className = 'del-btn';
-                delBtn.textContent = '✕';
-                delBtn.dataset.index = i;
-                actions.appendChild(editBtn);
-                actions.appendChild(delBtn);
-
-                item.appendChild(textSpan);
-                item.appendChild(authorSpan);
-                item.appendChild(actions);
-                manager.appendChild(item);
-            });
-            body.appendChild(manager);
-
-            const form = document.createElement('div');
-            form.className = 'quote-add-form';
-            const inputText = document.createElement('input');
-            inputText.type = 'text';
-            inputText.id = 'newQuoteText';
-            inputText.placeholder = '语录内容';
-            const inputAuthor = document.createElement('input');
-            inputAuthor.type = 'text';
-            inputAuthor.id = 'newQuoteAuthor';
-            inputAuthor.placeholder = '作者';
-            const addBtn = document.createElement('button');
-            addBtn.id = 'addQuoteBtn';
-            addBtn.textContent = '添加';
-            form.appendChild(inputText);
-            form.appendChild(inputAuthor);
-            form.appendChild(addBtn);
-            body.appendChild(form);
-
-            const intervalRow = document.createElement('div');
-            intervalRow.className = 'setting-row';
-            const intervalCtrl = document.createElement('div');
-            intervalCtrl.className = 'interval-control';
-            const label = document.createElement('label');
-            label.textContent = '切换间隔（秒）';
-            const intervalInput = document.createElement('input');
-            intervalInput.type = 'number';
-            intervalInput.id = 'intervalInput';
-            intervalInput.min = '1';
-            intervalInput.max = '300';
-            intervalInput.value = Math.round(quoteInterval / 1000);
-            const unit = document.createElement('span');
-            unit.style.cssText = 'font-size:0.6rem;opacity:0.4;';
-            unit.textContent = '秒';
-            intervalCtrl.appendChild(label);
-            intervalCtrl.appendChild(intervalInput);
-            intervalCtrl.appendChild(unit);
-            intervalRow.appendChild(intervalCtrl);
-            body.appendChild(intervalRow);
-
-            container.appendChild(body);
-            return container;
-        }
-
-        // ---- 渲染设置（仅生成 DOM，事件委托统一处理） ----
-        function renderSettings() {
-            const content = document.getElementById('settingsDynamicContent');
-            content.innerHTML = '';
-
-            // 模式模块
-            const modeModule = document.createElement('div');
-            modeModule.className = 'settings-module';
-            modeModule.dataset.module = 'mode';
-            modeModule.innerHTML = `
-                <div class="settings-module-header" data-module-toggle="mode">
-                    <span>✦ 模式</span>
-                    <span class="arrow ${moduleStates.mode ? '' : 'collapsed'}">▾</span>
-                </div>
-                <div class="settings-module-body ${moduleStates.mode ? '' : 'collapsed'}">
-                    <div class="setting-row">
-                        <div class="mode-switch-container">
-                            <div class="mode-switch-big ${isWallpaperMode ? 'wallpaper' : ''}" id="modeSwitchBig">
-                                <span class="mode-label-left ${!isWallpaperMode ? 'active' : ''}">阴阳</span>
-                                <span class="mode-label-right ${isWallpaperMode ? 'active' : ''}">修仙</span>
-                                <div class="slider-track"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            content.appendChild(modeModule);
-
-            // 壁纸模块（仅修仙模式显示）
-            if (isWallpaperMode) {
-                const wpModule = document.createElement('div');
-                wpModule.className = 'settings-module';
-                wpModule.dataset.module = 'wallpaper';
-                wpModule.innerHTML = `
-                    <div class="settings-module-header" data-module-toggle="wallpaper">
-                        <span>🏔 修仙</span>
-                        <span class="arrow ${moduleStates.wallpaper ? '' : 'collapsed'}">▾</span>
-                    </div>
-                    <div class="settings-module-body ${moduleStates.wallpaper ? '' : 'collapsed'}">
-                        <div class="setting-row">
-                            <label>类型</label>
-                            <div class="type-btns">
-                                <button class="type-btn ${currentWallpaperType === 'static' ? 'active' : ''}" data-type="static">静态</button>
-                                <button class="type-btn ${currentWallpaperType === 'dynamic' ? 'active' : ''}" data-type="dynamic">动态</button>
-                            </div>
-                        </div>
-                        <div class="setting-row">
-                            <label>选择仙境</label>
-                            <div class="wallpaper-scroll-container">
-                                <div class="wp-grid" id="wallpaperPreviewGrid"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                content.appendChild(wpModule);
-            }
-
-            // 元素控制模块
-            const elemModule = document.createElement('div');
-            elemModule.className = 'settings-module';
-            elemModule.dataset.module = 'elements';
-            const defs = isWallpaperMode ? elemDefs.wallpaper : elemDefs.simple;
-            let elemHtml = '';
-            defs.forEach(def => {
-                const state = elemState[def.id] || { visible: true, opacity: 1 };
-                elemHtml += `
-                    <div class="elem-control" data-elem-id="${def.id}">
-                        <span class="elem-name">${def.name}</span>
-                        <button class="elem-toggle ${state.visible ? 'active' : ''}"><span class="thumb"></span></button>
-                        <div class="elem-opacity"><input type="range" min="0.05" max="1" step="0.05" value="${state.opacity}" /></div>
-                        <span class="elem-opacity-value">${Math.round(state.opacity*100)}%</span>
-                    </div>
-                `;
-            });
-            elemModule.innerHTML = `
-                <div class="settings-module-header" data-module-toggle="elements">
-                    <span>⊞ 元素控制</span>
-                    <span class="arrow ${moduleStates.elements ? '' : 'collapsed'}">▾</span>
-                </div>
-                <div class="settings-module-body ${moduleStates.elements ? '' : 'collapsed'}">
-                    <div class="setting-row">
-                        <div id="elemControlList">${elemHtml}</div>
-                    </div>
-                </div>
-            `;
-            content.appendChild(elemModule);
-
-            // 语录模块
-            const quoteModule = renderQuotesModule();
-            content.appendChild(quoteModule);
-
-            // 更新壁纸预览
-            if (isWallpaperMode) {
-                updateWallpaperPreview(currentWallpaperType, currentWallpaperId);
-            }
-
-            // 恢复锁定状态
-            restoreLocks();
-            updateModeSwitchUI();
-        }
-
-        // ---- 设置面板事件委托 ----
-        function initSettingsDelegation() {
-            const content = document.getElementById('settingsDynamicContent');
-            if (!content) return;
-
-            // 模块折叠
-            content.addEventListener('click', function(e) {
-                const header = e.target.closest('.settings-module-header');
-                if (header && header.dataset.moduleToggle) {
-                    const moduleName = header.dataset.moduleToggle;
-                    if (moduleStates[moduleName] !== undefined) {
-                        moduleStates[moduleName] = !moduleStates[moduleName];
-                        const body = header.closest('.settings-module').querySelector('.settings-module-body');
-                        const arrow = header.querySelector('.arrow');
-                        if (body) body.classList.toggle('collapsed', !moduleStates[moduleName]);
-                        if (arrow) arrow.classList.toggle('collapsed', !moduleStates[moduleName]);
-                        saveModuleStates();
-                    }
-                }
-            });
-
-            // 模式切换
-            content.addEventListener('click', function(e) {
-                const bigSwitch = e.target.closest('#modeSwitchBig');
-                if (bigSwitch) {
-                    e.stopPropagation();
-                    toggleMode();
-                }
-            });
-
-            // 壁纸类型切换
-            content.addEventListener('click', function(e) {
-                const btn = e.target.closest('.type-btn');
-                if (btn) {
-                    e.stopPropagation();
-                    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    const type = btn.dataset.type;
-                    currentWallpaperType = type;
-                    const items = wallpapers[type] || [];
-                    if (items.length > 0) {
-                        const exists = items.some(w => w.id === currentWallpaperId);
-                        if (!exists) {
-                            currentWallpaperId = items[0].id;
-                        }
-                    }
-                    updateWallpaperPreview(type, currentWallpaperId);
+            function deleteLink() {
+                if (editingIndex === -1) return;
+                if (confirm('确定删除？')) {
+                    links.splice(editingIndex, 1);
+                    renderAllLinks();
+                    closeEditor();
+                    saveLinksToStorage();
                     saveAllSettings();
                 }
+            }
+
+            function saveLinksToStorage() {
+                try { localStorage.setItem('quickLinks', JSON.stringify(links)); } catch (e) {}
+            }
+
+            function loadLinksFromStorage() {
+                try {
+                    const data = localStorage.getItem('quickLinks');
+                    if (data) {
+                        const parsed = JSON.parse(data);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            const hasOld = parsed.some(l =>
+                                l.text === '百度' || l.text === 'B站' ||
+                                (l.url && (l.url.includes('baidu') || l.url.includes('bilibili')))
+                            );
+                            if (!hasOld) {
+                                links = parsed;
+                                return;
+                            }
+                        }
+                    }
+                    links = [...DEFAULT_LINKS];
+                    saveLinksToStorage();
+                } catch (e) {
+                    links = [...DEFAULT_LINKS];
+                }
+            }
+
+            modalSave.addEventListener('click', saveLink);
+            modalCancel.addEventListener('click', closeEditor);
+            modalDelete.addEventListener('click', deleteLink);
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === this) closeEditor();
+            });
+            modalText.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') saveLink();
+                if (e.key === 'Escape') closeEditor();
+            });
+            modalUrl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') saveLink();
+                if (e.key === 'Escape') closeEditor();
+            });
+            loadLinksFromStorage();
+            renderAllLinks();
+
+            function search() {
+                const query = searchInput.value.trim();
+                if (query) window.location.href = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
+                else if (searchVisible) toggleSearch();
+            }
+            searchBtn.addEventListener('click', search);
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') search();
             });
 
-<<<<<<< HEAD
             function glassSearch() {
                 const query = glassSearchInput.value.trim();
                 if (query) window.location.href = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
@@ -4953,6 +3870,7 @@
                 if (e.key === 'Enter') glassSearch();
             });
 
+            // ---- 软键盘适配 ----
             const glassSearchWrapper = document.getElementById('glassSearch');
             glassSearchInput.addEventListener('focus', function() {
                 glassSearchWrapper.classList.add('input-focused');
@@ -4961,6 +3879,7 @@
                 glassSearchWrapper.classList.remove('input-focused');
             });
 
+            // ---- 设置面板输入框滚动可见 ----
             function scrollInputIntoView(input) {
                 if (!input) return;
                 input.addEventListener('focus', function() {
@@ -4969,12 +3888,14 @@
                     }, 300);
                 });
             }
+            // 将在渲染设置面板后调用
 
             // ================================================================
-            // 7. 设置面板 - 修复花屏：添加回退背景 + 强制GPU + 禁用拖拽
+            // 7. 设置面板 - 修复：清理observer，统一状态管理
             // ================================================================
             const settingsToggleBtn = document.getElementById('wallpaperSettingsBtn');
             const settingsPanel = document.getElementById('settingsPanel');
+            const settingsDynamic = document.getElementById('settingsDynamicContent');
             let settingsOpen = false;
 
             let moduleStates = {
@@ -5119,11 +4040,13 @@
                 }
             }
 
+            // ---- 壁纸预览：懒加载优化，修复observer泄露 ----
             let previewObserver = null;
 
             function updateWallpaperPreview(type, id) {
                 const previewGrid = document.getElementById('wallpaperPreviewGrid');
                 if (!previewGrid) return;
+                // 断开旧observer
                 if (previewObserver) {
                     previewObserver.disconnect();
                     previewObserver = null;
@@ -5240,6 +4163,7 @@
                 }
             }
 
+            // ---- 渲染设置（简化，保持原有逻辑） ----
             function renderSettings() {
                 const content = document.getElementById('settingsDynamicContent');
                 content.innerHTML = '';
@@ -5333,14 +4257,12 @@
                 restoreLocks();
                 updateModeSwitchUI();
 
+                // 为设置面板内的输入框添加焦点滚动
                 const inputs = content.querySelectorAll('input');
                 inputs.forEach(input => scrollInputIntoView(input));
-
-                // 打开设置面板时禁用所有可拖动元素（防止花屏）
-                const allDraggable = document.querySelectorAll('.draggable-item, .simple-draggable');
-                allDraggable.forEach(el => el.classList.add('no-pointer-events'));
             }
 
+            // ---- 语录模块渲染 ----
             function renderQuotesModule() {
                 const container = document.createElement('div');
                 container.className = 'settings-module';
@@ -5371,6 +4293,7 @@
 
                     const textSpan = document.createElement('span');
                     textSpan.className = 'q-text';
+                    // 限制显示长度
                     const displayText = q.text.length > 80 ? q.text.substring(0, 80) + '...' : q.text;
                     textSpan.textContent = displayText;
 
@@ -5443,6 +4366,7 @@
                 return container;
             }
 
+            // ---- 设置面板事件委托 ----
             function initSettingsDelegation() {
                 const content = document.getElementById('settingsDynamicContent');
                 if (!content) return;
@@ -5615,88 +4539,21 @@
                                 moduleStates[key] = parsed[key];
                             }
                         }
-=======
-            // 元素控制：toggle
-            content.addEventListener('click', function(e) {
-                const toggle = e.target.closest('.elem-toggle');
-                if (toggle) {
-                    e.stopPropagation();
-                    const row = toggle.closest('.elem-control');
-                    if (!row) return;
-                    const id = row.dataset.elemId;
-                    if (!id || !elemState[id]) return;
-                    const newVis = !elemState[id].visible;
-                    elemState[id].visible = newVis;
-                    toggle.classList.toggle('active', newVis);
-                    applyElemState();
-                    saveElemState();
-                }
-            });
-
-            // 元素控制：opacity range
-            content.addEventListener('input', function(e) {
-                const range = e.target.closest('.elem-opacity input[type="range"]');
-                if (range) {
-                    const row = range.closest('.elem-control');
-                    if (!row) return;
-                    const id = row.dataset.elemId;
-                    if (!id || !elemState[id]) return;
-                    const val = parseFloat(range.value);
-                    elemState[id].opacity = val;
-                    applyElemState();
-                    saveElemState();
-                    const valDisplay = row.querySelector('.elem-opacity-value');
-                    if (valDisplay) valDisplay.textContent = Math.round(val * 100) + '%';
-                }
-            });
-
-            // 语录编辑/删除/添加
-            content.addEventListener('click', function(e) {
-                // 编辑
-                const editBtn = e.target.closest('.edit-btn');
-                if (editBtn) {
-                    e.stopPropagation();
-                    const idx = parseInt(editBtn.dataset.index);
-                    const q = quotes[idx];
-                    if (!q) return;
-                    const newText = prompt('编辑语录内容：', q.text);
-                    if (newText !== null) {
-                        const newAuthor = prompt('编辑作者：', q.author);
-                        if (newAuthor !== null) {
-                            quotes[idx] = { text: newText.trim(), author: newAuthor.trim() };
-                            saveQuotes();
-                            renderSettings();
-                            if (quoteIndex === idx) showQuote(quoteIndex);
-                            restartInterval();
-                        }
                     }
-                    return;
+                } catch (e) {}
+            }
+            loadModuleStates();
+
+            function restoreLocks() {
+                if (quoteLocked) {
+                    quoteArea.classList.add('locked');
+                    quoteArea.style.cursor = 'default';
+                    if (wqDisplay) wqDisplay.classList.add('locked');
+                } else {
+                    quoteArea.classList.remove('locked');
+                    quoteArea.style.cursor = 'pointer';
+                    if (wqDisplay) wqDisplay.classList.remove('locked');
                 }
-                // 删除
-                const delBtn = e.target.closest('.del-btn');
-                if (delBtn) {
-                    e.stopPropagation();
-                    const idx = parseInt(delBtn.dataset.index);
-                    if (confirm('确定删除此语录？')) {
-                        quotes.splice(idx, 1);
-                        saveQuotes();
-                        if (quotes.length === 0) {
-                            quotes = DEFAULT_QUOTES.map(q => ({ ...q }));
-                            saveQuotes();
-                        }
-                        if (quoteIndex >= quotes.length) quoteIndex = 0;
-                        showQuote(quoteIndex);
-                        renderSettings();
-                        restartInterval();
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
-                    }
-                    return;
-                }
-<<<<<<< HEAD
-                // 恢复指针事件
-                document.querySelectorAll('.draggable-item, .simple-draggable').forEach(el => {
-                    el.classList.remove('no-pointer-events');
-                });
             }
 
             function toggleSettings(e) {
@@ -5705,11 +4562,6 @@
                 settingsPanel.classList.toggle('open', settingsOpen);
                 if (settingsOpen) {
                     renderSettings();
-                } else {
-                    // 关闭时恢复指针事件
-                    document.querySelectorAll('.draggable-item, .simple-draggable').forEach(el => {
-                        el.classList.remove('no-pointer-events');
-                    });
                 }
             }
 
@@ -5720,15 +4572,11 @@
                     e.target !== settingsToggleBtn && !settingsToggleBtn.contains(e.target)) {
                     settingsPanel.classList.remove('open');
                     settingsOpen = false;
-                    // 恢复指针事件
-                    document.querySelectorAll('.draggable-item, .simple-draggable').forEach(el => {
-                        el.classList.remove('no-pointer-events');
-                    });
                 }
             });
 
             // ================================================================
-            // 8. 音乐播放器
+            // 8. 音乐播放器 - 修复：状态同步
             // ================================================================
             const musicPlayer = document.getElementById('musicPlayer');
             const playerCover = document.getElementById('playerCover');
@@ -5829,207 +4677,17 @@
                     audioPlayer.preload = 'auto';
                     audioPlayer.addEventListener('ended', function() {
                         isPlaying = false;
+                        // 可以更新UI，但当前无播放状态指示
                     });
                     audioPlayer.addEventListener('error', function(e) {
                         console.warn('音频播放错误:', e);
                         showToast('音乐播放失败，请检查资源');
                     });
-=======
-                // 添加
-                const addBtn = e.target.closest('#addQuoteBtn');
-                if (addBtn) {
-                    e.stopPropagation();
-                    const textInput = document.getElementById('newQuoteText');
-                    const authorInput = document.getElementById('newQuoteAuthor');
-                    if (!textInput || !authorInput) return;
-                    const text = textInput.value.trim();
-                    const author = authorInput.value.trim();
-                    if (!text) { showToast('请输入语录内容'); return; }
-                    quotes.push({ text, author: author || '佚名' });
-                    saveQuotes();
-                    textInput.value = '';
-                    authorInput.value = '';
-                    renderSettings();
-                    restartInterval();
-                    showToast('语录已添加');
-                }
-            });
-
-            // 间隔输入变化
-            content.addEventListener('change', function(e) {
-                const intervalInput = e.target.closest('#intervalInput');
-                if (intervalInput) {
-                    let val = parseInt(intervalInput.value);
-                    if (isNaN(val) || val < 1) val = 1;
-                    if (val > 300) val = 300;
-                    intervalInput.value = val;
-                    quoteInterval = val * 1000;
-                    saveInterval();
-                    restartInterval();
-                    showToast('间隔已更新');
-                }
-            });
-        }
-
-        function saveModuleStates() {
-            try { localStorage.setItem('moduleStates', JSON.stringify(moduleStates)); } catch (e) {}
-        }
-
-        function loadModuleStates() {
-            try {
-                const data = localStorage.getItem('moduleStates');
-                if (data) {
-                    const parsed = JSON.parse(data);
-                    for (const key in parsed) {
-                        if (moduleStates[key] !== undefined) {
-                            moduleStates[key] = parsed[key];
-                        }
-                    }
-                }
-            } catch (e) {}
-        }
-        loadModuleStates();
-
-        function restoreLocks() {
-            if (quoteLocked) {
-                quoteArea.classList.add('locked');
-                quoteArea.style.cursor = 'default';
-                if (wqDisplay) wqDisplay.classList.add('locked');
-            } else {
-                quoteArea.classList.remove('locked');
-                quoteArea.style.cursor = 'pointer';
-                if (wqDisplay) wqDisplay.classList.remove('locked');
-            }
-        }
-
-        function toggleSettings(e) {
-            if (e) e.stopPropagation();
-            settingsOpen = !settingsOpen;
-            settingsPanel.classList.toggle('open', settingsOpen);
-            if (settingsOpen) {
-                renderSettings();
-            }
-        }
-
-        settingsToggleBtn.addEventListener('click', toggleSettings);
-
-        document.addEventListener('click', function(e) {
-            if (settingsOpen && !settingsPanel.contains(e.target) &&
-                e.target !== settingsToggleBtn && !settingsToggleBtn.contains(e.target)) {
-                settingsPanel.classList.remove('open');
-                settingsOpen = false;
-            }
-        });
-
-        // ================================================================
-        // 8. 音乐播放器
-        // ================================================================
-        const musicPlayer = document.getElementById('musicPlayer');
-        const playerCover = document.getElementById('playerCover');
-        const playerCoverImg = document.getElementById('playerCoverImg');
-        const playerJoystickBtn = document.getElementById('playerJoystickBtn');
-        const IMAGE_COUNT = 36;
-        const albumImages = [];
-        for (let i = 1; i <= IMAGE_COUNT; i++) {
-            const num = String(i).padStart(2, '0');
-            albumImages.push(`images/cover_${num}.png`);
-        }
-        const songs = [
-            { name: '凡人', file: 'song_01.mp3' },
-            { name: '归期', file: 'song_02.mp3' },
-            { name: '旅人', file: 'song_03.mp3' },
-        ];
-        let currentSongIndex = 0;
-        let currentImageIndex = 0;
-        let audioPlayer = null;
-        let isPlaying = false;
-        let isCoverLoading = false;
-
-        let isCoverDragging = false;
-        let coverDragStartX = 0,
-            coverDragStartY = 0;
-        let coverDragOrigLeft = 0,
-            coverDragOrigTop = 0;
-        let coverClickThreshold = 8;
-        let coverPointerDownTime = 0;
-
-        playerCover.addEventListener('pointerdown', function(e) {
-            if (e.button !== 0) return;
-            const rect = musicPlayer.getBoundingClientRect();
-            coverDragOrigLeft = rect.left;
-            coverDragOrigTop = rect.top;
-            coverDragStartX = e.clientX;
-            coverDragStartY = e.clientY;
-            coverPointerDownTime = Date.now();
-            isCoverDragging = false;
-            playerCover.style.cursor = 'grabbing';
-            playerCover._draggingActive = true;
-            e.preventDefault();
-        });
-
-        document.addEventListener('pointermove', function(e) {
-            if (!playerCover._draggingActive) return;
-            const dx = e.clientX - coverDragStartX;
-            const dy = e.clientY - coverDragStartY;
-            if (Math.sqrt(dx * dx + dy * dy) > coverClickThreshold) {
-                isCoverDragging = true;
-                playerCover.classList.add('dragging-cover');
-                let newLeft = coverDragOrigLeft + dx;
-                let newTop = coverDragOrigTop + dy;
-                const w = musicPlayer.offsetWidth;
-                const h = musicPlayer.offsetHeight;
-                const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
-                    .getPropertyValue('--safe-right') || '0');
-                const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
-                    .getPropertyValue('--safe-bottom') || '0');
-                newLeft = Math.max(0, Math.min(safeRight - w, newLeft));
-                newTop = Math.max(0, Math.min(safeBottom - h, newTop));
-                musicPlayer.style.left = newLeft + 'px';
-                musicPlayer.style.top = newTop + 'px';
-                saveMusicPlayerPos();
-            }
-        });
-
-        document.addEventListener('pointerup', function(e) {
-            if (!playerCover._draggingActive) return;
-            playerCover._draggingActive = false;
-            playerCover.style.cursor = 'pointer';
-            if (isCoverDragging) {
-                playerCover.classList.remove('dragging-cover');
-                saveMusicPlayerPos();
-            } else {
-                const dt = Date.now() - coverPointerDownTime;
-                if (dt < 300) {
-                    togglePlay();
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                 }
             }
-            isCoverDragging = false;
-        });
 
-        function initAudio() {
-            if (!audioPlayer) {
-                audioPlayer = new Audio();
-                audioPlayer.volume = 0.6;
-                audioPlayer.addEventListener('ended', function() { isPlaying = false; });
-            }
-        }
-
-        function playSong(index) {
-            initAudio();
-            const song = songs[index % songs.length];
-            if (!song) return;
-            const src = preloaded.blobs[song.file] || 'songs/' + song.file;
-            audioPlayer.src = src;
-            audioPlayer.load();
-            audioPlayer.play().catch(() => {});
-            isPlaying = true;
-        }
-
-        function togglePlay() {
-            if (!audioPlayer) {
+            function playSong(index) {
                 initAudio();
-<<<<<<< HEAD
                 const song = songs[index % songs.length];
                 if (!song) return;
                 const cached = musicBlobCache[song.file];
@@ -6039,39 +4697,25 @@
                 audioPlayer.play().catch(() => {
                     showToast('音乐播放失败');
                 });
-=======
-                playSong(currentSongIndex);
-                return;
-            }
-            if (isPlaying) {
-                audioPlayer.pause();
-                isPlaying = false;
-            } else {
-                audioPlayer.play().catch(() => {});
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                 isPlaying = true;
-                currentSongIndex = index;
+                currentSongIndex = index; // 统一索引
             }
-        }
 
-        function updatePlayerCover() {
-            if (isCoverLoading) return;
-            isCoverLoading = true;
-            const src = albumImages[currentImageIndex] || 'images/cover_01.png';
-            playerCoverImg.src = src;
-            playerCoverImg.onload = function() {
-                isCoverLoading = false;
-                playerCoverImg.onload = null;
-                playerCoverImg.onerror = null;
-            };
-            playerCoverImg.onerror = function() {
-                isCoverLoading = false;
-                playerCoverImg.onload = null;
-                playerCoverImg.onerror = null;
-            };
-        }
+            function togglePlay() {
+                if (!audioPlayer) {
+                    initAudio();
+                    playSong(currentSongIndex);
+                    return;
+                }
+                if (isPlaying) {
+                    audioPlayer.pause();
+                    isPlaying = false;
+                } else {
+                    audioPlayer.play().catch(() => {});
+                    isPlaying = true;
+                }
+            }
 
-<<<<<<< HEAD
             function updatePlayerCover() {
                 if (isCoverLoading) return;
                 isCoverLoading = true;
@@ -6164,6 +4808,7 @@
             });
 
             function togglePlayerVisibility() {
+                // 统一由 elemState 控制
                 const state = elemState['musicPlayer'];
                 if (!state) return;
                 const newVis = !state.visible;
@@ -6230,257 +4875,23 @@
                     top: musicPlayer.style.top
                 };
                 try { localStorage.setItem('musicPlayerPos', JSON.stringify(pos)); } catch (e) {}
-=======
-        const playerTouchDivs = document.querySelectorAll('.player-joystick .touch > div');
-        playerTouchDivs.forEach(div => {
-            const dir = div.dataset.dir;
-            div.addEventListener('mouseenter', function() {
-                playerJoystickBtn.classList.remove('dir-up', 'dir-down', 'dir-left', 'dir-right');
-                playerJoystickBtn.classList.add('dir-' + dir);
-            });
-            div.addEventListener('mouseleave', function() {
-                playerJoystickBtn.classList.remove('dir-up', 'dir-down', 'dir-left', 'dir-right');
-            });
-            div.addEventListener('click', function(e) {
-                e.stopPropagation();
-                handlePlayerJoystick(dir);
-            });
-            div.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                handlePlayerJoystick(dir);
-            }, { passive: false });
-        });
-
-        function handlePlayerJoystick(dir) {
-            switch (dir) {
-                case 'up':
-                    if (isCoverLoading) return;
-                    currentImageIndex = (currentImageIndex - 1 + IMAGE_COUNT) % IMAGE_COUNT;
-                    updatePlayerCover();
-                    break;
-                case 'down':
-                    if (isCoverLoading) return;
-                    currentImageIndex = (currentImageIndex + 1) % IMAGE_COUNT;
-                    updatePlayerCover();
-                    break;
-                case 'left':
-                    currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
-                    playSong(currentSongIndex);
-                    break;
-                case 'right':
-                    currentSongIndex = (currentSongIndex + 1) % songs.length;
-                    playSong(currentSongIndex);
-                    break;
             }
-        }
 
-        let playerVisible = false;
-
-        document.addEventListener('dblclick', function(e) {
-            const interactiveSelectors = [
-                'button', 'a', 'input', 'textarea', 'select',
-                '.link-item', '.add-link-btn', '.glass-link', '.glass-add',
-                '.settings-toggle', '.settings-panel', '.modal-overlay',
-                '.player-cover', '.player-joystick', '.quote-area',
-                '.wallpaper-quote-display', '.clock-area', '.draggable-item',
-                '#rope-container', '#settingsPanelWrapper', '.search-box',
-                '.glass-search-wrapper', '.search-btn', '.glass-search-btn',
-                '.mode-switch-big', '.type-btn', '.wp-preview-item',
-                '.elem-toggle', '.elem-opacity input', '.settings-module-header',
-                '.quote-item .q-actions button', '#addQuoteBtn', '#modalSave',
-                '#modalCancel', '#modalDelete', '.settings-toggle'
-            ];
-            for (const sel of interactiveSelectors) {
-                if (e.target.closest(sel)) return;
-            }
-            const target = e.target;
-            if (target === document.body || target === document.documentElement) {
-                togglePlayerVisibility();
-                return;
-            }
-            if (target.closest('.wallpaper-container') && !target.closest('.draggable-item')) {
-                togglePlayerVisibility();
-                return;
-            }
-            if (target.closest('.simple-mode') && !target.closest('.simple-draggable')) {
-                togglePlayerVisibility();
-                return;
-            }
-        });
-
-        function togglePlayerVisibility() {
-            const state = elemState['musicPlayer'];
-            if (!state) return;
-            const newVis = !elemState['musicPlayer'].visible;
-            elemState['musicPlayer'].visible = newVis;
-            saveElemState();
-            applyElemState();
-            playerVisible = newVis;
-
-            if (newVis) {
-                musicPlayer.classList.add('active');
-                const w = window.innerWidth,
-                    h = window.innerHeight;
-                const pw = musicPlayer.offsetWidth || 270,
-                    ph = musicPlayer.offsetHeight || 400;
-                const safeRight = w - parseFloat(getComputedStyle(document.documentElement).getPropertyValue(
-                    '--safe-right') || '0');
-                const safeBottom = h - parseFloat(getComputedStyle(document.documentElement).getPropertyValue(
-                    '--safe-bottom') || '0');
-                musicPlayer.style.left = Math.max(10, Math.min(safeRight - pw - 10, w / 2 - pw / 2 + (Math.random() -
-                    0.5) * 100)) + 'px';
-                musicPlayer.style.top = Math.max(10, Math.min(safeBottom - ph - 10, h / 2 - ph / 2 + (Math.random() -
-                    0.5) * 100)) + 'px';
-                updatePlayerCover();
-                initAudio();
-                if (!isPlaying) playSong(currentSongIndex);
-            } else {
-                musicPlayer.classList.remove('active');
-            }
-        }
-
-        let isDraggingPlayer = false;
-        let dragOffsetX, dragOffsetY;
-        musicPlayer.addEventListener('mousedown', function(e) {
-            if (e.target.closest('.player-cover') || e.target.closest('.player-joystick')) return;
-            isDraggingPlayer = true;
-            const rect = musicPlayer.getBoundingClientRect();
-            dragOffsetX = e.clientX - rect.left;
-            dragOffsetY = e.clientY - rect.top;
-            musicPlayer.style.cursor = 'grabbing';
-            e.preventDefault();
-        });
-        window.addEventListener('mousemove', function(e) {
-            if (!isDraggingPlayer) return;
-            let x = e.clientX - dragOffsetX,
-                y = e.clientY - dragOffsetY;
-            const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
-                .getPropertyValue('--safe-right') || '0');
-            const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
-                .getPropertyValue('--safe-bottom') || '0');
-            x = Math.max(0, Math.min(safeRight - musicPlayer.offsetWidth, x));
-            y = Math.max(0, Math.min(safeBottom - musicPlayer.offsetHeight, y));
-            musicPlayer.style.left = x + 'px';
-            musicPlayer.style.top = y + 'px';
-            saveMusicPlayerPos();
-        });
-        window.addEventListener('mouseup', function(e) {
-            if (isDraggingPlayer) {
-                isDraggingPlayer = false;
-                musicPlayer.style.cursor = 'grab';
-                saveMusicPlayerPos();
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
-            }
-        });
-        musicPlayer.addEventListener('touchstart', function(e) {
-            if (e.target.closest('.player-cover') || e.target.closest('.player-joystick')) return;
-            const touch = e.touches[0];
-            const rect = musicPlayer.getBoundingClientRect();
-            dragOffsetX = touch.clientX - rect.left;
-            dragOffsetY = touch.clientY - rect.top;
-            isDraggingPlayer = true;
-            e.preventDefault();
-        }, { passive: false });
-        window.addEventListener('touchmove', function(e) {
-            if (!isDraggingPlayer) return;
-            const touch = e.touches[0];
-            let x = touch.clientX - dragOffsetX,
-                y = touch.clientY - dragOffsetY;
-            const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
-                .getPropertyValue('--safe-right') || '0');
-            const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
-                .getPropertyValue('--safe-bottom') || '0');
-            x = Math.max(0, Math.min(safeRight - musicPlayer.offsetWidth, x));
-            y = Math.max(0, Math.min(safeBottom - musicPlayer.offsetHeight, y));
-            musicPlayer.style.left = x + 'px';
-            musicPlayer.style.top = y + 'px';
-            saveMusicPlayerPos();
-        }, { passive: true });
-        window.addEventListener('touchend', function(e) {
-            if (isDraggingPlayer) {
-                isDraggingPlayer = false;
-                saveMusicPlayerPos();
-            }
-        }, { passive: true });
-        window.addEventListener('touchcancel', function(e) {
-            if (isDraggingPlayer) {
-                isDraggingPlayer = false;
-                saveMusicPlayerPos();
-            }
-        }, { passive: true });
-
-        function saveMusicPlayerPos() {
-            const pos = {
-                left: musicPlayer.style.left,
-                top: musicPlayer.style.top
-            };
-            try { localStorage.setItem('musicPlayerPos', JSON.stringify(pos)); } catch (e) {}
-        }
-
-        function loadMusicPlayerPos() {
-            try {
-                const raw = localStorage.getItem('musicPlayerPos');
-                if (raw) {
-                    const pos = JSON.parse(raw);
-                    if (pos.left) musicPlayer.style.left = pos.left;
-                    if (pos.top) musicPlayer.style.top = pos.top;
-                }
-            } catch (e) {}
-        }
-        loadMusicPlayerPos();
-        updatePlayerCover();
-
-        // ================================================================
-        // 9. 修仙模式拖拽系统 (安全区域)
-        // ================================================================
-        const draggableItems = document.querySelectorAll('.draggable-item');
-        const positions = {};
-        let dragJustHappened = false;
-        let dragJustResetTimer = null;
-        let currentDraggingItem = null;
-
-        function forceEndAllDrags() {
-            draggableItems.forEach(item => {
-                if (item._forceEnd) item._forceEnd();
-            });
-            if (dragJustResetTimer) {
-                clearTimeout(dragJustResetTimer);
-                dragJustResetTimer = null;
-            }
-            dragJustHappened = false;
-            currentDraggingItem = null;
-        }
-
-        function initDraggable(item) {
-            let startX, startY, origX, origY;
-            let dragging = false;
-            let locked = false;
-            let dragRafId = null;
-
-            function forceEnd() {
-                if (dragging) {
-                    dragging = false;
-                    item.style.cursor = locked ? 'default' : 'grab';
-                    item.classList.remove('dragging');
-                    if (currentDraggingItem === item) currentDraggingItem = null;
-                    if (dragJustResetTimer) {
-                        clearTimeout(dragJustResetTimer);
-                        dragJustResetTimer = null;
+            function loadMusicPlayerPos() {
+                try {
+                    const raw = localStorage.getItem('musicPlayerPos');
+                    if (raw) {
+                        const pos = JSON.parse(raw);
+                        if (pos.left) musicPlayer.style.left = pos.left;
+                        if (pos.top) musicPlayer.style.top = pos.top;
                     }
-                    dragJustHappened = false;
-                    if (dragRafId) {
-                        cancelAnimationFrame(dragRafId);
-                        dragRafId = null;
-                    }
-<<<<<<< HEAD
                 } catch (e) {}
             }
             loadMusicPlayerPos();
             updatePlayerCover();
 
             // ================================================================
-            // 9. 修仙模式拖拽系统
+            // 9. 修仙模式拖拽系统 - 修复：事件清理 + RAF优化
             // ================================================================
             const draggableItems = document.querySelectorAll('.draggable-item');
             const positions = {};
@@ -6496,134 +4907,36 @@
                 if (dragJustResetTimer) {
                     clearTimeout(dragJustResetTimer);
                     dragJustResetTimer = null;
-=======
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                 }
-            }
-            item._forceEnd = forceEnd;
-
-            item.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                if (dragging) forceEnd();
-                locked = !locked;
-                if (locked) {
-                    item.classList.add('locked');
-                    item.style.cursor = 'default';
-                } else {
-                    item.classList.remove('locked');
-                    item.style.cursor = 'grab';
-                }
-                if (currentDraggingItem === item) currentDraggingItem = null;
                 dragJustHappened = false;
-                saveWallpaperLock(item.id, locked);
-                return false;
-            });
-
-            function onStart(e) {
-                if (e.target.closest('.settings-panel') || e.target.closest('.settings-toggle') ||
-                    e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) {
-                    return;
-                }
-                if (locked) {
-                    e.preventDefault();
-                    return;
-                }
-                if (currentDraggingItem && currentDraggingItem !== item) {
-                    if (currentDraggingItem._forceEnd) currentDraggingItem._forceEnd();
-                }
-                const ev = e.touches ? e.touches[0] : e;
-                const rect = item.getBoundingClientRect();
-                let left = parseFloat(item.style.left) || rect.left;
-                let top = parseFloat(item.style.top) || rect.top;
-                if (!item.style.left) {
-                    left = rect.left;
-                    item.style.left = left + 'px';
-                }
-                if (!item.style.top) {
-                    top = rect.top;
-                    item.style.top = top + 'px';
-                }
-                origX = left;
-                origY = top;
-                startX = ev.clientX;
-                startY = ev.clientY;
-                dragging = false;
-                item.style.cursor = 'grabbing';
-                currentDraggingItem = item;
-                if (e.target.closest('a')) e.preventDefault();
+                currentDraggingItem = null;
             }
 
-            function onMove(e) {
-                if (locked) return;
-                if (!currentDraggingItem || currentDraggingItem !== item) return;
-                const ev = e.touches ? e.touches[0] : e;
-                const dx = ev.clientX - startX;
-                const dy = ev.clientY - startY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > 8) {
-                    if (!dragging) {
-                        dragging = true;
-                        e.preventDefault();
-                        dragJustHappened = true;
+            function initDraggable(item) {
+                let startX, startY, origX, origY;
+                let dragging = false;
+                let locked = false;
+                let dragRafId = null;
+
+                function forceEnd() {
+                    if (dragging) {
+                        dragging = false;
+                        item.style.cursor = locked ? 'default' : 'grab';
+                        item.classList.remove('dragging');
+                        if (currentDraggingItem === item) currentDraggingItem = null;
                         if (dragJustResetTimer) {
                             clearTimeout(dragJustResetTimer);
                             dragJustResetTimer = null;
                         }
-                        item.classList.add('dragging');
-                    }
-                    let newX = origX + dx;
-                    let newY = origY + dy;
-                    const w = item.offsetWidth;
-                    const h = item.offsetHeight;
-                    const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
-                        .getPropertyValue('--safe-right') || '0');
-                    const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
-                        .getPropertyValue('--safe-bottom') || '0');
-                    newX = Math.max(0, Math.min(safeRight - w, newX));
-                    newY = Math.max(0, Math.min(safeBottom - h, newY));
-
-                    if (dragRafId) cancelAnimationFrame(dragRafId);
-                    dragRafId = requestAnimationFrame(() => {
-                        item.style.left = newX + 'px';
-                        item.style.top = newY + 'px';
-                        if (item.id === 'wallpaperQuoteDisplay') {
-                            const rect = item.getBoundingClientRect();
-                            const leftDist = rect.left;
-                            const rightDist = window.innerWidth - rect.right;
-                            const topDist = rect.top;
-                            const bottomDist = window.innerHeight - rect.bottom;
-                            let maxWidth = 420;
-                            let minWidth = 180;
-                            let availWidth = Math.min(maxWidth, Math.max(minWidth, window.innerWidth -
-                                leftDist - 24));
-                            if (rightDist < 60) {
-                                availWidth = Math.min(availWidth, window.innerWidth - leftDist - 24);
-                            }
-                            availWidth = Math.max(minWidth, availWidth);
-                            if (leftDist < 30) {
-                                availWidth = Math.min(availWidth, window.innerWidth - leftDist - 12);
-                            }
-                            item.style.maxWidth = availWidth + 'px';
-                            const baseSize = 1.2;
-                            let fontSize = baseSize;
-                            if (topDist < 60) {
-                                fontSize = Math.max(0.7, baseSize - (60 - topDist) / 150);
-                            }
-                            if (bottomDist < 60) {
-                                fontSize = Math.max(0.7, baseSize - (60 - bottomDist) / 150);
-                            }
-                            if (availWidth < 250) {
-                                fontSize = Math.min(fontSize, 0.9);
-                            }
-                            const wqText = item.querySelector('.wq-text');
-                            if (wqText) {
-                                wqText.style.fontSize = fontSize + 'rem';
-                            }
+                        dragJustHappened = false;
+                        if (dragRafId) {
+                            cancelAnimationFrame(dragRafId);
+                            dragRafId = null;
                         }
-                        dragRafId = null;
-                    });
+                    }
+                }
+                item._forceEnd = forceEnd;
 
-<<<<<<< HEAD
                 function onContextMenu(e) {
                     e.preventDefault();
                     if (dragging) forceEnd();
@@ -6813,28 +5126,21 @@
                     item.removeEventListener('contextmenu', onContextMenu);
                     item.removeEventListener('dragstart', function(e) { e.preventDefault(); });
                 });
-=======
-                    e.preventDefault();
-                } else {
-                    if (e.cancelable) e.preventDefault();
-                }
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
             }
 
-            function onEnd(e) {
-                if (dragging) {
-                    dragging = false;
-                    item.style.cursor = locked ? 'default' : 'grab';
-                    item.classList.remove('dragging');
+            draggableItems.forEach(item => initDraggable(item));
+
+            // ---- 保存/加载壁纸位置 ----
+            function saveWallpaperPositions() {
+                const data = {};
+                draggableItems.forEach(item => {
                     const id = item.id;
-                    if (id) {
-                        positions[id] = {
+                    if (id && item.style.left && item.style.top) {
+                        data[id] = {
                             left: parseFloat(item.style.left),
                             top: parseFloat(item.style.top)
                         };
-                        saveWallpaperPositions();
                     }
-<<<<<<< HEAD
                 });
                 const key = getStorageKey('wallpaperPositions');
                 try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
@@ -6880,87 +5186,33 @@
                         positions[id] = pos;
                     }
                 });
-=======
-                    if (currentDraggingItem === item) currentDraggingItem = null;
-                    if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
-                    dragJustResetTimer = setTimeout(() => {
-                        dragJustHappened = false;
-                        dragJustResetTimer = null;
-                    }, 300);
-                    if (dragRafId) {
-                        cancelAnimationFrame(dragRafId);
-                        dragRafId = null;
-                    }
-                } else {
-                    if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
-                    dragJustResetTimer = setTimeout(() => {
-                        dragJustHappened = false;
-                        dragJustResetTimer = null;
-                    }, 50);
-                }
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
             }
 
-            item.addEventListener('mousedown', onStart);
-            window.addEventListener('mousemove', onMove);
-            window.addEventListener('mouseup', onEnd);
-            item.addEventListener('touchstart', onStart, { passive: false });
-            window.addEventListener('touchmove', onMove, { passive: false });
-            window.addEventListener('touchend', onEnd, { passive: false });
-            window.addEventListener('touchcancel', onEnd, { passive: false });
+            function saveWallpaperLock(id, locked) {
+                const key = getStorageKey('wallpaperLocks');
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    data[id] = locked;
+                    localStorage.setItem(key, JSON.stringify(data));
+                } catch (e) {}
+            }
 
-            item.addEventListener('dragstart', function(e) { e.preventDefault(); }, false);
-
-            item._destroyDrag = function() {
-                window.removeEventListener('mousemove', onMove);
-                window.removeEventListener('mouseup', onEnd);
-                window.removeEventListener('touchmove', onMove);
-                window.removeEventListener('touchend', onEnd);
-                window.removeEventListener('touchcancel', onEnd);
-                item.removeEventListener('mousedown', onStart);
-                item.removeEventListener('touchstart', onStart);
-                item.removeEventListener('dragstart', function(e) { e.preventDefault(); });
-                item.removeEventListener('contextmenu', function() {});
-            };
-        }
-
-        draggableItems.forEach(item => initDraggable(item));
-
-        function saveWallpaperPositions() {
-            const data = {};
-            draggableItems.forEach(item => {
-                const id = item.id;
-                if (id && item.style.left && item.style.top) {
-                    data[id] = {
-                        left: parseFloat(item.style.left),
-                        top: parseFloat(item.style.top)
-                    };
-                }
-            });
-            const key = getStorageKey('wallpaperPositions');
-            try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
-        }
-
-        function loadWallpaperPositions() {
-            const key = getStorageKey('wallpaperPositions');
-            try {
-                const raw = localStorage.getItem(key);
-                if (raw) {
-                    const data = JSON.parse(raw);
+            function loadWallpaperLocks() {
+                const key = getStorageKey('wallpaperLocks');
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
                     draggableItems.forEach(item => {
                         const id = item.id;
                         if (id && data[id]) {
-                            item.style.left = data[id].left + 'px';
-                            item.style.top = data[id].top + 'px';
-                            positions[id] = data[id];
+                            item.classList.add('locked');
+                            item.style.cursor = 'default';
                         }
                     });
-<<<<<<< HEAD
                 } catch (e) {}
             }
 
             // ================================================================
-            // 10. 阴阳模式拖拽
+            // 10. 阴阳模式拖拽 - 修复：RAF优化 + 事件清理
             // ================================================================
             const simpleDragTargets = document.querySelectorAll('.simple-draggable');
             const dragStateMap = new WeakMap();
@@ -7125,105 +5377,36 @@
                     el.removeEventListener('pointerup', onPointerUp);
                     el.removeEventListener('pointercancel', onPointerCancel);
                 });
-=======
-                } else {
-                    // 默认位置（无缓存时）
-                    const w = window.innerWidth,
-                        h = window.innerHeight;
-                    const defs = {
-                        'wallpaperTimeDisplay': { left: w * 0.05, top: h * 0.05 },
-                        'wallpaperQuoteDisplay': { left: w * 0.05, top: h * 0.30 },
-                        'glassSearch': { left: (w - 360) / 2, top: h * 0.70 },
-                        'glassLinks': { left: w * 0.05, top: h * 0.55 },
-                    };
-                    for (const id in defs) {
-                        const item = document.getElementById(id);
-                        if (item) {
-                            item.style.left = defs[id].left + 'px';
-                            item.style.top = defs[id].top + 'px';
-                            positions[id] = defs[id];
+
+                const lockState = loadSimpleLockState(el.id);
+                if (lockState) {
+                    state.locked = true;
+                    el.classList.add('locked');
+                    el.style.cursor = 'default';
+                }
+            }
+
+            function getElementTransform(el) {
+                let tx = 0,
+                    ty = 0;
+                const style = window.getComputedStyle(el);
+                const transform = style.transform;
+                if (transform && transform !== 'none') {
+                    const matrix = transform.match(/matrix.*\((.+)\)/);
+                    if (matrix) {
+                        const values = matrix[1].split(', ').map(Number);
+                        if (values.length === 6) {
+                            tx = values[4] || 0;
+                            ty = values[5] || 0;
+                        } else if (values.length === 16) {
+                            tx = values[12] || 0;
+                            ty = values[13] || 0;
                         }
                     }
                 }
-            } catch (e) {}
-        }
+                return { x: tx, y: ty };
+            }
 
-        function saveWallpaperLock(id, locked) {
-            const key = getStorageKey('wallpaperLocks');
-            try {
-                const data = JSON.parse(localStorage.getItem(key) || '{}');
-                data[id] = locked;
-                localStorage.setItem(key, JSON.stringify(data));
-            } catch (e) {}
-        }
-
-        function loadWallpaperLocks() {
-            const key = getStorageKey('wallpaperLocks');
-            try {
-                const data = JSON.parse(localStorage.getItem(key) || '{}');
-                draggableItems.forEach(item => {
-                    const id = item.id;
-                    if (id && data[id]) {
-                        item.classList.add('locked');
-                        item.style.cursor = 'default';
-                    }
-                });
-            } catch (e) {}
-        }
-
-        // ================================================================
-        // 10. 阴阳模式拖拽 (修复: setPointerCapture 兼容 + 安全区域)
-        // ================================================================
-        const simpleDragTargets = document.querySelectorAll('.simple-draggable');
-        const dragStateMap = new WeakMap();
-        let activeSimpleDrag = null;
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
-
-        function initSimpleDrag(el) {
-            const state = {
-                isDragging: false,
-                startX: 0,
-                startY: 0,
-                baseTX: 0,
-                baseTY: 0,
-                fixedLeft: 0,
-                fixedTop: 0,
-                width: 0,
-                height: 0,
-                rafId: null,
-                pendingX: 0,
-                pendingY: 0,
-                locked: false,
-            };
-            dragStateMap.set(el, state);
-
-            el.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                if (state.isDragging) return;
-                state.locked = !state.locked;
-                if (state.locked) {
-                    el.classList.add('locked');
-                    el.style.cursor = 'default';
-                    if (activeSimpleDrag === el) endSimpleDrag(el);
-                } else {
-                    el.classList.remove('locked');
-                    el.style.cursor = 'grab';
-                }
-                saveSimpleLockState(el.id, state.locked);
-            });
-
-            el.addEventListener('pointerdown', function(e) {
-                if (e.target.closest('input') || e.target.closest('textarea') ||
-                    e.target.closest('a') || e.target.closest('button') ||
-                    e.target.closest('.link-item') || e.target.closest('.add-link-btn') ||
-                    e.target.closest('.search-btn') || e.target.closest('.search-btn-mobile') ||
-                    e.target.closest('.search-btn-end')) {
-                    return;
-                }
-                if (isWallpaperMode) return;
-                if (state.locked) return;
-
-<<<<<<< HEAD
             function endSimpleDrag(el) {
                 if (!el) return;
                 const state = dragStateMap.get(el);
@@ -7238,32 +5421,21 @@
                     state.isDragging = false;
                 }
                 if (activeSimpleDrag === el) activeSimpleDrag = null;
-=======
-                if (activeSimpleDrag) endSimpleDrag(activeSimpleDrag);
-
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                 const rect = el.getBoundingClientRect();
                 const transform = getElementTransform(el);
+                state.fixedLeft = rect.left - transform.x;
+                state.fixedTop = rect.top - transform.y;
+            }
 
-                state.isDragging = false;
-                state.startX = e.clientX;
-                state.startY = e.clientY;
-                state.baseTX = transform.x;
-                state.baseTY = transform.y;
-                state.fixedLeft = rect.left - state.baseTX;
-                state.fixedTop = rect.top - state.baseTY;
-                state.width = el.offsetWidth || rect.width;
-                state.height = el.offsetHeight || rect.height;
-
+            function saveSimplePosition(id, x, y) {
+                const key = getStorageKey('simplePositions');
                 try {
-                    el.setPointerCapture(e.pointerId);
-                } catch (_) {}
-                el.style.cursor = 'grabbing';
-                activeSimpleDrag = el;
-                e.preventDefault();
-            });
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    data[id] = { x, y };
+                    localStorage.setItem(key, JSON.stringify(data));
+                } catch (e) {}
+            }
 
-<<<<<<< HEAD
             function loadSimplePositions() {
                 const key = getStorageKey('simplePositions');
                 try {
@@ -7304,18 +5476,16 @@
                     });
                 } catch (e) {}
             }
-=======
-            el.addEventListener('pointermove', function(e) {
-                if (activeSimpleDrag !== el) return;
-                if (state.locked) return;
-                if (e.target.closest('.settings-panel') || e.target.closest('.settings-toggle')) return;
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
 
-                const dx = e.clientX - state.startX;
-                const dy = e.clientY - state.startY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+            function saveSimpleLockState(id, locked) {
+                const key = getStorageKey('simpleLocks');
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    data[id] = locked;
+                    localStorage.setItem(key, JSON.stringify(data));
+                } catch (e) {}
+            }
 
-<<<<<<< HEAD
             function loadSimpleLockState(id) {
                 const key = getStorageKey('simpleLocks');
                 try {
@@ -7328,7 +5498,7 @@
             loadSimplePositions();
 
             // ================================================================
-            // 11. 时钟
+            // 11. 时钟 - 优化：使用 requestAnimationFrame 降低频率
             // ================================================================
             const timeEl = document.getElementById('time');
             const dateEl = document.getElementById('date');
@@ -7366,7 +5536,7 @@
             setTimeout(scheduleClockUpdate, 1000 - (Date.now() % 1000) + 50);
 
             // ================================================================
-            // 12. 资源加载
+            // 12. 资源加载（关键资源 + 壁纸后台下载）
             // ================================================================
             const criticalResources = [
                 'images/bg_day.png',
@@ -7401,7 +5571,7 @@
             }
 
             // ================================================================
-            // 13. 开始页控制
+            // 13. 开始页控制 - 修复：采样率降低
             // ================================================================
             const startPage = document.getElementById('startPage');
             let startPageVisible = false;
@@ -7412,6 +5582,7 @@
             let rainPlane = null;
             let mouse = { x: 0, y: 0 };
 
+            // ---- 降低采样率（根据设备性能动态调整） ----
             function getOptimalSamples() {
                 const cores = navigator.hardwareConcurrency || 4;
                 const isTouch = isTouchDevice();
@@ -7530,103 +5701,24 @@
                         off *= d;
                         col += texture2D(dispImage, uv + off);
                         a++;
-=======
-                if (dist > 6) {
-                    if (!state.isDragging) {
-                        state.isDragging = true;
-                        el.classList.add('dragging-simple');
-                        const rect = el.getBoundingClientRect();
-                        const transform = getElementTransform(el);
-                        state.baseTX = transform.x;
-                        state.baseTY = transform.y;
-                        state.fixedLeft = rect.left - state.baseTX;
-                        state.fixedTop = rect.top - state.baseTY;
-                        state.startX = e.clientX;
-                        state.startY = e.clientY;
-                        e.preventDefault();
-                        return;
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                     }
 
-                    let newTX = state.baseTX + (e.clientX - state.startX);
-                    let newTY = state.baseTY + (e.clientY - state.startY);
+                    col /= float(numSamples);
+                    gl_FragColor = col;
+                }
+            `;
 
-<<<<<<< HEAD
             function initRainEffect() {
                 if (rainInitialized || rainDestroyed || rainInitFailed) return;
                 if (typeof Curtains === 'undefined') {
                     console.warn('Curtains.js 未加载，雨滴特效跳过');
                     rainInitFailed = true;
-=======
-                    const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
-                        .getPropertyValue('--safe-right') || '0');
-                    const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
-                        .getPropertyValue('--safe-bottom') || '0');
-
-                    const maxX = safeRight - state.width - state.fixedLeft;
-                    const minX = -state.fixedLeft;
-                    const maxY = safeBottom - state.height - state.fixedTop;
-                    const minY = -state.fixedTop;
-
-                    newTX = Math.max(minX, Math.min(maxX, newTX));
-                    newTY = Math.max(minY, Math.min(maxY, newTY));
-
-                    if (el.id === 'quoteArea') {
-                        const rectNow = el.getBoundingClientRect();
-                        const leftEdge = rectNow.left;
-                        const availWidth = Math.min(420, Math.max(200, window.innerWidth - leftEdge - 32));
-                        el.style.maxWidth = availWidth + 'px';
-                    }
-
-                    applyTransformRAF(el, newTX, newTY, state);
-                    saveSimplePosition(el.id, newTX, newTY);
-                    e.preventDefault();
-                } else {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-
-            el.addEventListener('pointerup', function(e) {
-                if (activeSimpleDrag !== el) return;
-                endSimpleDrag(el);
-                e.preventDefault();
-            });
-
-            el.addEventListener('pointercancel', function(e) {
-                if (activeSimpleDrag === el) endSimpleDrag(el);
-            });
-
-            el.addEventListener('touchstart', function(e) {
-                if (e.target.closest('input') || e.target.closest('textarea') ||
-                    e.target.closest('a') || e.target.closest('button') ||
-                    e.target.closest('.link-item') || e.target.closest('.add-link-btn') ||
-                    e.target.closest('.search-btn') || e.target.closest('.search-btn-mobile') ||
-                    e.target.closest('.search-btn-end') ||
-                    e.target.closest('.settings-panel') || e.target.closest('.settings-toggle')) {
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                     return;
                 }
-                if (isWallpaperMode) return;
-                if (state.locked) return;
-                if (activeSimpleDrag) endSimpleDrag(activeSimpleDrag);
-                const touch = e.touches[0];
-                const rect = el.getBoundingClientRect();
-                const transform = getElementTransform(el);
-                state.isDragging = false;
-                state.startX = touch.clientX;
-                state.startY = touch.clientY;
-                state.baseTX = transform.x;
-                state.baseTY = transform.y;
-                state.fixedLeft = rect.left - state.baseTX;
-                state.fixedTop = rect.top - state.baseTY;
-                state.width = el.offsetWidth || rect.width;
-                state.height = el.offsetHeight || rect.height;
-                el.style.cursor = 'grabbing';
-                activeSimpleDrag = el;
-                e.preventDefault();
-            }, { passive: false });
+                const canvasContainer = document.getElementById('canvas');
+                const textureImg = document.getElementById('texture');
+                if (!canvasContainer || !textureImg) return;
 
-<<<<<<< HEAD
                 let timeoutId = setTimeout(() => {
                     console.warn('背景图加载超时，跳过雨滴特效');
                     rainInitFailed = true;
@@ -7643,63 +5735,16 @@
                 clearTimeout(timeoutId);
 
                 const numSamples = getOptimalSamples();
-=======
-            el.addEventListener('touchmove', function(e) {
-                if (activeSimpleDrag !== el) return;
-                if (state.locked) return;
-                const touch = e.touches[0];
-                const dx = touch.clientX - state.startX;
-                const dy = touch.clientY - state.startY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > 6) {
-                    if (!state.isDragging) {
-                        state.isDragging = true;
-                        el.classList.add('dragging-simple');
-                        const rect = el.getBoundingClientRect();
-                        const transform = getElementTransform(el);
-                        state.baseTX = transform.x;
-                        state.baseTY = transform.y;
-                        state.fixedLeft = rect.left - state.baseTX;
-                        state.fixedTop = rect.top - state.baseTY;
-                        state.startX = touch.clientX;
-                        state.startY = touch.clientY;
-                        e.preventDefault();
-                        return;
-                    }
-                    let newTX = state.baseTX + (touch.clientX - state.startX);
-                    let newTY = state.baseTY + (touch.clientY - state.startY);
-                    const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
-                        .getPropertyValue('--safe-right') || '0');
-                    const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
-                        .getPropertyValue('--safe-bottom') || '0');
-                    const maxX = safeRight - state.width - state.fixedLeft;
-                    const minX = -state.fixedLeft;
-                    const maxY = safeBottom - state.height - state.fixedTop;
-                    const minY = -state.fixedTop;
-                    newTX = Math.max(minX, Math.min(maxX, newTX));
-                    newTY = Math.max(minY, Math.min(maxY, newTY));
-                    if (el.id === 'quoteArea') {
-                        const rectNow = el.getBoundingClientRect();
-                        const leftEdge = rectNow.left;
-                        const availWidth = Math.min(420, Math.max(200, window.innerWidth - leftEdge - 32));
-                        el.style.maxWidth = availWidth + 'px';
-                    }
-                    applyTransformRAF(el, newTX, newTY, state);
-                    saveSimplePosition(el.id, newTX, newTY);
-                    e.preventDefault();
-                }
-            }, { passive: false });
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
 
-            el.addEventListener('touchend', function(e) {
-                if (activeSimpleDrag === el) endSimpleDrag(el);
-            });
+                try {
+                    rainCurtains = new Curtains({
+                        container: 'canvas',
+                        watchScroll: false,
+                        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+                    });
 
-            el.addEventListener('touchcancel', function(e) {
-                if (activeSimpleDrag === el) endSimpleDrag(el);
-            });
+                    const planeElement = document.querySelector('.plane');
 
-<<<<<<< HEAD
                     const params = {
                         vertexShader: rainVertexShader,
                         fragmentShader: rainFragmentShader,
@@ -7728,495 +5773,45 @@
                             },
                         },
                     };
-=======
-            const lockState = loadSimpleLockState(el.id);
-            if (lockState) {
-                state.locked = true;
-                el.classList.add('locked');
-                el.style.cursor = 'default';
-            }
-        }
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
 
-        function getElementTransform(el) {
-            let tx = 0,
-                ty = 0;
-            const style = window.getComputedStyle(el);
-            const transform = style.transform;
-            if (transform && transform !== 'none') {
-                const matrix = transform.match(/matrix.*\((.+)\)/);
-                if (matrix) {
-                    const values = matrix[1].split(', ').map(Number);
-                    if (values.length === 6) {
-                        tx = values[4] || 0;
-                        ty = values[5] || 0;
-                    } else if (values.length === 16) {
-                        tx = values[12] || 0;
-                        ty = values[13] || 0;
-                    }
-                }
-            }
-            return { x: tx, y: ty };
-        }
+                    rainPlane = rainCurtains.addPlane(planeElement, params);
 
-        function applyTransformRAF(el, x, y, state) {
-            if (state.rafId) {
-                cancelAnimationFrame(state.rafId);
-                state.rafId = null;
-            }
-            state.pendingX = x;
-            state.pendingY = y;
-            state.rafId = requestAnimationFrame(() => {
-                if (el) {
-                    el.style.transform = `translate(${state.pendingX}px, ${state.pendingY}px)`;
-                }
-                state.rafId = null;
-            });
-        }
+                    if (rainPlane) {
+                        rainPlane.onRender(() => {
+                            if (rainDestroyed) return;
+                            rainPlane.uniforms.time.value++;
+                            rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
+                            rainPlane.uniforms.mousepos.value = [mouse.x, mouse.y];
+                        });
 
-<<<<<<< HEAD
                         window.addEventListener('pointermove', (e) => {
                             mouse.x = e.clientX;
                             mouse.y = e.clientY;
                         });
-=======
-        function endSimpleDrag(el) {
-            if (!el) return;
-            const state = dragStateMap.get(el);
-            if (!state) return;
-            if (state.rafId) {
-                cancelAnimationFrame(state.rafId);
-                state.rafId = null;
-            }
-            if (state.isDragging) {
-                el.classList.remove('dragging-simple');
-                el.style.cursor = state.locked ? 'default' : 'grab';
-                state.isDragging = false;
-            }
-            if (activeSimpleDrag === el) activeSimpleDrag = null;
-            const rect = el.getBoundingClientRect();
-            const transform = getElementTransform(el);
-            state.fixedLeft = rect.left - transform.x;
-            state.fixedTop = rect.top - transform.y;
-        }
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
 
-        function saveSimplePosition(id, x, y) {
-            const key = getStorageKey('simplePositions');
-            try {
-                const data = JSON.parse(localStorage.getItem(key) || '{}');
-                data[id] = { x, y };
-                localStorage.setItem(key, JSON.stringify(data));
-            } catch (e) {}
-        }
+                        window.addEventListener('resize', () => {
+                            if (rainPlane && !rainDestroyed) {
+                                rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
+                            }
+                        });
 
-<<<<<<< HEAD
                         rainInitialized = true;
                     } else {
                         console.warn('雨滴平面初始化失败');
                         if (rainCurtains) {
                             rainCurtains.dispose();
                             rainCurtains = null;
-=======
-        function loadSimplePositions() {
-            const key = getStorageKey('simplePositions');
-            try {
-                const data = JSON.parse(localStorage.getItem(key) || '{}');
-                const isMobile = window.innerWidth <= 768;
-                simpleDragTargets.forEach(el => {
-                    const id = el.id;
-                    let tx, ty;
-                    if (id && data[id]) {
-                        tx = data[id].x;
-                        ty = data[id].y;
-                    } else {
-                        // 默认位置（基于屏幕尺寸）
-                        const vh = window.innerHeight;
-                        if (id === 'clockArea') {
-                            tx = 0;
-                            ty = -0.10 * vh; // 上移 10%
-                        } else if (id === 'quoteArea') {
-                            tx = 0;
-                            ty = 0;
-                            el.style.maxWidth = isMobile ? (window.innerWidth * 0.88) + 'px' : '420px';
-                        } else if (id === 'bottomArea') {
-                            tx = 0;
-                            ty = 0.10 * vh; // 下移 10%
-                        } else {
-                            tx = 0;
-                            ty = 0;
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                         }
+                        rainInitFailed = true;
                     }
-                    el.style.transform = `translate(${tx}px, ${ty}px)`;
-                    const state = dragStateMap.get(el);
-                    if (state) {
-                        state.baseTX = tx;
-                        state.baseTY = ty;
-                        const rect = el.getBoundingClientRect();
-                        state.fixedLeft = rect.left - state.baseTX;
-                        state.fixedTop = rect.top - state.baseTY;
-                    }
-                });
-            } catch (e) {}
-        }
-
-        function saveSimpleLockState(id, locked) {
-            const key = getStorageKey('simpleLocks');
-            try {
-                const data = JSON.parse(localStorage.getItem(key) || '{}');
-                data[id] = locked;
-                localStorage.setItem(key, JSON.stringify(data));
-            } catch (e) {}
-        }
-
-        function loadSimpleLockState(id) {
-            const key = getStorageKey('simpleLocks');
-            try {
-                const data = JSON.parse(localStorage.getItem(key) || '{}');
-                return data[id] || false;
-            } catch (e) { return false; }
-        }
-
-        simpleDragTargets.forEach(el => initSimpleDrag(el));
-        loadSimplePositions();
-
-        // ================================================================
-        // 11. 时钟
-        // ================================================================
-        const timeEl = document.getElementById('time');
-        const dateEl = document.getElementById('date');
-        const wpTimeEl = document.getElementById('wpTime');
-        const wpDateEl = document.getElementById('wpDate');
-
-        function updateClock() {
-            const now = new Date();
-            const h = String(now.getHours()).padStart(2, '0');
-            const m = String(now.getMinutes()).padStart(2, '0');
-            const timeStr = h + ':' + m;
-            const dateStr =
-                `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${'日一二三四五六'[now.getDay()]}`;
-            timeEl.textContent = timeStr;
-            dateEl.textContent = dateStr;
-            wpTimeEl.textContent = timeStr;
-            wpDateEl.textContent = dateStr;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        // ================================================================
-        // 12. 资源加载管理器（后台并行下载 + 超时保护）
-        // ================================================================
-
-        const criticalResources = [
-            'images/bg_day.png',
-            'images/bg_night.png',
-            'images/background.png'
-        ];
-
-        const preloaded = { blobs: {} };
-        let criticalLoaded = false;
-        let bgDownloadStarted = false;
-        let bgDownloadComplete = false;
-
-        function loadCriticalResources() {
-            return new Promise((resolve) => {
-                let loaded = 0;
-                const total = criticalResources.length;
-                const onLoad = () => {
-                    loaded++;
-                    if (loaded >= total) {
-                        resolve();
-                    }
-                };
-                criticalResources.forEach(url => {
-                    const img = new Image();
-                    img.onload = onLoad;
-                    img.onerror = () => onLoad();
-                    img.src = url;
-                });
-            });
-        }
-
-        // 并行下载背景资源
-        async function downloadBackgroundResources() {
-            if (bgDownloadStarted) return;
-            bgDownloadStarted = true;
-            console.log('📦 开始并行下载资源');
-
-            const download = async (url) => {
-                try {
-                    const resp = await fetch(url);
-                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                    return await resp.blob();
                 } catch (e) {
-<<<<<<< HEAD
                     console.warn('雨滴特效初始化异常:', e);
-=======
-                    console.warn('⚠️ 下载失败:', url, e);
-                    return null;
-                }
-            };
-
-            const tasks = [];
-
-            // 静态壁纸
-            wallpapers.static.forEach(wp => {
-                tasks.push(download('images/' + wp.file).then(blob => {
-                    if (blob) preloaded.blobs[wp.id] = URL.createObjectURL(blob);
-                }));
-            });
-
-            // 专辑图片（仅预加载）
-            albumImages.forEach(src => {
-                tasks.push(new Promise((resolve) => {
-                    const img = new Image();
-                    img.onload = () => resolve();
-                    img.onerror = () => resolve();
-                    img.src = src;
-                }));
-            });
-
-            // 歌曲
-            songs.forEach(song => {
-                tasks.push(download('songs/' + song.file).then(blob => {
-                    if (blob) preloaded.blobs[song.file] = URL.createObjectURL(blob);
-                }));
-            });
-
-            // 动态壁纸
-            wallpapers.dynamic.forEach(wp => {
-                tasks.push(download('videos/' + wp.file).then(blob => {
-                    if (blob) preloaded.blobs[wp.id] = URL.createObjectURL(blob);
-                }));
-            });
-
-            await Promise.all(tasks);
-            bgDownloadComplete = true;
-            console.log('🎉 所有后台资源下载完成');
-        }
-
-        // ================================================================
-        // 13. 开始页控制（只有淡出，没有淡入）
-        // ================================================================
-        const startPage = document.getElementById('startPage');
-        let startPageVisible = false; // 默认隐藏
-        let rainInitialized = false;
-        let rainDestroyed = false;
-        let rainInitFailed = false;
-        let rainCurtains = null;
-        let rainPlane = null;
-        let mouse = { x: 0, y: 0 };
-
-        const rainVertexShader = `
-            #ifdef GL_ES
-            precision mediump float;
-            #endif
-
-            attribute vec3 aVertexPosition;
-            attribute vec2 aTextureCoord;
-
-            uniform mat4 uMVMatrix;
-            uniform mat4 uPMatrix;
-            uniform mat4 dispImageMatrix;
-
-            varying vec3 vVertexPosition;
-            varying vec2 vTextureCoord;
-
-            void main() {
-                vec3 vertexPosition = aVertexPosition;
-                gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
-                vTextureCoord = (dispImageMatrix * vec4(aTextureCoord, 0., 1.)).xy;
-                vVertexPosition = vertexPosition;
-            }
-        `;
-
-        const rainFragmentShader = `
-            #ifdef GL_ES
-            precision mediump float;
-            #endif
-
-            #define PI2 6.28318530718
-            #define PI  3.14159265359
-            #define S(a,b,n) smoothstep(a,b,n)
-
-            varying vec3 vVertexPosition;
-            varying vec2 vTextureCoord;
-
-            uniform float uTime;
-            uniform vec2  uReso;
-            uniform vec2  uMouse;
-
-            uniform sampler2D dispImage;
-
-            float N12(vec2 p) {
-                p = fract(p * vec2(123.34, 345.45));
-                p += dot(p, p + 34.345);
-                return fract(p.x * p.y);
-            }
-
-            vec3 Layer(vec2 uv0, float t) {
-                vec2 asp = vec2(2., 1.);
-                vec2 uv1 = uv0 * 3.0 * asp;
-                uv1.y += t * 0.25;
-
-                vec2 gv = fract(uv1) - 0.5;
-                vec2 id = floor(uv1);
-
-                float n = N12(id);
-                t += n * PI2;
-
-                float w = uv0.y * 10.0;
-                float x = (n - 0.5) * 0.8;
-                x += (0.4 - abs(x)) * sin(3.0 * w) * pow(sin(w), 6.0) * 0.45;
-
-                float y = -sin(t + sin(t + sin(t) * 0.5)) * (0.5 - 0.06);
-                y -= (gv.x - x) * (gv.x - x);
-
-                vec2 dropPos = (gv - vec2(x, y)) / asp;
-                float drop = S(0.015, 0.01, length(dropPos));
-
-                vec2 trailPos = (gv - vec2(x, t * 0.25)) / asp;
-                trailPos.y = (fract(trailPos.y * 8.0) - 0.5) / 8.0;
-                float trail = S(0.01, 0.0075, length(trailPos));
-
-                float fogTrail = S(-0.05, 0.05, dropPos.y);
-                fogTrail *= S(0.5, y, gv.y);
-                trail *= fogTrail;
-                fogTrail *= S(0.015, 0.0075, abs(dropPos.x));
-
-                vec2 off = drop * dropPos + trail * trailPos;
-                return vec3(off, fogTrail);
-            }
-
-            void main() {
-                float dist = 5.0;
-                float blurSize = 1.5;
-                float t = mod(uTime * 0.03, 7200.0);
-
-                vec2 uv = vTextureCoord;
-
-                vec3 drops = Layer(uv, t);
-                drops += Layer(uv * 1.25 + 7.54, t);
-                drops += Layer(uv * 1.35 + 1.54, t);
-                drops += Layer(uv * 1.57 - 7.54, t);
-
-                float blur = blurSize * 1.0 * (1.0 - drops.z);
-                vec4 col = vec4(0.0);
-
-                int numSamples = 32;
-                float a = N12(uv) * PI2;
-
-                blur *= 0.0005;
-                uv += drops.xy * dist;
-
-                for (int n = 0; n < 32; n++) {
-                    vec2 off = vec2(sin(a), cos(a)) * blur;
-                    float d = fract(sin(float(n + 1) * 546.0) * 5424.0);
-                    d = sqrt(d);
-                    off *= d;
-                    col += texture2D(dispImage, uv + off);
-                    a++;
-                }
-
-                col /= float(numSamples);
-                gl_FragColor = col;
-            }
-        `;
-
-        function initRainEffect() {
-            if (rainInitialized || rainDestroyed || rainInitFailed) return;
-            if (typeof Curtains === 'undefined') {
-                console.warn('⚠️ Curtains.js 未加载，雨滴特效跳过');
-                rainInitFailed = true;
-                return;
-            }
-            const canvasContainer = document.getElementById('canvas');
-            const textureImg = document.getElementById('texture');
-            if (!canvasContainer || !textureImg) return;
-
-            // 超时保护
-            let timeoutId = setTimeout(() => {
-                console.warn('⚠️ 背景图加载超时，跳过雨滴特效');
-                rainInitFailed = true;
-                textureImg.onload = null;
-            }, 5000);
-
-            if (!textureImg.complete || textureImg.naturalWidth === 0) {
-                textureImg.onload = function() {
-                    clearTimeout(timeoutId);
-                    initRainEffect();
-                };
-                return;
-            }
-            clearTimeout(timeoutId);
-
-            try {
-                rainCurtains = new Curtains({
-                    container: 'canvas',
-                    watchScroll: false,
-                    pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-                });
-
-                const planeElement = document.querySelector('.plane');
-
-                const params = {
-                    vertexShader: rainVertexShader,
-                    fragmentShader: rainFragmentShader,
-                    widthSegments: 40,
-                    heightSegments: 40,
-                    uniforms: {
-                        time: {
-                            name: 'uTime',
-                            type: '1f',
-                            value: 0,
-                        },
-                        mousepos: {
-                            name: 'uMouse',
-                            type: '2f',
-                            value: [mouse.x, mouse.y],
-                        },
-                        resolution: {
-                            name: 'uReso',
-                            type: '2f',
-                            value: [window.innerWidth, window.innerHeight],
-                        },
-                    },
-                };
-
-                rainPlane = rainCurtains.addPlane(planeElement, params);
-
-                if (rainPlane) {
-                    rainPlane.onRender(() => {
-                        if (rainDestroyed) return;
-                        rainPlane.uniforms.time.value++;
-                        rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
-                        rainPlane.uniforms.mousepos.value = [mouse.x, mouse.y];
-                    });
-
-                    window.addEventListener('mousemove', (e) => {
-                        mouse.x = e.clientX;
-                        mouse.y = e.clientY;
-                    });
-
-                    window.addEventListener('resize', () => {
-                        if (rainPlane && !rainDestroyed) {
-                            rainPlane.uniforms.resolution.value = [window.innerWidth, window.innerHeight];
-                        }
-                    });
-
-                    rainInitialized = true;
-                    console.log('🌧️ 开始页雨滴特效已启动');
-                } else {
-                    console.warn('⚠️ 雨滴平面初始化失败');
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                     if (rainCurtains) {
                         rainCurtains.dispose();
                         rainCurtains = null;
                     }
                     rainInitFailed = true;
                 }
-<<<<<<< HEAD
             }
 
             function destroyRainEffect() {
@@ -8231,208 +5826,24 @@
                     rainCurtains = null;
                 }
                 rainInitialized = false;
-=======
-            } catch (e) {
-                console.warn('⚠️ 雨滴特效初始化异常:', e);
-                if (rainCurtains) {
-                    rainCurtains.dispose();
-                    rainCurtains = null;
-                }
-                rainInitFailed = true;
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
             }
-        }
 
-<<<<<<< HEAD
             function hideStartPage() {
                 if (!startPageVisible) return;
                 startPage.classList.add('fade-out');
                 startPageVisible = false;
-=======
-        function destroyRainEffect() {
-            if (rainDestroyed) return;
-            rainDestroyed = true;
-            if (rainPlane) {
-                try { rainPlane.remove(); } catch (e) {}
-                rainPlane = null;
-            }
-            if (rainCurtains) {
-                try { rainCurtains.dispose(); } catch (e) {}
-                rainCurtains = null;
-            }
-            rainInitialized = false;
-            console.log('🌧️ 开始页雨滴特效已销毁');
-        }
 
-        function hideStartPage() {
-            if (!startPageVisible) return;
-            startPage.classList.add('fade-out');
-            startPageVisible = false;
-            console.log('🌙 开始页淡出');
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
-
-            const rainContainer = document.getElementById('rain-container');
-            if (rainContainer) {
-                rainContainer.classList.add('active');
-                setTimeout(() => {
-                    rainContainer.classList.add('fade-out');
+                const rainContainer = document.getElementById('rain-container');
+                if (rainContainer) {
+                    rainContainer.classList.add('active');
                     setTimeout(() => {
-                        rainContainer.classList.remove('active');
-                        rainContainer.style.display = 'none';
-                    }, 1200);
-                }, 300);
-            }
-
-            setTimeout(() => {
-                destroyRainEffect();
-                startPage.classList.add('hide');
-            }, 1300);
-
-            if (!bgDownloadStarted) {
-                downloadBackgroundResources();
-            }
-        }
-
-        function enterSite() {
-            if (!startPageVisible) return;
-            if (startPage.classList.contains('fade-out')) return;
-            hideStartPage();
-        }
-
-        startPage.addEventListener('click', enterSite);
-        startPage.addEventListener('touchstart', function(e) {
-            if (startPageVisible && !startPage.classList.contains('fade-out')) {
-                enterSite();
-            }
-        }, { passive: true });
-
-        // ================================================================
-        // 14. 独立雨丝
-        // ================================================================
-        function buildRaindrops() {
-            const rainContainer = document.getElementById('rain-container');
-            rainContainer.innerHTML = '';
-            const configs = [
-                { left: 10, duration: 2.4, delay: 0.2, height: 60 },
-                { left: 22, duration: 3.0, delay: 0.8, height: 80 },
-                { left: 35, duration: 2.0, delay: 0.0, height: 50 },
-                { left: 48, duration: 2.8, delay: 0.5, height: 70 },
-                { left: 60, duration: 2.2, delay: 1.0, height: 55 },
-                { left: 73, duration: 3.2, delay: 0.3, height: 90 },
-                { left: 85, duration: 2.6, delay: 0.7, height: 65 },
-                { left: 92, duration: 2.0, delay: 1.2, height: 45 },
-                { left: 15, duration: 2.9, delay: 0.9, height: 75 },
-                { left: 42, duration: 2.1, delay: 0.1, height: 50 },
-                { left: 68, duration: 3.1, delay: 0.6, height: 85 },
-                { left: 78, duration: 2.3, delay: 1.1, height: 60 },
-            ];
-            configs.forEach(cfg => {
-                const el = document.createElement('div');
-                el.className = 'raindrop';
-                el.style.left = cfg.left + '%';
-                el.style.animationDuration = cfg.duration + 's';
-                el.style.animationDelay = cfg.delay + 's';
-                el.style.height = cfg.height + 'px';
-                rainContainer.appendChild(el);
-            });
-        }
-        buildRaindrops();
-
-        // ================================================================
-        // 15. 启动流程
-        // ================================================================
-        async function boot() {
-            console.log('🚀 启动中...');
-
-            // 加载页显示（默认）
-            const loadingPage = document.getElementById('loadingPage');
-            const startPageEl = document.getElementById('startPage');
-            startPageEl.classList.remove('show'); // 确保隐藏
-
-            // 加载关键资源
-            await loadCriticalResources();
-            console.log('✅ 关键资源加载完成');
-
-            // 隐藏加载页
-            loadingPage.style.display = 'none';
-
-            // 显示开始页
-            startPageEl.classList.add('show');
-            startPageVisible = true;
-
-            // 初始化雨滴
-            initRainEffect();
-
-            // 后台下载
-            setTimeout(() => {
-                if (!bgDownloadStarted) {
-                    downloadBackgroundResources();
-                }
-            }, 800);
-        }
-
-        if (document.readyState === 'complete') {
-            boot();
-        } else {
-            window.addEventListener('load', function() {
-                boot();
-            });
-        }
-
-        // ================================================================
-        // 16. 综合保存/加载
-        // ================================================================
-        function saveAllSettings() {
-            try { localStorage.setItem('nightMode', JSON.stringify(currentMode === 'night')); } catch (e) {}
-            try {
-                localStorage.setItem('wallpaperType', currentWallpaperType);
-                localStorage.setItem('wallpaperId', currentWallpaperId);
-            } catch (e) {}
-            try { localStorage.setItem('isWallpaperMode', JSON.stringify(isWallpaperMode)); } catch (e) {}
-            try { localStorage.setItem('quoteLocked', JSON.stringify(quoteLocked)); } catch (e) {}
-            try { localStorage.setItem('searchVisible', JSON.stringify(searchVisible)); } catch (e) {}
-            saveElemState();
-            saveLinksToStorage();
-            saveQuotes();
-            saveInterval();
-            saveModuleStates();
-        }
-
-        function loadAllSettings() {
-            try {
-                const night = JSON.parse(localStorage.getItem('nightMode'));
-                if (night) setDayNight('night');
-                else setDayNight('day');
-            } catch (e) { setDayNight('day'); }
-            try {
-                const type = localStorage.getItem('wallpaperType');
-                const id = localStorage.getItem('wallpaperId');
-                if (type && id) {
-                    currentWallpaperType = type;
-                    currentWallpaperId = id;
-                }
-            } catch (e) {}
-            try {
-                const mode = JSON.parse(localStorage.getItem('isWallpaperMode'));
-                if (mode) {
-                    isWallpaperMode = true;
-                    setTimeout(() => {
-                        body.classList.add('wallpaper-mode');
-                        if (!currentWallpaperType || !currentWallpaperId) applyWallpaper('static', 's1');
-                        else applyWallpaper(currentWallpaperType, currentWallpaperId);
-                        draggableItems.forEach(item => {
-                            if (item.id === 'glassSearch') item.style.display = 'flex';
-                            else if (item.id === 'glassLinks') item.style.display = 'flex';
-                            else item.style.display = 'block';
-                        });
-                        loadWallpaperPositions();
-                        loadWallpaperLocks();
-                        applyElemState();
-                        renderSettings();
-                        updateModeSwitchUI();
+                        rainContainer.classList.add('fade-out');
+                        setTimeout(() => {
+                            rainContainer.classList.remove('active');
+                            rainContainer.style.display = 'none';
+                        }, 1200);
                     }, 300);
                 }
-<<<<<<< HEAD
 
                 setTimeout(() => {
                     destroyRainEffect();
@@ -8490,7 +5901,7 @@
             buildRaindrops();
 
             // ================================================================
-            // 15. 启动流程 + CSP
+            // 15. 启动流程 + CSP nonce 动态注入
             // ================================================================
             function injectCSPNonce() {
                 const nonce = btoa(Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
@@ -8551,45 +5962,10 @@
                 try { localStorage.setItem('searchVisible', JSON.stringify(searchVisible)); } catch (e) {}
                 saveElemState();
                 saveLinksToStorage();
-=======
-            } catch (e) {}
-            try {
-                const locked = JSON.parse(localStorage.getItem('quoteLocked'));
-                if (locked) {
-                    quoteLocked = true;
-                    quoteArea.classList.add('locked');
-                    quoteArea.style.cursor = 'default';
-                    if (wqDisplay) wqDisplay.classList.add('locked');
-                }
-            } catch (e) {}
-            try {
-                const vis = JSON.parse(localStorage.getItem('searchVisible'));
-                if (vis !== null) {
-                    searchVisible = vis;
-                    if (!searchVisible) {
-                        searchWrapper.classList.add('hidden');
-                        if (searchWrapper.contains(searchBtn)) searchWrapper.removeChild(searchBtn);
-                        renderAllLinks();
-                    }
-                }
-            } catch (e) {}
-            loadElemState();
-            applyElemState();
-            loadLinksFromStorage();
-            renderAllLinks();
-            loadSimplePositions();
-            loadWallpaperPositions();
-            loadWallpaperLocks();
-            loadMusicPlayerPos();
-            loadQuotes();
-            loadInterval();
-            loadModuleStates();
-            if (quotes.length === 0) {
-                quotes = DEFAULT_QUOTES.map(q => ({ ...q }));
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
                 saveQuotes();
+                saveInterval();
+                saveModuleStates();
             }
-<<<<<<< HEAD
 
             function loadAllSettings() {
                 try {
@@ -8688,70 +6064,20 @@
             }
 
             // ================================================================
-            // 17. 最终初始化
+            // 17. 最终初始化 + 清理
             // ================================================================
             loadAllSettings();
             initSettingsDelegation();
 
-=======
-            showQuote(0);
-            restartInterval();
-            renderSettings();
-            updateModeSwitchUI();
-            if (elemState['musicPlayer']) {
-                playerVisible = elemState['musicPlayer'].visible;
-                if (playerVisible) {
-                    musicPlayer.classList.add('active');
-                } else {
-                    musicPlayer.classList.remove('active');
-                }
-            }
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
             if (!isWallpaperMode) {
                 draggableItems.forEach(item => { item.style.display = 'none'; });
             }
-            if (elemState['musicPlayer']) {
-                playerVisible = elemState['musicPlayer'].visible;
-            }
-        }
 
-        // ================================================================
-        // 17. 最终初始化
-        // ================================================================
-        // 先加载设置，但开始页默认隐藏，所以不影响
-        loadAllSettings();
-        // 初始化设置面板事件委托
-        initSettingsDelegation();
-
-        if (!isWallpaperMode) {
-            draggableItems.forEach(item => { item.style.display = 'none'; });
-        }
-
-        document.getElementById('rope-container').addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-
-        window.addEventListener('resize', function() {
-            const safeRight = window.innerWidth - parseFloat(getComputedStyle(document.documentElement)
-                .getPropertyValue('--safe-right') || '0');
-            const safeBottom = window.innerHeight - parseFloat(getComputedStyle(document.documentElement)
-                .getPropertyValue('--safe-bottom') || '0');
-
-            draggableItems.forEach(item => {
-                if (item.style.display !== 'none') {
-                    const rect = item.getBoundingClientRect();
-                    const w = item.offsetWidth;
-                    const h = item.offsetHeight;
-                    let left = parseFloat(item.style.left) || rect.left;
-                    let top = parseFloat(item.style.top) || rect.top;
-                    left = Math.max(0, Math.min(safeRight - w, left));
-                    top = Math.max(0, Math.min(safeBottom - h, top));
-                    item.style.left = left + 'px';
-                    item.style.top = top + 'px';
-                }
+            document.getElementById('rope-container').addEventListener('click', function(e) {
+                e.stopPropagation();
             });
-<<<<<<< HEAD
 
+            // ---- 窗口尺寸变化适配（具名函数以便移除） ----
             let resizeHandler = null;
 
             function handleResize() {
@@ -8799,6 +6125,7 @@
             resizeHandler = handleResize;
             window.addEventListener('resize', resizeHandler);
 
+            // ---- 页面卸载时清理所有资源 ----
             window.addEventListener('beforeunload', function() {
                 if (intervalTimer) {
                     clearInterval(intervalTimer);
@@ -8859,45 +6186,6 @@
                 }
             });
         })();
-=======
-            simpleDragTargets.forEach(el => {
-                const rect = el.getBoundingClientRect();
-                const transform = getElementTransform(el);
-                const tx = transform.x;
-                const ty = transform.y;
-                const w = el.offsetWidth || rect.width;
-                const h = el.offsetHeight || rect.height;
-                const fixedLeft = rect.left - tx;
-                const fixedTop = rect.top - ty;
-                const maxX = safeRight - w - fixedLeft;
-                const minX = -fixedLeft;
-                const maxY = safeBottom - h - fixedTop;
-                const minY = -fixedTop;
-                let newTX = Math.max(minX, Math.min(maxX, tx));
-                let newTY = Math.max(minY, Math.min(maxY, ty));
-                if (newTX !== tx || newTY !== ty) {
-                    el.style.transform = `translate(${newTX}px, ${newTY}px)`;
-                    saveSimplePosition(el.id, newTX, newTY);
-                }
-            });
-        });
-
-        window.addEventListener('beforeunload', function() {
-            for (const key in preloaded.blobs) {
-                try { URL.revokeObjectURL(preloaded.blobs[key]); } catch (e) {}
-            }
-        });
-
-        console.log('✅ 小永子首页 - 修仙/阴阳版 (开始页默认隐藏，加载页显示)');
-        console.log('📦 关键资源加载完成后显示开始页（含雨滴）');
-        console.log('⬇️ 后台并行下载：静态壁纸、专辑图、歌曲、动态壁纸');
-        console.log('🖱️ 右键锁定/解锁所有元素');
-        console.log('⚙️ 点击齿轮打开设置');
-        console.log('📱 移动端独立位置存储');
-        console.log('🎵 双击屏幕空白处切换播放器');
-        console.log('🔒 已修复 XSS、URL 协议绕过、内存泄漏、触摸滚动冲突等');
-    })();
->>>>>>> 647acbd6b780eeeef9f690fa98b66f8c6de0b23b
     </script>
 </body>
 </html>
