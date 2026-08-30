@@ -1274,41 +1274,56 @@
             display: flex;
         }
 
-        /* ---- 壁纸预览项中的加载状态 ---- */
-        .wp-preview-item .loading-overlay {
+        /* ---- 壁纸预览项中的进度条（替代转圈） ---- */
+        .wp-preview-item .progress-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.4);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             pointer-events: none;
             z-index: 2;
+            padding: 12px;
         }
-        .wp-preview-item .loading-spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255,255,255,0.2);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 4px;
+        .wp-preview-item .progress-overlay progress {
+            width: 80%;
+            height: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            transition: width 0.2s;
         }
-        .wp-preview-item .loading-text {
-            font-size: 0.5rem;
-            color: rgba(255,255,255,0.7);
+        .wp-preview-item .progress-overlay progress::-webkit-progress-bar {
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+        .wp-preview-item .progress-overlay progress::-webkit-progress-value {
+            background: #fff;
+            border-radius: 4px;
+            transition: width 0.2s;
+        }
+        .wp-preview-item .progress-overlay progress::-moz-progress-bar {
+            background: #fff;
+            border-radius: 4px;
+        }
+        .wp-preview-item .progress-text {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.9);
+            margin-top: 6px;
             text-shadow: 0 1px 4px rgba(0,0,0,0.5);
         }
-        .wp-preview-item.downloaded .loading-overlay {
+        .wp-preview-item.downloaded .progress-overlay {
             display: none;
         }
         .wp-preview-item:not(.downloaded) {
             cursor: default;
-            opacity: 0.7;
+            opacity: 0.8;
         }
         .wp-preview-item:not(.downloaded):hover {
             transform: none;
@@ -3142,132 +3157,299 @@
                 }, 800);
             }
 
-            let bgDownloadStarted = false;
-            const concurrencyLimit = 3;
-            let activeDownloads = 0;
-            const downloadQueue = [];
+            // ================================================================
+            // 串行下载队列（按顺序：静态壁纸→专辑图→歌曲→动态壁纸）
+            // ================================================================
+            let downloadQueue = [];
+            let isDownloading = false;
+            let downloadProgress = {}; // { id: 0-1 }
 
-            function processQueue() {
-                if (downloadQueue.length === 0 || activeDownloads >= concurrencyLimit) return;
-                const task = downloadQueue.shift();
-                activeDownloads++;
-                task().finally(() => {
-                    activeDownloads--;
-                    processQueue();
-                });
-            }
-
-            function enqueueDownload(fn) {
-                downloadQueue.push(fn);
-                processQueue();
-            }
-
-            async function downloadSingle(item, type, maxRetries = 2) {
-                const url = type === 'static' ? 'images/' + item.file : 'videos/' + item.file;
-                for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                    try {
-                        const resp = await fetch(url, { mode: 'cors' });
-                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                        const contentType = resp.headers.get('content-type') || '';
-                        if (type === 'static' && !contentType.startsWith('image/')) {
-                            throw new Error('Not an image');
-                        }
-                        if (type === 'dynamic' && !contentType.startsWith('video/')) {
-                            throw new Error('Not a video');
-                        }
-                        const blob = await resp.blob();
-                        const blobUrl = URL.createObjectURL(blob);
-                        cacheBlob(item.id, blobUrl);
-                        if (document.querySelector('.wp-preview-item[data-id="' + item.id + '"]')) {
-                            updateWallpaperPreview(currentWallpaperType, currentWallpaperId);
-                        }
-                        if (item.id === currentWallpaperId && document.body.classList.contains('wallpaper-mode')) {
-                            applyWallpaper(type, item.id);
-                        }
-                        return true;
-                    } catch (e) {
-                        console.warn('下载失败 (尝试' + attempt + '/' + maxRetries + '):', item.file, e.message);
-                        if (attempt < maxRetries) {
-                            await new Promise(r => setTimeout(r, 800 + attempt * 200));
+            // 更新预览项的进度
+            function updatePreviewProgress(id, progress) {
+                const item = document.querySelector(`.wp-preview-item[data-id="${id}"]`);
+                if (!item) return;
+                const overlay = item.querySelector('.progress-overlay');
+                if (!overlay) return;
+                const progressBar = overlay.querySelector('progress');
+                const textEl = overlay.querySelector('.progress-text');
+                if (progressBar) {
+                    progressBar.value = progress;
+                }
+                if (textEl) {
+                    textEl.textContent = Math.round(progress * 100) + '%';
+                }
+                if (progress >= 1) {
+                    // 下载完成，标记为已下载并移除进度条
+                    item.classList.add('downloaded');
+                    // 渲染内容
+                    const type = item.dataset.type;
+                    const blobUrl = getBlob(id);
+                    if (blobUrl) {
+                        // 清空已有内容，只保留label和check-mark
+                        const label = item.querySelector('.wp-label');
+                        const check = item.querySelector('.check-mark');
+                        item.innerHTML = '';
+                        if (label) item.appendChild(label);
+                        if (check) item.appendChild(check);
+                        // 添加媒体
+                        if (type === 'dynamic') {
+                            if (blobUrl.startsWith('data:image/') || blobUrl.startsWith('blob:') && blobUrl.includes(
+                                'image')) {
+                                const img = document.createElement('img');
+                                img.src = blobUrl;
+                                img.alt = item.dataset.name || '';
+                                img.loading = 'lazy';
+                                item.prepend(img);
+                            } else {
+                                const vid = document.createElement('video');
+                                vid.src = blobUrl;
+                                vid.muted = true;
+                                vid.playsInline = true;
+                                vid.preload = 'metadata';
+                                vid.loop = true;
+                                vid.addEventListener('loadedmetadata', function() {
+                                    this.pause();
+                                });
+                                item.prepend(vid);
+                            }
                         } else {
-                            console.error('下载失败:', item.file);
-                            const placeholder = type === 'static' ? PLACEHOLDER_IMAGE : PLACEHOLDER_VIDEO;
-                            if (!blobCache[item.id]) {
-                                cacheBlob(item.id, placeholder);
-                            }
-                            const previewEl = document.querySelector('.wp-preview-item[data-id="' + item.id + '"]');
-                            if (previewEl) {
-                                previewEl.classList.add('downloaded');
-                                const overlay = previewEl.querySelector('.loading-overlay');
-                                if (overlay) overlay.remove();
-                                if (type === 'static') {
-                                    const img = document.createElement('img');
-                                    img.src = PLACEHOLDER_IMAGE;
-                                    img.alt = item.name;
-                                    img.loading = 'lazy';
-                                    previewEl.prepend(img);
-                                } else {
-                                    const img = document.createElement('img');
-                                    img.src = PLACEHOLDER_IMAGE;
-                                    img.alt = item.name;
-                                    img.loading = 'lazy';
-                                    previewEl.prepend(img);
-                                }
-                            }
+                            const img = document.createElement('img');
+                            img.src = blobUrl;
+                            img.alt = item.dataset.name || '';
+                            img.loading = 'lazy';
+                            item.prepend(img);
                         }
+                        // 移除进度条遮罩
+                        if (overlay.parentNode) overlay.remove();
                     }
                 }
-                return false;
             }
 
-            const musicBlobCache = {};
-
-            async function downloadMusicFiles() {
-                const musicFiles = ['song_01.mp3', 'song_02.mp3', 'song_03.mp3'];
-                const promises = musicFiles.map(async (file) => {
-                    try {
-                        const resp = await fetch('songs/' + file);
-                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                        const blob = await resp.blob();
-                        musicBlobCache[file] = URL.createObjectURL(blob);
-                    } catch (e) {
-                        console.warn('音乐下载失败:', file);
-                        musicBlobCache[file] = null;
-                    }
+            // 下载单个资源（带进度回调）
+            function downloadSingleResource(url, id, type, onProgress) {
+                return new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', url, true);
+                    xhr.responseType = 'blob';
+                    xhr.onprogress = function(e) {
+                        if (e.lengthComputable && onProgress) {
+                            const progress = e.loaded / e.total;
+                            onProgress(progress);
+                        }
+                    };
+                    xhr.onload = function() {
+                        if (xhr.status === 200) {
+                            const blob = xhr.response;
+                            const blobUrl = URL.createObjectURL(blob);
+                            cacheBlob(id, blobUrl);
+                            if (onProgress) onProgress(1);
+                            resolve(blobUrl);
+                        } else {
+                            reject(new Error('HTTP ' + xhr.status));
+                        }
+                    };
+                    xhr.onerror = function() {
+                        reject(new Error('Network error'));
+                    };
+                    xhr.ontimeout = function() {
+                        reject(new Error('Timeout'));
+                    };
+                    xhr.timeout = 30000;
+                    xhr.send();
                 });
-                await Promise.allSettled(promises);
             }
 
-            async function downloadAllWallpapers() {
+            // 生成下载任务列表
+            function buildDownloadTasks() {
+                const tasks = [];
+                // 1. 静态壁纸（按顺序）
+                for (const wp of wallpapers.static) {
+                    tasks.push({
+                        id: wp.id,
+                        type: 'static',
+                        url: 'images/' + wp.file,
+                        name: wp.name,
+                        category: 'static'
+                    });
+                }
+                // 2. 专辑图 (cover_01.png ~ cover_36.png)
+                const IMAGE_COUNT = 36;
+                for (let i = 1; i <= IMAGE_COUNT; i++) {
+                    const num = String(i).padStart(2, '0');
+                    tasks.push({
+                        id: 'cover_' + num,
+                        type: 'image',
+                        url: 'images/cover_' + num + '.png',
+                        name: '封面 ' + num,
+                        category: 'cover'
+                    });
+                }
+                // 3. 歌曲 (song_01.mp3 ~ song_03.mp3)
+                const songs = ['song_01.mp3', 'song_02.mp3', 'song_03.mp3'];
+                for (const file of songs) {
+                    tasks.push({
+                        id: file,
+                        type: 'audio',
+                        url: 'songs/' + file,
+                        name: file,
+                        category: 'song'
+                    });
+                }
+                // 4. 动态壁纸
+                for (const wp of wallpapers.dynamic) {
+                    tasks.push({
+                        id: wp.id,
+                        type: 'dynamic',
+                        url: 'videos/' + wp.file,
+                        name: wp.name,
+                        category: 'dynamic'
+                    });
+                }
+                return tasks;
+            }
+
+            // 开始串行下载
+            let bgDownloadStarted = false;
+
+            function startSerialDownload() {
                 if (bgDownloadStarted) return;
                 bgDownloadStarted = true;
+                const tasks = buildDownloadTasks();
+                if (tasks.length === 0) return;
 
-                const currentList = wallpapers[currentWallpaperType];
-                const currentItem = currentList.find(w => w.id === currentWallpaperId);
-                if (currentItem) {
-                    await downloadSingle(currentItem, currentWallpaperType);
-                }
+                // 初始化进度对象
+                tasks.forEach(t => {
+                    downloadProgress[t.id] = 0;
+                });
 
-                const allTasks = [];
-                for (const type of ['static', 'dynamic']) {
-                    for (const wp of wallpapers[type]) {
-                        if (wp.id === currentWallpaperId) continue;
-                        allTasks.push({ item: wp, type: type });
+                // 为每个壁纸预览项创建进度条
+                document.querySelectorAll('.wp-preview-item').forEach(el => {
+                    const id = el.dataset.id;
+                    if (id && downloadProgress[id] !== undefined) {
+                        // 已经有进度条了，或者下载完成
+                        if (!el.classList.contains('downloaded')) {
+                            // 添加进度条遮罩
+                            const overlay = document.createElement('div');
+                            overlay.className = 'progress-overlay';
+                            const progress = document.createElement('progress');
+                            progress.value = 0;
+                            progress.max = 1;
+                            const text = document.createElement('div');
+                            text.className = 'progress-text';
+                            text.textContent = '0%';
+                            overlay.appendChild(progress);
+                            overlay.appendChild(text);
+                            el.prepend(overlay);
+                            // 如果已缓存，直接标记完成
+                            if (getBlob(id)) {
+                                el.classList.add('downloaded');
+                                overlay.remove();
+                                // 渲染内容
+                                renderPreviewItem(el, el.dataset.type);
+                            }
+                        }
                     }
-                }
-                const queue = [...allTasks];
-                const promises = [];
-                while (queue.length > 0) {
-                    const batch = queue.splice(0, concurrencyLimit);
-                    promises.push(...batch.map(task => downloadSingle(task.item, task.type)));
-                    if (queue.length > 0) {
-                        await Promise.all(promises.slice(-concurrencyLimit));
-                    }
-                }
-                await Promise.allSettled(promises);
+                });
 
-                await downloadMusicFiles();
-                showToast('所有资源已就绪 ✨');
+                // 启动串行下载
+                isDownloading = true;
+                let currentIndex = 0;
+
+                function downloadNext() {
+                    if (currentIndex >= tasks.length) {
+                        isDownloading = false;
+                        showToast('所有资源下载完成 ✨');
+                        return;
+                    }
+                    const task = tasks[currentIndex];
+                    const id = task.id;
+                    // 如果已经缓存，跳过
+                    if (getBlob(id)) {
+                        // 更新进度为1
+                        if (downloadProgress[id] !== undefined) {
+                            downloadProgress[id] = 1;
+                            updatePreviewProgress(id, 1);
+                        }
+                        currentIndex++;
+                        downloadNext();
+                        return;
+                    }
+
+                    // 更新进度回调
+                    const onProgress = (progress) => {
+                        if (downloadProgress[id] !== undefined) {
+                            downloadProgress[id] = progress;
+                            updatePreviewProgress(id, progress);
+                        }
+                    };
+
+                    // 开始下载
+                    downloadSingleResource(task.url, id, task.type, onProgress)
+                        .then(() => {
+                            // 下载完成，标记进度1
+                            if (downloadProgress[id] !== undefined) {
+                                downloadProgress[id] = 1;
+                                updatePreviewProgress(id, 1);
+                            }
+                            currentIndex++;
+                            downloadNext();
+                        })
+                        .catch((err) => {
+                            console.warn('下载失败:', task.url, err.message);
+                            // 失败时使用占位图
+                            const placeholder = task.type === 'static' || task.type === 'image' ? PLACEHOLDER_IMAGE :
+                                PLACEHOLDER_VIDEO;
+                            cacheBlob(id, placeholder);
+                            if (downloadProgress[id] !== undefined) {
+                                downloadProgress[id] = 1;
+                                updatePreviewProgress(id, 1);
+                            }
+                            currentIndex++;
+                            downloadNext();
+                        });
+                }
+
+                downloadNext();
+            }
+
+            // 对预览项进行渲染（在下载完成后调用）
+            function renderPreviewItem(el, type) {
+                const id = el.dataset.id;
+                const blobUrl = getBlob(id);
+                if (!blobUrl) return;
+                const overlay = el.querySelector('.progress-overlay');
+                if (overlay) overlay.remove();
+                el.classList.add('downloaded');
+                // 移除已有媒体
+                const existingMedia = el.querySelector('img, video');
+                if (existingMedia) existingMedia.remove();
+
+                if (type === 'dynamic') {
+                    if (blobUrl.startsWith('data:image/') || blobUrl.startsWith('blob:') && blobUrl.includes('image')) {
+                        const img = document.createElement('img');
+                        img.src = blobUrl;
+                        img.alt = el.dataset.name || '';
+                        img.loading = 'lazy';
+                        el.prepend(img);
+                    } else {
+                        const vid = document.createElement('video');
+                        vid.src = blobUrl;
+                        vid.muted = true;
+                        vid.playsInline = true;
+                        vid.preload = 'metadata';
+                        vid.loop = true;
+                        vid.addEventListener('loadedmetadata', function() {
+                            this.pause();
+                        });
+                        el.prepend(vid);
+                    }
+                } else {
+                    const img = document.createElement('img');
+                    img.src = blobUrl;
+                    img.alt = el.dataset.name || '';
+                    img.loading = 'lazy';
+                    el.prepend(img);
+                }
             }
 
             // ================================================================
@@ -3986,7 +4168,7 @@
                     if (!getBlob(currentWallpaperId)) {
                         showToast('壁纸下载中，请稍候...');
                         if (!bgDownloadStarted) {
-                            downloadAllWallpapers();
+                            startSerialDownload();
                         }
                     } else {
                         applyWallpaper(currentWallpaperType, currentWallpaperId);
@@ -4027,36 +4209,12 @@
                 }
             }
 
-            // ---- 壁纸预览：优化 DOM 操作，使用 DocumentFragment，复用 Observer ----
-            let previewObserver = null;
-
+            // ---- 壁纸预览：不再使用Observer，直接渲染占位 ----
             function updateWallpaperPreview(type, id) {
                 const previewGrid = document.getElementById('wallpaperPreviewGrid');
                 if (!previewGrid) return;
-                // 断开旧 observer
-                if (previewObserver) {
-                    previewObserver.disconnect();
-                    previewObserver = null;
-                }
                 const items = wallpapers[type] || [];
                 previewGrid.innerHTML = '';
-
-                // 使用 DocumentFragment 批量构建
-                const fragment = document.createDocumentFragment();
-
-                previewObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const el = entry.target;
-                            const isDownloaded = !!getBlob(el.dataset.id);
-                            if (isDownloaded && !el.classList.contains('loaded')) {
-                                renderPreviewItem(el, type);
-                                el.classList.add('loaded');
-                            }
-                            previewObserver.unobserve(el);
-                        }
-                    });
-                }, { rootMargin: '50px' });
 
                 items.forEach(wp => {
                     const el = document.createElement('div');
@@ -4067,25 +4225,29 @@
                     el.dataset.file = wp.file;
                     el.dataset.name = wp.name;
 
+                    // 检查是否已缓存
                     const isDownloaded = !!getBlob(wp.id);
-
                     if (isDownloaded) {
                         el.classList.add('downloaded');
                         renderPreviewItem(el, type);
-                        el.classList.add('loaded');
                     } else {
-                        el.classList.add('not-downloaded');
+                        // 显示进度条占位
                         const overlay = document.createElement('div');
-                        overlay.className = 'loading-overlay';
-                        const spinner = document.createElement('div');
-                        spinner.className = 'loading-spinner';
+                        overlay.className = 'progress-overlay';
+                        const progress = document.createElement('progress');
+                        progress.value = 0;
+                        progress.max = 1;
                         const text = document.createElement('div');
-                        text.className = 'loading-text';
-                        text.textContent = '下载中...';
-                        overlay.appendChild(spinner);
+                        text.className = 'progress-text';
+                        text.textContent = '0%';
+                        overlay.appendChild(progress);
                         overlay.appendChild(text);
                         el.appendChild(overlay);
-                        previewObserver.observe(el);
+                        // 如果正在下载，但进度可能已有
+                        if (downloadProgress[wp.id] !== undefined && downloadProgress[wp.id] > 0) {
+                            progress.value = downloadProgress[wp.id];
+                            text.textContent = Math.round(downloadProgress[wp.id] * 100) + '%';
+                        }
                     }
 
                     const label = document.createElement('div');
@@ -4114,49 +4276,8 @@
                         });
                     });
 
-                    fragment.appendChild(el);
+                    previewGrid.appendChild(el);
                 });
-
-                previewGrid.appendChild(fragment);
-            }
-
-            function renderPreviewItem(el, type) {
-                const id = el.dataset.id;
-                const blobUrl = getBlob(id);
-                if (!blobUrl) return;
-                const overlay = el.querySelector('.loading-overlay');
-                if (overlay) overlay.remove();
-                el.classList.add('downloaded');
-                el.classList.remove('not-downloaded');
-
-                if (type === 'dynamic') {
-                    if (blobUrl.startsWith('data:image/') || blobUrl.startsWith('blob:') && blobUrl.includes('image')) {
-                        const img = document.createElement('img');
-                        img.src = blobUrl;
-                        img.alt = el.dataset.name || '';
-                        img.loading = 'lazy';
-                        el.prepend(img);
-                    } else {
-                        const vid = document.createElement('video');
-                        vid.src = blobUrl;
-                        vid.muted = true;
-                        vid.playsInline = true;
-                        vid.preload = 'metadata';
-                        vid.loop = true;
-                        // 不自动播放，避免多个视频同时播放导致花屏
-                        vid.addEventListener('loadedmetadata', function() {
-                            // 暂停所有动态预览视频，只显示封面帧
-                            this.pause();
-                        });
-                        el.prepend(vid);
-                    }
-                } else {
-                    const img = document.createElement('img');
-                    img.src = blobUrl;
-                    img.alt = el.dataset.name || '';
-                    img.loading = 'lazy';
-                    el.prepend(img);
-                }
             }
 
             // ---- 渲染设置 ----
@@ -4591,7 +4712,7 @@
             const albumImages = [];
             for (let i = 1; i <= IMAGE_COUNT; i++) {
                 const num = String(i).padStart(2, '0');
-                albumImages.push(`images/cover_${num}.png`);
+                albumImages.push('images/cover_' + num + '.png');
             }
             const songs = [
                 { name: '凡人', file: 'song_01.mp3' },
@@ -4694,7 +4815,8 @@
                 initAudio();
                 const song = songs[index % songs.length];
                 if (!song) return;
-                const cached = musicBlobCache[song.file];
+                // 检查缓存
+                const cached = getBlob(song.file);
                 const src = cached || 'songs/' + song.file;
                 audioPlayer.src = src;
                 audioPlayer.load();
@@ -5133,7 +5255,7 @@
 
             draggableItems.forEach(item => initDraggable(item));
 
-            // ---- 保存/加载壁纸位置（修复：默认位置：时间左上角，语录右下角，链接左边） ----
+            // ---- 保存/加载壁纸位置（修复：默认位置：时间左上角，语录右下角，链接左边，且上移） ----
             function saveWallpaperPositions() {
                 const data = {};
                 draggableItems.forEach(item => {
@@ -5159,12 +5281,12 @@
 
                 const w = window.innerWidth,
                     h = window.innerHeight;
-                // 修复：时间左上角，语录右下角，链接左边，搜索框中间偏下
+                // 调整默认位置：时间左上角，语录右下角，搜索中间偏下，链接上移（top 减小）
                 const defaults = {
                     'wallpaperTimeDisplay': { left: 20, top: 20 },
                     'wallpaperQuoteDisplay': { left: Math.max(20, w - 380), top: Math.max(20, h - 220) },
                     'glassSearch': { left: (w - 360) / 2, top: Math.min(h * 0.70, h - 120) },
-                    'glassLinks': { left: 20, top: Math.min(h * 0.55, h - 300) },
+                    'glassLinks': { left: 20, top: Math.min(h * 0.15, 80) }, // 上移
                 };
 
                 draggableItems.forEach(item => {
@@ -5847,8 +5969,9 @@
                     startPage.classList.add('hide');
                 }, 1300);
 
+                // 启动串行下载（进入首页后）
                 if (!bgDownloadStarted) {
-                    downloadAllWallpapers();
+                    startSerialDownload();
                 }
             }
 
@@ -5929,12 +6052,6 @@
                 startPageVisible = true;
 
                 initRainEffect();
-
-                setTimeout(() => {
-                    if (!bgDownloadStarted) {
-                        downloadAllWallpapers();
-                    }
-                }, 800);
             }
 
             if (document.readyState === 'complete') {
@@ -5987,7 +6104,7 @@
                             if (!getBlob(currentWallpaperId)) {
                                 showToast('壁纸下载中，请稍候...');
                                 if (!bgDownloadStarted) {
-                                    downloadAllWallpapers();
+                                    startSerialDownload();
                                 }
                             } else {
                                 applyWallpaper(currentWallpaperType, currentWallpaperId);
@@ -6134,10 +6251,6 @@
                     cancelAnimationFrame(clockUpdateTimer);
                     clockUpdateTimer = null;
                 }
-                if (previewObserver) {
-                    previewObserver.disconnect();
-                    previewObserver = null;
-                }
                 if (resizeHandler) {
                     window.removeEventListener('resize', resizeHandler);
                     resizeHandler = null;
@@ -6162,11 +6275,6 @@
 
                 for (const id in blobCache) {
                     try { URL.revokeObjectURL(blobCache[id]); } catch (e) {}
-                }
-                for (const file in musicBlobCache) {
-                    if (musicBlobCache[file]) {
-                        try { URL.revokeObjectURL(musicBlobCache[file]); } catch (e) {}
-                    }
                 }
 
                 destroyRainEffect();
