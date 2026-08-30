@@ -2984,47 +2984,38 @@
                 else body.removeAttribute('data-brightness');
             }
 
-            const MAX_BLOB_CACHE = 40;
-            const blobCache = {};
-            const blobOrder = [];
+            // ---------- 直接使用原始URL，不依赖blob缓存 ----------
+            // 下载进度跟踪
+            let downloadProgress = {};
 
-            function cacheBlob(id, blobUrl) {
-                if (blobCache[id]) {
-                    const idx = blobOrder.indexOf(id);
-                    if (idx > -1) blobOrder.splice(idx, 1);
-                }
-                if (blobOrder.length >= MAX_BLOB_CACHE) {
-                    let removed = 0;
-                    const toRemove = [];
-                    for (let i = 0; i < blobOrder.length && removed < MAX_BLOB_CACHE / 2; i++) {
-                        const oldId = blobOrder[i];
-                        if (oldId !== currentWallpaperId) {
-                            toRemove.push(oldId);
-                            removed++;
-                        }
+            // 判断资源是否已通过浏览器缓存（通过加载测试）
+            function isResourceCached(url, type) {
+                return new Promise((resolve) => {
+                    if (type === 'static') {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => resolve(true);
+                        img.onerror = () => resolve(false);
+                        img.src = url;
+                        // 超时处理
+                        setTimeout(() => resolve(false), 3000);
+                    } else if (type === 'dynamic') {
+                        const video = document.createElement('video');
+                        video.muted = true;
+                        video.playsInline = true;
+                        video.preload = 'metadata';
+                        video.onloadedmetadata = () => resolve(true);
+                        video.onerror = () => resolve(false);
+                        video.src = url;
+                        video.load();
+                        setTimeout(() => resolve(false), 3000);
+                    } else {
+                        resolve(false);
                     }
-                    toRemove.forEach(oldId => {
-                        const idx2 = blobOrder.indexOf(oldId);
-                        if (idx2 > -1) blobOrder.splice(idx2, 1);
-                        if (blobCache[oldId]) {
-                            delete blobCache[oldId];
-                        }
-                    });
-                }
-                blobCache[id] = blobUrl;
-                const idx = blobOrder.indexOf(id);
-                if (idx > -1) blobOrder.splice(idx, 1);
-                blobOrder.push(id);
+                });
             }
 
-            function getBlob(id) {
-                return blobCache[id] || null;
-            }
-
-            // --- applyWallpaper 使用双缓冲 + 交叉淡入淡出 ---
-            let pendingWallpaper = null;
-            let transitionTimer = null;
-
+            // ---- 主壁纸加载（直接使用原始路径） ----
             function applyWallpaper(type, id) {
                 if (isWallpaperTransitioning) {
                     pendingWallpaper = { type, id };
@@ -3040,11 +3031,6 @@
                     transitionTimer = null;
                 }
 
-                let blobUrl = getBlob(id);
-                if (blobUrl && isPlaceholder(blobUrl)) {
-                    blobUrl = null;
-                }
-
                 const list = wallpapers[type];
                 if (!list) {
                     showToast('壁纸列表不存在');
@@ -3057,47 +3043,36 @@
                 }
 
                 isWallpaperTransitioning = true;
+                const url = (type === 'static' ? 'images/' : 'videos/') + item.file;
 
                 const currentActive = videoEl.classList.contains('active') ? videoEl :
                     imgEl.classList.contains('active') ? imgEl : null;
-                const currentType = currentActive === videoEl ? 'dynamic' :
-                    currentActive === imgEl ? 'static' : null;
 
-                const isSameType = (currentType === type);
-                const hasCache = !!blobUrl;
-
-                if (!hasCache) {
-                    loadWallpaperFromNetwork(type, id, item, currentActive);
-                    return;
+                // 先淡出当前
+                if (currentActive && currentActive.classList.contains('active')) {
+                    currentActive.classList.remove('active');
+                    currentActive.classList.add('fade-out');
+                    transitionTimer = setTimeout(() => {
+                        transitionTimer = null;
+                        if (currentActive) {
+                            currentActive.classList.remove('fade-out');
+                        }
+                        loadWallpaperDirect(type, url, id);
+                    }, 700);
+                } else {
+                    loadWallpaperDirect(type, url, id);
                 }
-
-                const doTransition = () => {
-                    if (currentActive && currentActive.classList.contains('active')) {
-                        currentActive.classList.remove('active');
-                        currentActive.classList.add('fade-out');
-
-                        transitionTimer = setTimeout(() => {
-                            transitionTimer = null;
-                            if (currentActive) {
-                                currentActive.classList.remove('fade-out');
-                            }
-                            loadWallpaperFromCache(type, id, blobUrl, currentActive);
-                        }, 700);
-                    } else {
-                        loadWallpaperFromCache(type, id, blobUrl, null);
-                    }
-                };
-
-                doTransition();
             }
 
-            // ---------- 从缓存加载（移除超时） ----------
-            function loadWallpaperFromCache(type, id, blobUrl, oldEl) {
+            let pendingWallpaper = null;
+            let transitionTimer = null;
+
+            function loadWallpaperDirect(type, url, id) {
                 videoEl.classList.remove('active', 'fade-out');
                 imgEl.classList.remove('active', 'fade-out');
 
                 if (type === 'static') {
-                    imgEl.src = blobUrl;
+                    imgEl.src = url;
                     imgEl.onload = function() {
                         imgEl.classList.add('active');
                         detectBrightnessFromImage(imgEl).then(b => applyBrightnessClass(b)).catch(() => {});
@@ -3112,7 +3087,6 @@
                         applyBrightnessClass('dark');
                         isWallpaperTransitioning = false;
                         showToast('壁纸加载失败');
-                        cacheBlob(id, PLACEHOLDER_IMAGE);
                         imgEl.onerror = null;
                         updatePreviewActiveState(type, id);
                         checkPending();
@@ -3120,7 +3094,6 @@
                     if (imgEl.complete && imgEl.naturalWidth > 0) {
                         imgEl.onload && imgEl.onload();
                     }
-                    // 移除超时 — 让加载自然完成
                 } else {
                     // 动态
                     while (videoEl.firstChild) {
@@ -3128,7 +3101,7 @@
                     }
                     videoEl.poster = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
                     const source = document.createElement('source');
-                    source.setAttribute('src', blobUrl);
+                    source.setAttribute('src', url);
                     source.setAttribute('type', 'video/mp4');
                     videoEl.appendChild(source);
                     videoEl.load();
@@ -3153,159 +3126,11 @@
                         applyBrightnessClass('dark');
                         isWallpaperTransitioning = false;
                         showToast('视频壁纸加载失败');
-                        cacheBlob(id, PLACEHOLDER_VIDEO);
                         videoEl.onerror = null;
                         updatePreviewActiveState(type, id);
                         checkPending();
                     };
-                    // 移除超时
                 }
-
-                currentWallpaperType = type;
-                currentWallpaperId = id;
-                saveAllSettings();
-            }
-
-            // ---------- 从网络加载（移除超时） ----------
-            function loadWallpaperFromNetwork(type, id, item, currentActive) {
-                const fallbackUrl = type === 'static' ? 'images/' + item.file : 'videos/' + item.file;
-                showToast('加载壁纸中...');
-
-                if (currentActive && currentActive.classList.contains('active')) {
-                    currentActive.classList.remove('active');
-                    currentActive.classList.add('fade-out');
-                    setTimeout(() => {
-                        if (currentActive) {
-                            currentActive.classList.remove('fade-out');
-                        }
-                        doNetworkLoad(type, id, item, fallbackUrl);
-                    }, 700);
-                } else {
-                    doNetworkLoad(type, id, item, fallbackUrl);
-                }
-            }
-
-            function doNetworkLoad(type, id, item, fallbackUrl) {
-                videoEl.classList.remove('active', 'fade-out');
-                imgEl.classList.remove('active', 'fade-out');
-
-                if (type === 'static') {
-                    const tempImg = new Image();
-                    tempImg.crossOrigin = 'anonymous';
-                    tempImg.onload = function() {
-                        const url = tempImg.src;
-                        imgEl.src = url;
-                        imgEl.onload = function() {
-                            imgEl.classList.add('active');
-                            detectBrightnessFromImage(imgEl).then(b => applyBrightnessClass(b)).catch(() => {});
-                            isWallpaperTransitioning = false;
-                            fetch(url).then(r => r.blob()).then(blob => {
-                                const blobUrl2 = URL.createObjectURL(blob);
-                                cacheBlob(id, blobUrl2);
-                            }).catch(() => {});
-                            updatePreviewActiveState(type, id);
-                            checkPending();
-                        };
-                        imgEl.onerror = function() {
-                            imgEl.src = PLACEHOLDER_IMAGE;
-                            imgEl.classList.add('active');
-                            applyBrightnessClass('dark');
-                            isWallpaperTransitioning = false;
-                            showToast('壁纸加载失败');
-                            cacheBlob(id, PLACEHOLDER_IMAGE);
-                            updatePreviewActiveState(type, id);
-                            checkPending();
-                        };
-                        imgEl.src = url;
-                    };
-                    tempImg.onerror = function() {
-                        imgEl.src = PLACEHOLDER_IMAGE;
-                        imgEl.classList.add('active');
-                        applyBrightnessClass('dark');
-                        isWallpaperTransitioning = false;
-                        showToast('壁纸加载失败');
-                        cacheBlob(id, PLACEHOLDER_IMAGE);
-                        updatePreviewActiveState(type, id);
-                        checkPending();
-                    };
-                    tempImg.src = fallbackUrl;
-                    // 移除超时
-                } else {
-                    // 动态
-                    const tempVideo = document.createElement('video');
-                    tempVideo.muted = true;
-                    tempVideo.playsInline = true;
-                    tempVideo.preload = 'auto';
-                    tempVideo.poster =
-                        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-                    const source = document.createElement('source');
-                    source.src = fallbackUrl;
-                    source.type = 'video/mp4';
-                    tempVideo.appendChild(source);
-                    tempVideo.load();
-
-                    const onVideoReady = function() {
-                        if (wallpaperTimeout) {
-                            clearTimeout(wallpaperTimeout);
-                            wallpaperTimeout = null;
-                        }
-                        const src = tempVideo.src || fallbackUrl;
-                        while (videoEl.firstChild) {
-                            videoEl.removeChild(videoEl.firstChild);
-                        }
-                        videoEl.poster =
-                            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-                        videoEl.src = src;
-                        videoEl.load();
-                        videoEl.loop = true;
-                        videoEl.play().catch(() => {});
-                        videoEl.oncanplaythrough = function() {
-                            videoEl.classList.add('active');
-                            detectBrightnessFromVideo(videoEl).then(b => applyBrightnessClass(b)).catch(() => {});
-                            isWallpaperTransitioning = false;
-                            videoEl.oncanplaythrough = null;
-                            fetch(src).then(r => r.blob()).then(blob => {
-                                const blobUrl2 = URL.createObjectURL(blob);
-                                cacheBlob(id, blobUrl2);
-                            }).catch(() => {});
-                            updatePreviewActiveState(type, id);
-                            checkPending();
-                        };
-                        videoEl.onerror = function() {
-                            videoEl.poster = PLACEHOLDER_IMAGE;
-                            videoEl.load();
-                            videoEl.classList.add('active');
-                            applyBrightnessClass('dark');
-                            isWallpaperTransitioning = false;
-                            showToast('视频壁纸加载失败');
-                            cacheBlob(id, PLACEHOLDER_VIDEO);
-                            updatePreviewActiveState(type, id);
-                            checkPending();
-                        };
-                        imgEl.classList.remove('active', 'fade-out');
-                        videoEl.classList.remove('active', 'fade-out');
-                        videoEl.load();
-                        videoEl.play().catch(() => {});
-                    };
-
-                    tempVideo.oncanplaythrough = onVideoReady;
-                    tempVideo.onerror = function() {
-                        while (videoEl.firstChild) {
-                            videoEl.removeChild(videoEl.firstChild);
-                        }
-                        videoEl.poster = PLACEHOLDER_IMAGE;
-                        videoEl.load();
-                        videoEl.classList.add('active');
-                        applyBrightnessClass('dark');
-                        isWallpaperTransitioning = false;
-                        showToast('视频壁纸加载失败');
-                        cacheBlob(id, PLACEHOLDER_VIDEO);
-                        updatePreviewActiveState(type, id);
-                        checkPending();
-                    };
-                    // 移除超时
-                }
-
                 currentWallpaperType = type;
                 currentWallpaperId = id;
                 saveAllSettings();
@@ -3329,92 +3154,12 @@
             }
 
             // ================================================================
-            // 串行下载队列（按顺序：静态壁纸→专辑图→歌曲→动态壁纸）
+            // 串行下载队列（用于预加载资源，并显示进度）
             // ================================================================
-            let downloadQueue = [];
             let isDownloading = false;
-            let downloadProgress = {};
+            let bgDownloadStarted = false;
 
-            function updatePreviewProgress(id, progress) {
-                const item = document.querySelector(`.wp-preview-item[data-id="${id}"]`);
-                if (!item) return;
-                const overlay = item.querySelector('.progress-overlay');
-                if (!overlay) return;
-                const progressBar = overlay.querySelector('progress');
-                const textEl = overlay.querySelector('.progress-text');
-                if (progressBar) {
-                    progressBar.value = progress;
-                }
-                if (textEl) {
-                    textEl.textContent = Math.round(progress * 100) + '%';
-                }
-                // 进度达到100%时渲染预览图
-                if (progress >= 1) {
-                    renderPreviewItem(item, item.dataset.type);
-                }
-            }
-
-            // 渲染预览项（仅当缓存有效且非占位符时才显示缩略图）
-            function renderPreviewItem(el, type) {
-                const id = el.dataset.id;
-                const blobUrl = getBlob(id);
-
-                // 移除进度条
-                const overlay = el.querySelector('.progress-overlay');
-                if (overlay) overlay.remove();
-                el.classList.add('downloaded');
-
-                // 移除旧的媒体/占位符
-                const existingMedia = el.querySelector('img, video');
-                if (existingMedia) existingMedia.remove();
-                const placeholder = el.querySelector('.wp-placeholder');
-                if (placeholder) placeholder.remove();
-
-                // 没有缓存或缓存是占位符 → 显示"加载失败"
-                if (!blobUrl || isPlaceholder(blobUrl)) {
-                    const placeholderDiv = document.createElement('div');
-                    placeholderDiv.className = 'wp-placeholder';
-                    placeholderDiv.textContent = '加载失败';
-                    el.prepend(placeholderDiv);
-                    return;
-                }
-
-                // 有有效缓存 → 渲染缩略图
-                if (type === 'static') {
-                    const img = document.createElement('img');
-                    img.className = 'wp-thumbnail';
-                    img.src = blobUrl;
-                    img.alt = el.dataset.name || '';
-                    img.loading = 'lazy';
-                    el.prepend(img);
-                } else if (type === 'dynamic') {
-                    // 判断 blob 类型
-                    if (blobUrl.startsWith('data:image/') || (blobUrl.startsWith('blob:') && blobUrl.includes('image'))) {
-                        const img = document.createElement('img');
-                        img.className = 'wp-thumbnail';
-                        img.src = blobUrl;
-                        img.alt = el.dataset.name || '';
-                        img.loading = 'lazy';
-                        el.prepend(img);
-                    } else {
-                        const vid = document.createElement('video');
-                        vid.src = blobUrl;
-                        vid.muted = true;
-                        vid.playsInline = true;
-                        vid.preload = 'metadata';
-                        vid.loop = true;
-                        vid.poster =
-                            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-                        vid.addEventListener('loadedmetadata', function() {
-                            this.pause();
-                        });
-                        el.prepend(vid);
-                    }
-                }
-                // 确保点击有效
-                el.style.cursor = 'pointer';
-            }
-
+            // 下载单个资源（仅用于进度显示，实际浏览器会缓存）
             function downloadSingleResource(url, id, type, onProgress) {
                 return new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
@@ -3429,11 +3174,9 @@
                     };
                     xhr.onload = function() {
                         if (xhr.status === 200) {
-                            const blob = xhr.response;
-                            const blobUrl = URL.createObjectURL(blob);
-                            cacheBlob(id, blobUrl);
+                            // 不存储blob，直接使用原始URL，浏览器缓存已生效
                             if (onProgress) onProgress(1);
-                            resolve(blobUrl);
+                            resolve();
                         } else {
                             reject(new Error('HTTP ' + xhr.status));
                         }
@@ -3492,7 +3235,82 @@
                 return tasks;
             }
 
-            let bgDownloadStarted = false;
+            // 更新预览进度和状态
+            function updatePreviewProgress(id, progress) {
+                const item = document.querySelector(`.wp-preview-item[data-id="${id}"]`);
+                if (!item) return;
+                const overlay = item.querySelector('.progress-overlay');
+                if (!overlay) return;
+                const progressBar = overlay.querySelector('progress');
+                const textEl = overlay.querySelector('.progress-text');
+                if (progressBar) {
+                    progressBar.value = progress;
+                }
+                if (textEl) {
+                    textEl.textContent = Math.round(progress * 100) + '%';
+                }
+                if (progress >= 1) {
+                    // 下载完成，标记为已下载（预览图会通过重加载显示）
+                    item.classList.add('downloaded');
+                    // 移除进度条
+                    if (overlay) overlay.remove();
+                    // 重新加载预览（利用缓存）
+                    refreshPreviewItem(item, item.dataset.type);
+                }
+            }
+
+            // 刷新预览项（利用浏览器缓存）
+            function refreshPreviewItem(el, type) {
+                const id = el.dataset.id;
+                const url = (type === 'static' ? 'images/' : 'videos/') + el.dataset.file;
+                // 移除旧媒体
+                const existing = el.querySelector('img, video, .wp-placeholder');
+                if (existing) existing.remove();
+
+                if (type === 'static') {
+                    const img = document.createElement('img');
+                    img.className = 'wp-thumbnail';
+                    img.src = url;
+                    img.alt = el.dataset.name || '';
+                    img.loading = 'lazy';
+                    img.onload = () => {
+                        el.classList.add('downloaded');
+                        // 确保进度条移除
+                        const ov = el.querySelector('.progress-overlay');
+                        if (ov) ov.remove();
+                    };
+                    img.onerror = () => {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'wp-placeholder';
+                        placeholder.textContent = '加载失败';
+                        el.prepend(placeholder);
+                    };
+                    el.prepend(img);
+                } else {
+                    // 动态
+                    const vid = document.createElement('video');
+                    vid.src = url;
+                    vid.muted = true;
+                    vid.playsInline = true;
+                    vid.preload = 'metadata';
+                    vid.loop = true;
+                    vid.poster = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+                    vid.style.backgroundColor = '#000';
+                    vid.addEventListener('loadedmetadata', function() {
+                        this.pause();
+                        el.classList.add('downloaded');
+                        const ov = el.querySelector('.progress-overlay');
+                        if (ov) ov.remove();
+                    });
+                    vid.addEventListener('error', function() {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'wp-placeholder';
+                        placeholder.textContent = '加载失败';
+                        el.prepend(placeholder);
+                    });
+                    el.prepend(vid);
+                }
+            }
 
             function startSerialDownload() {
                 if (bgDownloadStarted) return;
@@ -3500,46 +3318,81 @@
                 const tasks = buildDownloadTasks();
                 if (tasks.length === 0) return;
 
+                // 初始化进度
                 tasks.forEach(t => {
                     downloadProgress[t.id] = 0;
                 });
 
-                // 更新所有预览项的状态
+                // 更新所有预览项，显示进度条和占位符
                 document.querySelectorAll('.wp-preview-item').forEach(el => {
                     const id = el.dataset.id;
                     if (id && downloadProgress[id] !== undefined) {
-                        const cached = getBlob(id);
-                        if (cached && !isPlaceholder(cached)) {
-                            el.classList.add('downloaded');
-                            const overlay = el.querySelector('.progress-overlay');
-                            if (overlay) overlay.remove();
-                            renderPreviewItem(el, el.dataset.type);
+                        // 检查是否已经缓存（通过尝试加载）
+                        const url = (el.dataset.type === 'static' ? 'images/' : 'videos/') + el.dataset.file;
+                        // 先尝试直接加载，如果成功则标记为已下载
+                        if (el.dataset.type === 'static') {
+                            const testImg = new Image();
+                            testImg.onload = () => {
+                                el.classList.add('downloaded');
+                                const ov = el.querySelector('.progress-overlay');
+                                if (ov) ov.remove();
+                                refreshPreviewItem(el, el.dataset.type);
+                            };
+                            testImg.onerror = () => {
+                                // 未缓存，显示进度条
+                                if (!el.querySelector('.progress-overlay')) {
+                                    const overlay = document.createElement('div');
+                                    overlay.className = 'progress-overlay';
+                                    const progress = document.createElement('progress');
+                                    progress.value = 0;
+                                    progress.max = 1;
+                                    const text = document.createElement('div');
+                                    text.className = 'progress-text';
+                                    text.textContent = '0%';
+                                    overlay.appendChild(progress);
+                                    overlay.appendChild(text);
+                                    el.prepend(overlay);
+                                    // 占位符
+                                    const placeholder = document.createElement('div');
+                                    placeholder.className = 'wp-placeholder';
+                                    placeholder.textContent = '等待下载';
+                                    el.prepend(placeholder);
+                                }
+                            };
+                            testImg.src = url;
                         } else {
-                            // 未下载：只显示占位符+进度条，不显示缩略图
-                            if (!el.querySelector('.progress-overlay')) {
-                                // 移除可能存在的缩略图
-                                const existingMedia = el.querySelector('img, video');
-                                if (existingMedia) existingMedia.remove();
-                                const placeholder = el.querySelector('.wp-placeholder');
-                                if (placeholder) placeholder.remove();
-                                // 显示占位符
-                                const placeholderDiv = document.createElement('div');
-                                placeholderDiv.className = 'wp-placeholder';
-                                placeholderDiv.textContent = '等待下载';
-                                el.prepend(placeholderDiv);
-                                // 进度条
-                                const overlay = document.createElement('div');
-                                overlay.className = 'progress-overlay';
-                                const progress = document.createElement('progress');
-                                progress.value = 0;
-                                progress.max = 1;
-                                const text = document.createElement('div');
-                                text.className = 'progress-text';
-                                text.textContent = '0%';
-                                overlay.appendChild(progress);
-                                overlay.appendChild(text);
-                                el.prepend(overlay);
-                            }
+                            // 动态视频
+                            const testVid = document.createElement('video');
+                            testVid.muted = true;
+                            testVid.playsInline = true;
+                            testVid.preload = 'metadata';
+                            testVid.onloadedmetadata = () => {
+                                el.classList.add('downloaded');
+                                const ov = el.querySelector('.progress-overlay');
+                                if (ov) ov.remove();
+                                refreshPreviewItem(el, el.dataset.type);
+                            };
+                            testVid.onerror = () => {
+                                if (!el.querySelector('.progress-overlay')) {
+                                    const overlay = document.createElement('div');
+                                    overlay.className = 'progress-overlay';
+                                    const progress = document.createElement('progress');
+                                    progress.value = 0;
+                                    progress.max = 1;
+                                    const text = document.createElement('div');
+                                    text.className = 'progress-text';
+                                    text.textContent = '0%';
+                                    overlay.appendChild(progress);
+                                    overlay.appendChild(text);
+                                    el.prepend(overlay);
+                                    const placeholder = document.createElement('div');
+                                    placeholder.className = 'wp-placeholder';
+                                    placeholder.textContent = '等待下载';
+                                    el.prepend(placeholder);
+                                }
+                            };
+                            testVid.src = url;
+                            testVid.load();
                         }
                     }
                 });
@@ -3551,20 +3404,15 @@
                     if (currentIndex >= tasks.length) {
                         isDownloading = false;
                         showToast('所有资源下载完成 ✨');
-                        const curBlob = getBlob(currentWallpaperId);
-                        if (!curBlob || isPlaceholder(curBlob)) {
-                            applyWallpaper(currentWallpaperType, currentWallpaperId);
-                        }
+                        // 重新应用当前壁纸（利用缓存）
+                        applyWallpaper(currentWallpaperType, currentWallpaperId);
                         return;
                     }
                     const task = tasks[currentIndex];
                     const id = task.id;
-                    const cached = getBlob(id);
-                    if (cached && !isPlaceholder(cached)) {
-                        if (downloadProgress[id] !== undefined) {
-                            downloadProgress[id] = 1;
-                            updatePreviewProgress(id, 1);
-                        }
+                    // 检查是否已经下载完成（进度100%且已标记下载）
+                    const item = document.querySelector(`.wp-preview-item[data-id="${id}"]`);
+                    if (item && item.classList.contains('downloaded')) {
                         currentIndex++;
                         downloadNext();
                         return;
@@ -3583,6 +3431,7 @@
                                 downloadProgress[id] = 1;
                                 updatePreviewProgress(id, 1);
                             }
+                            // 如果当前选中的壁纸刚下载完，刷新主壁纸
                             if (task.category === 'static' || task.category === 'dynamic') {
                                 if (id === currentWallpaperId && task.type === currentWallpaperType) {
                                     applyWallpaper(currentWallpaperType, currentWallpaperId);
@@ -3593,9 +3442,7 @@
                         })
                         .catch((err) => {
                             console.warn('下载失败:', task.url, err.message);
-                            const placeholder = task.type === 'static' || task.type === 'image' ? PLACEHOLDER_IMAGE :
-                                PLACEHOLDER_VIDEO;
-                            cacheBlob(id, placeholder);
+                            // 标记为失败，但继续
                             if (downloadProgress[id] !== undefined) {
                                 downloadProgress[id] = 1;
                                 updatePreviewProgress(id, 1);
@@ -4321,14 +4168,11 @@
                 isWallpaperMode = !isWallpaperMode;
                 if (isWallpaperMode) {
                     body.classList.add('wallpaper-mode');
-                    if (!getBlob(currentWallpaperId) || isPlaceholder(getBlob(currentWallpaperId))) {
-                        showToast('壁纸下载中，请稍候...');
-                        if (!bgDownloadStarted) {
-                            startSerialDownload();
-                        }
-                        applyWallpaper(currentWallpaperType, currentWallpaperId);
-                    } else {
-                        applyWallpaper(currentWallpaperType, currentWallpaperId);
+                    // 尝试直接加载当前壁纸（利用缓存）
+                    applyWallpaper(currentWallpaperType, currentWallpaperId);
+                    // 如果没有下载过，启动下载
+                    if (!bgDownloadStarted) {
+                        startSerialDownload();
                     }
                     draggableItems.forEach(item => {
                         if (item.id === 'glassSearch') item.style.display = 'flex';
@@ -4366,7 +4210,7 @@
                 }
             }
 
-            // ---- 更新壁纸预览网格（修复：未下载的壁纸不显示缩略图） ----
+            // ---- 更新壁纸预览网格（使用原始路径，利用浏览器缓存） ----
             function updateWallpaperPreview(type, id) {
                 const previewGrid = document.getElementById('wallpaperPreviewGrid');
                 if (!previewGrid) return;
@@ -4382,64 +4226,100 @@
                     el.dataset.file = wp.file;
                     el.dataset.name = wp.name;
 
-                    const cached = getBlob(wp.id);
-                    const hasValidCache = cached && !isPlaceholder(cached);
+                    const url = (type === 'static' ? 'images/' : 'videos/') + wp.file;
 
-                    if (hasValidCache) {
-                        // 有缓存 → 渲染缩略图
+                    // 尝试加载预览，如果成功则标记为已下载
+                    const testLoad = () => {
                         if (type === 'static') {
                             const img = document.createElement('img');
                             img.className = 'wp-thumbnail';
-                            img.src = cached;
+                            img.src = url;
                             img.alt = wp.name || '';
                             img.loading = 'lazy';
+                            img.onload = () => {
+                                el.classList.add('downloaded');
+                                const ov = el.querySelector('.progress-overlay');
+                                if (ov) ov.remove();
+                                // 移除占位符
+                                const ph = el.querySelector('.wp-placeholder');
+                                if (ph) ph.remove();
+                                // 添加图片
+                                if (!el.querySelector('img')) {
+                                    el.prepend(img);
+                                }
+                            };
+                            img.onerror = () => {
+                                // 加载失败，显示占位符和进度条
+                                if (!el.querySelector('.wp-placeholder')) {
+                                    const placeholder = document.createElement('div');
+                                    placeholder.className = 'wp-placeholder';
+                                    placeholder.textContent = '等待下载';
+                                    el.prepend(placeholder);
+                                }
+                                if (!el.querySelector('.progress-overlay')) {
+                                    const overlay = document.createElement('div');
+                                    overlay.className = 'progress-overlay';
+                                    const progress = document.createElement('progress');
+                                    progress.value = downloadProgress[wp.id] || 0;
+                                    progress.max = 1;
+                                    const text = document.createElement('div');
+                                    text.className = 'progress-text';
+                                    const pct = downloadProgress[wp.id] ? Math.round(downloadProgress[wp.id] * 100) : 0;
+                                    text.textContent = pct + '%';
+                                    overlay.appendChild(progress);
+                                    overlay.appendChild(text);
+                                    el.prepend(overlay);
+                                }
+                            };
                             el.prepend(img);
                         } else {
-                            if (cached.startsWith('data:image/') || (cached.startsWith('blob:') && cached.includes(
-                                'image'))) {
-                                const img = document.createElement('img');
-                                img.className = 'wp-thumbnail';
-                                img.src = cached;
-                                img.alt = wp.name || '';
-                                img.loading = 'lazy';
-                                el.prepend(img);
-                            } else {
-                                const vid = document.createElement('video');
-                                vid.src = cached;
-                                vid.muted = true;
-                                vid.playsInline = true;
-                                vid.preload = 'metadata';
-                                vid.loop = true;
-                                vid.poster =
-                                    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-                                vid.addEventListener('loadedmetadata', function() {
-                                    this.pause();
-                                });
-                                el.prepend(vid);
-                            }
+                            // 动态
+                            const vid = document.createElement('video');
+                            vid.src = url;
+                            vid.muted = true;
+                            vid.playsInline = true;
+                            vid.preload = 'metadata';
+                            vid.loop = true;
+                            vid.poster = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+                            vid.style.backgroundColor = '#000';
+                            vid.addEventListener('loadedmetadata', function() {
+                                this.pause();
+                                el.classList.add('downloaded');
+                                const ov = el.querySelector('.progress-overlay');
+                                if (ov) ov.remove();
+                                const ph = el.querySelector('.wp-placeholder');
+                                if (ph) ph.remove();
+                                if (!el.querySelector('video')) {
+                                    el.prepend(vid);
+                                }
+                            });
+                            vid.addEventListener('error', function() {
+                                if (!el.querySelector('.wp-placeholder')) {
+                                    const placeholder = document.createElement('div');
+                                    placeholder.className = 'wp-placeholder';
+                                    placeholder.textContent = '等待下载';
+                                    el.prepend(placeholder);
+                                }
+                                if (!el.querySelector('.progress-overlay')) {
+                                    const overlay = document.createElement('div');
+                                    overlay.className = 'progress-overlay';
+                                    const progress = document.createElement('progress');
+                                    progress.value = downloadProgress[wp.id] || 0;
+                                    progress.max = 1;
+                                    const text = document.createElement('div');
+                                    text.className = 'progress-text';
+                                    const pct = downloadProgress[wp.id] ? Math.round(downloadProgress[wp.id] * 100) : 0;
+                                    text.textContent = pct + '%';
+                                    overlay.appendChild(progress);
+                                    overlay.appendChild(text);
+                                    el.prepend(overlay);
+                                }
+                            });
+                            el.prepend(vid);
                         }
-                        el.classList.add('downloaded');
-                    } else {
-                        // 未下载：只显示占位符 + 进度条，不显示缩略图
-                        const placeholderDiv = document.createElement('div');
-                        placeholderDiv.className = 'wp-placeholder';
-                        placeholderDiv.textContent = '等待下载';
-                        el.prepend(placeholderDiv);
+                    };
 
-                        // 进度条
-                        const overlay = document.createElement('div');
-                        overlay.className = 'progress-overlay';
-                        const progress = document.createElement('progress');
-                        progress.value = downloadProgress[wp.id] || 0;
-                        progress.max = 1;
-                        const text = document.createElement('div');
-                        text.className = 'progress-text';
-                        const pct = downloadProgress[wp.id] ? Math.round(downloadProgress[wp.id] * 100) : 0;
-                        text.textContent = pct + '%';
-                        overlay.appendChild(progress);
-                        overlay.appendChild(text);
-                        el.prepend(overlay);
-                    }
+                    testLoad();
 
                     const label = document.createElement('div');
                     label.className = 'wp-label';
@@ -4451,10 +4331,9 @@
                     check.textContent = '✓';
                     el.appendChild(check);
 
-                    // 点击切换壁纸（仅当已下载）
+                    // 点击切换（只有下载完成才可点击）
                     el.addEventListener('click', function(e) {
-                        const isReady = getBlob(wp.id) && !isPlaceholder(getBlob(wp.id));
-                        if (!isReady) {
+                        if (!el.classList.contains('downloaded')) {
                             showToast('壁纸下载中，请稍候...');
                             if (!bgDownloadStarted) startSerialDownload();
                             return;
@@ -5007,9 +4886,8 @@
                 initAudio();
                 const song = songs[index % songs.length];
                 if (!song) return;
-                const cached = getBlob(song.file);
-                const src = cached && !isPlaceholder(cached) ? cached : 'songs/' + song.file;
-                audioPlayer.src = src;
+                const url = 'songs/' + song.file;
+                audioPlayer.src = url;
                 audioPlayer.load();
                 audioPlayer.play().catch(() => {
                     showToast('音乐播放失败');
@@ -5037,9 +4915,7 @@
                 if (isCoverLoading) return;
                 isCoverLoading = true;
                 const src = albumImages[currentImageIndex] || 'images/cover_01.png';
-                const cached = getBlob('cover_' + String(currentImageIndex + 1).padStart(2, '0'));
-                const finalSrc = cached && !isPlaceholder(cached) ? cached : src;
-                playerCoverImg.src = finalSrc;
+                playerCoverImg.src = src;
                 playerCoverImg.onload = function() {
                     isCoverLoading = false;
                     playerCoverImg.onload = null;
@@ -6291,14 +6167,9 @@
                         isWallpaperMode = true;
                         setTimeout(() => {
                             body.classList.add('wallpaper-mode');
-                            if (!getBlob(currentWallpaperId) || isPlaceholder(getBlob(currentWallpaperId))) {
-                                showToast('壁纸下载中，请稍候...');
-                                if (!bgDownloadStarted) {
-                                    startSerialDownload();
-                                }
-                                applyWallpaper(currentWallpaperType, currentWallpaperId);
-                            } else {
-                                applyWallpaper(currentWallpaperType, currentWallpaperId);
+                            applyWallpaper(currentWallpaperType, currentWallpaperId);
+                            if (!bgDownloadStarted) {
+                                startSerialDownload();
                             }
                             draggableItems.forEach(item => {
                                 if (item.id === 'glassSearch') item.style.display = 'flex';
@@ -6462,10 +6333,6 @@
                     audioPlayer.pause();
                     audioPlayer.src = '';
                     audioPlayer = null;
-                }
-
-                for (const id in blobCache) {
-                    try { URL.revokeObjectURL(blobCache[id]); } catch (e) {}
                 }
 
                 destroyRainEffect();
