@@ -576,6 +576,7 @@
             min-height: 44px;
             align-items: center;
         }
+        /* ===== 简约模式链接：移除发光效果 ===== */
         .simple-mode .link-item,
         .simple-mode .add-link-btn {
             display: flex;
@@ -590,29 +591,36 @@
             color: var(--text-day);
             text-decoration: none;
             cursor: pointer;
-            transition: box-shadow 0.25s ease, background 0.25s ease, transform 0.1s;
+            transition: background 0.25s ease, transform 0.1s;
             background: var(--link-bg);
-            box-shadow: 6px 6px 12px var(--link-shadow-dark), -6px -6px 12px var(--link-shadow-light);
-            border: none;
+            border: 1px solid rgba(0, 0, 0, 0.04);
             font-family: inherit;
             text-align: center;
             word-break: break-word;
+            box-shadow: none !important;
         }
         body.night-mode .simple-mode .link-item,
         body.night-mode .simple-mode .add-link-btn {
             background: #2a2c2e;
-            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
             color: var(--text-night);
+            border-color: rgba(255, 255, 255, 0.04);
+            box-shadow: none !important;
         }
         .simple-mode .link-item.pressed,
         .simple-mode .add-link-btn.pressed {
-            box-shadow: inset 6px 6px 12px var(--link-shadow-dark), inset -6px -6px 12px var(--link-shadow-light);
             transform: scale(0.96);
+            box-shadow: none !important;
         }
         .simple-mode .link-item:hover,
         .simple-mode .add-link-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 8px 8px 16px var(--link-shadow-dark), -8px -8px 16px var(--link-shadow-light);
+            background: rgba(0, 0, 0, 0.03);
+            box-shadow: none !important;
+        }
+        body.night-mode .simple-mode .link-item:hover,
+        body.night-mode .simple-mode .add-link-btn:hover {
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: none !important;
         }
         .simple-mode .add-link-btn {
             min-width: 44px;
@@ -624,8 +632,7 @@
             height: 44px;
             border-radius: 14px;
             background: var(--link-bg);
-            box-shadow: 6px 6px 12px var(--link-shadow-dark), -6px -6px 12px var(--link-shadow-light);
-            border: none;
+            border: 1px solid rgba(0, 0, 0, 0.04);
             color: var(--text-day);
             cursor: pointer;
             display: flex;
@@ -634,15 +641,17 @@
             transition: all 0.15s ease;
             font-size: 1.1rem;
             padding: 0 12px;
+            box-shadow: none !important;
         }
         body.night-mode .simple-mode .links-grid .search-btn-end {
             background: #2a2c2e;
-            box-shadow: 6px 6px 12px #0a0c0e, -6px -6px 12px #3a3c3e;
             color: var(--text-night);
+            border-color: rgba(255, 255, 255, 0.04);
+            box-shadow: none !important;
         }
         .simple-mode .links-grid .search-btn-end:active {
-            box-shadow: inset 6px 6px 12px var(--link-shadow-dark), inset -6px -6px 12px var(--link-shadow-light);
             transform: scale(0.96);
+            box-shadow: none !important;
         }
         .simple-mode .links-grid .search-btn-end svg {
             width: 20px;
@@ -675,6 +684,7 @@
             right: auto;
             top: auto;
             bottom: auto;
+            will-change: left, top;
         }
         .draggable-item:active {
             cursor: grabbing;
@@ -768,8 +778,9 @@
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 50px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-            transition: opacity 0.4s ease, background 0.3s, top 0.3s ease;
+            transition: opacity 0.4s ease, background 0.3s;
             height: 52px;
+            /* 移除 input-focused 位移相关样式 */
         }
         body.night-mode .glass-search-wrapper {
             background: rgba(0, 0, 0, 0.18);
@@ -906,15 +917,7 @@
             transform: scale(1.04);
             background: rgba(255, 255, 255, 0.18);
         }
-        .glass-search-wrapper.input-focused {
-            top: 10% !important;
-            transition: top 0.3s ease;
-        }
-        @media (max-width: 600px) {
-            .glass-search-wrapper.input-focused {
-                top: 5% !important;
-            }
-        }
+        /* ===== 移除 input-focused 位移 ===== */
 
         /* ===== 设置面板 ===== */
         #settingsPanelWrapper {
@@ -2804,7 +2807,7 @@
             let links = [...DEFAULT_LINKS];
 
             // ================================================================
-            // 2. 修仙系统 (壁纸)
+            // 2. 修仙系统 (壁纸) + blob 缓存
             // ================================================================
             const wallpapers = {
                 dynamic: [
@@ -2826,6 +2829,10 @@
                     { id: 's12', name: '宋玉', file: 'static_12.png' },
                 ]
             };
+
+            // ---- blob 缓存 (用于动态壁纸) ----
+            const blobCache = {};
+            let activeBlobUrl = null;
 
             const videoEl = document.getElementById('wallpaperVideo');
             const imgEl = document.getElementById('wallpaperImg');
@@ -2900,6 +2907,7 @@
 
             let pendingWallpaper = null;
             let transitionTimer = null;
+            let currentBlobUrl = null;
 
             function applyWallpaper(type, id) {
                 if (isWallpaperTransitioning) {
@@ -2919,6 +2927,13 @@
                 const item = list.find(w => w.id === id);
                 if (!item) { showToast('壁纸不存在'); return; }
                 isWallpaperTransitioning = true;
+
+                // 释放之前的 blob URL
+                if (currentBlobUrl) {
+                    URL.revokeObjectURL(currentBlobUrl);
+                    currentBlobUrl = null;
+                }
+
                 const url = (type === 'static' ? 'images/' : 'videos/') + item.file;
                 const currentActive = videoEl.classList.contains('active') ? videoEl :
                     imgEl.classList.contains('active') ? imgEl : null;
@@ -2938,8 +2953,24 @@
             function loadWallpaperDirect(type, url, id) {
                 videoEl.classList.remove('active', 'fade-out');
                 imgEl.classList.remove('active', 'fade-out');
+
+                // 检查是否有缓存的 blob
+                const cachedBlob = blobCache[id];
+                let finalUrl = url;
+
+                if (cachedBlob && type === 'dynamic') {
+                    // 使用 blob URL
+                    if (currentBlobUrl) {
+                        URL.revokeObjectURL(currentBlobUrl);
+                        currentBlobUrl = null;
+                    }
+                    const blobUrl = URL.createObjectURL(cachedBlob);
+                    currentBlobUrl = blobUrl;
+                    finalUrl = blobUrl;
+                }
+
                 if (type === 'static') {
-                    imgEl.src = url;
+                    imgEl.src = finalUrl;
                     imgEl.onload = function() {
                         imgEl.classList.add('active');
                         detectBrightnessFromImage(imgEl).then(b => applyBrightnessClass(b)).catch(() => {});
@@ -2965,7 +2996,7 @@
                     while (videoEl.firstChild) { videoEl.removeChild(videoEl.firstChild); }
                     videoEl.poster = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
                     const source = document.createElement('source');
-                    source.setAttribute('src', url);
+                    source.setAttribute('src', finalUrl);
                     source.setAttribute('type', 'video/mp4');
                     videoEl.appendChild(source);
                     videoEl.load();
@@ -3019,6 +3050,7 @@
             let downloadProgress = {};
             let bgDownloadStarted = false;
 
+            // 修改 downloadSingleResource 返回 blob
             function downloadSingleResource(url, id, type, onProgress) {
                 return new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
@@ -3031,8 +3063,12 @@
                         }
                     };
                     xhr.onload = function() {
-                        if (xhr.status === 200) { if (onProgress) onProgress(1);
-                            resolve(); } else reject(new Error('HTTP ' + xhr.status));
+                        if (xhr.status === 200) {
+                            if (onProgress) onProgress(1);
+                            resolve(xhr.response); // 返回 blob
+                        } else {
+                            reject(new Error('HTTP ' + xhr.status));
+                        }
                     };
                     xhr.onerror = function() { reject(new Error('Network error')); };
                     xhr.ontimeout = function() { reject(new Error('Timeout')); };
@@ -3077,27 +3113,51 @@
                 }
             }
 
+            // 修改 refreshPreviewItem 使用 blob 缓存
             function refreshPreviewItem(el, type) {
                 const id = el.dataset.id;
-                const url = (type === 'static' ? 'images/' : 'videos/') + el.dataset.file;
+                const file = el.dataset.file;
+                const name = el.dataset.name || '';
+                const cachedBlob = blobCache[id];
+                let url;
+
+                if (cachedBlob) {
+                    // 使用 blob URL
+                    const blobUrl = URL.createObjectURL(cachedBlob);
+                    url = blobUrl;
+                    // 存储 blobUrl 以便后续释放
+                    el._blobUrl = blobUrl;
+                } else {
+                    url = (type === 'static' || type === 'image' ? 'images/' : 'videos/') + file;
+                }
+
                 const existing = el.querySelector('img, video, .wp-placeholder');
                 if (existing) existing.remove();
-                if (type === 'static') {
+
+                if (type === 'static' || type === 'image') {
                     const img = document.createElement('img');
                     img.className = 'wp-thumbnail';
                     img.src = url;
-                    img.alt = el.dataset.name || '';
+                    img.alt = name;
                     img.loading = 'lazy';
                     img.onload = function() {
                         el.classList.add('downloaded');
                         const ov = el.querySelector('.progress-overlay');
                         if (ov) ov.remove();
+                        // 如果是 blob URL，加载完成后释放（但保留 blob 引用）
+                        if (el._blobUrl && cachedBlob) {
+                            // 不立即释放，因为图片已经加载
+                        }
                     };
                     img.onerror = function() {
                         const placeholder = document.createElement('div');
                         placeholder.className = 'wp-placeholder';
                         placeholder.textContent = '加载失败';
                         el.prepend(placeholder);
+                        if (el._blobUrl) {
+                            URL.revokeObjectURL(el._blobUrl);
+                            el._blobUrl = null;
+                        }
                     };
                     el.prepend(img);
                 } else {
@@ -3105,7 +3165,7 @@
                     vid.src = url;
                     vid.muted = true;
                     vid.playsInline = true;
-                    vid.preload = 'metadata';
+                    vid.preload = 'auto';
                     vid.loop = true;
                     vid.style.backgroundColor = '#000';
                     vid.addEventListener('loadedmetadata', function() {
@@ -3122,6 +3182,10 @@
                         placeholder.textContent = '加载失败';
                         el.prepend(placeholder);
                         el.classList.remove('downloaded');
+                        if (el._blobUrl) {
+                            URL.revokeObjectURL(el._blobUrl);
+                            el._blobUrl = null;
+                        }
                     });
                     el.prepend(vid);
                 }
@@ -3133,6 +3197,7 @@
                 const tasks = buildDownloadTasks();
                 if (tasks.length === 0) return;
                 tasks.forEach(t => { downloadProgress[t.id] = 0; });
+
                 document.querySelectorAll('.wp-preview-item').forEach(el => {
                     const id = el.dataset.id;
                     if (id && downloadProgress[id] !== undefined) {
@@ -3159,6 +3224,7 @@
                         el.classList.remove('downloaded');
                     }
                 });
+
                 let currentIndex = 0;
 
                 function downloadNext() {
@@ -3172,14 +3238,20 @@
                     const item = document.querySelector(`.wp-preview-item[data-id="${id}"]`);
                     if (item && item.classList.contains('downloaded')) { currentIndex++;
                         downloadNext(); return; }
+
                     const onProgress = (progress) => {
                         if (downloadProgress[id] !== undefined) {
                             downloadProgress[id] = progress;
                             updatePreviewProgress(id, progress);
                         }
                     };
+
                     downloadSingleResource(task.url, id, task.type, onProgress)
-                        .then(() => {
+                        .then((blob) => {
+                            // 缓存 blob
+                            if (blob) {
+                                blobCache[id] = blob;
+                            }
                             if (downloadProgress[id] !== undefined) {
                                 downloadProgress[id] = 1;
                                 updatePreviewProgress(id, 1);
@@ -3646,9 +3718,8 @@
             glassSearchBtn.addEventListener('click', glassSearch);
             glassSearchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') glassSearch(); });
 
-            const glassSearchWrapper = document.getElementById('glassSearch');
-            glassSearchInput.addEventListener('focus', function() { glassSearchWrapper.classList.add('input-focused'); });
-            glassSearchInput.addEventListener('blur', function() { glassSearchWrapper.classList.remove('input-focused'); });
+            // ===== 移除 input-focused 位移相关事件 =====
+            // 不再添加 focus/blur 事件来切换 input-focused 类
 
             // ================================================================
             // 7. 设置面板
@@ -4487,7 +4558,7 @@
             updatePlayerCover();
 
             // ================================================================
-            // 9. 修仙模式拖拽
+            // 9. 修仙模式拖拽 (优化：移除 RAF，直接更新位置实现跟手)
             // ================================================================
             const draggableItems = document.querySelectorAll('.draggable-item');
             const positions = {};
@@ -4508,7 +4579,6 @@
                 let startX, startY, origX, origY;
                 let dragging = false;
                 let locked = false;
-                let dragRafId = null;
 
                 function forceEnd() {
                     if (dragging) {
@@ -4519,8 +4589,6 @@
                         if (dragJustResetTimer) { clearTimeout(dragJustResetTimer);
                             dragJustResetTimer = null; }
                         dragJustHappened = false;
-                        if (dragRafId) { cancelAnimationFrame(dragRafId);
-                            dragRafId = null; }
                     }
                 }
                 item._forceEnd = forceEnd;
@@ -4564,13 +4632,14 @@
                     item.setPointerCapture(e.pointerId);
                 }
 
+                // ===== 优化：移除 RAF，直接更新位置实现跟手 =====
                 function onMove(e) {
                     if (locked) return;
                     if (!currentDraggingItem || currentDraggingItem !== item) return;
                     const dx = e.clientX - startX;
                     const dy = e.clientY - startY;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist > 8) {
+                    if (dist > 6) {
                         if (!dragging) {
                             dragging = true;
                             e.preventDefault();
@@ -4589,20 +4658,9 @@
                             .getPropertyValue('--safe-bottom') || '0');
                         newX = Math.max(0, Math.min(safeRight - w, newX));
                         newY = Math.max(0, Math.min(safeBottom - h, newY));
-                        if (dragRafId) { item._pendingX = newX;
-                            item._pendingY = newY; } else {
-                            item._pendingX = newX;
-                            item._pendingY = newY;
-                            dragRafId = requestAnimationFrame(() => {
-                                if (item._pendingX !== undefined) {
-                                    item.style.left = item._pendingX + 'px';
-                                    item.style.top = item._pendingY + 'px';
-                                    item._pendingX = undefined;
-                                    item._pendingY = undefined;
-                                }
-                                dragRafId = null;
-                            });
-                        }
+                        // 直接更新位置，不用 RAF，更跟手
+                        item.style.left = newX + 'px';
+                        item.style.top = newY + 'px';
                         e.preventDefault();
                     } else { if (e.cancelable) e.preventDefault(); }
                 }
@@ -4621,8 +4679,6 @@
                         if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
                         dragJustResetTimer = setTimeout(() => { dragJustHappened = false;
                             dragJustResetTimer = null; }, 300);
-                        if (dragRafId) { cancelAnimationFrame(dragRafId);
-                            dragRafId = null; }
                     } else {
                         if (dragJustResetTimer) clearTimeout(dragJustResetTimer);
                         dragJustResetTimer = setTimeout(() => { dragJustHappened = false;
@@ -4661,7 +4717,6 @@
                 try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
             }
 
-            // ---- 元素初始位置 (按第一个文件) ----
             function loadWallpaperPositions() {
                 const key = getStorageKey('wallpaperPositions');
                 let data = null;
@@ -4669,7 +4724,6 @@
 
                 const w = window.innerWidth,
                     h = window.innerHeight;
-                // 第一个文件的初始位置
                 const defaults = {
                     'wallpaperTimeDisplay': { left: (w - 200) / 2, top: h * 0.08 },
                     'wallpaperQuoteDisplay': { left: Math.max(20, w - 380 - 30), top: Math.max(20, h - 160 - 80) },
@@ -4887,7 +4941,6 @@
                     localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
             }
 
-            // ---- 阴阳模式初始位置 (按第一个文件) ----
             function loadSimplePositions() {
                 const key = getStorageKey('simplePositions');
                 try {
@@ -5415,9 +5468,16 @@
                     audioPlayer.src = '';
                     audioPlayer = null; }
                 destroyRainEffect();
+                // 释放 blob URL
+                if (currentBlobUrl) {
+                    URL.revokeObjectURL(currentBlobUrl);
+                    currentBlobUrl = null;
+                }
+                Object.values(blobCache).forEach(blob => {});
             });
 
             console.log('✅ 融合完成 · 阴阳/修仙双模式 · 壁纸预览采用第一文件样式 · 元素初始位置采用第一文件');
+            console.log('✅ 优化: 修仙模式搜索框无位移 + 拖拽跟手 + 动态壁纸缓存 + 简约模式链接无发光');
         })();
     </script>
 
