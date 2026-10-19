@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>永de个人网页</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #000; }
+
+  .frame {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    border: none;
+    display: none;
+    opacity: 0;
+    transition: opacity .35s ease;
+  }
+  .frame.on {
+    display: block;
+    opacity: 1;
+  }
+
+  #veil {
+    position: fixed; inset: 0;
+    background: #000;
+    opacity: 1;
+    z-index: 9999;
+    pointer-events: none;
+    transition: opacity .5s ease;
+  }
+  #veil.off { opacity: 0; }
+</style>
+</head>
+<body>
+
+<iframe id="f-home" class="frame on" src="home.html"></iframe>
+<iframe id="f-3d"   class="frame"   data-src="3d.html"></iframe>
+<iframe id="f-chat" class="frame"   data-src="chat.html"></iframe>
+
+<div id="veil"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  const frames = {
+    home: document.getElementById('f-home'),
+    '3d': document.getElementById('f-3d'),
+    chat: document.getElementById('f-chat')
+  };
+  let current = 'home';
+  let switching = false;
+  const veil = document.getElementById('veil');
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    veil.classList.add('off');
+    setTimeout(() => { veil.style.display = 'none'; }, 600);
+  }));
+
+  function switchTo(name) {
+    if (switching || name === current || !frames[name]) return;
+    switching = true;
+
+    try { frames[current].contentWindow.postMessage({ type: 'deactivate' }, '*'); } catch (e) {}
+
+    veil.style.display = 'block';
+    veil.classList.remove('off');
+
+    setTimeout(() => {
+      frames[current].classList.remove('on');
+      const next = frames[name];
+
+      if (!next.src && next.dataset.src) next.src = next.dataset.src;
+
+      next.classList.add('on');
+      current = name;
+
+      const tellActivate = () => {
+        try { next.contentWindow.postMessage({ type: 'activate' }, '*'); } catch (e) {}
+        try { next.contentWindow.focus(); } catch (e) {}
+      };
+      tellActivate();
+      setTimeout(tellActivate, 350);
+
+      requestAnimationFrame(() => {
+        veil.classList.add('off');
+        setTimeout(() => {
+          veil.style.display = 'none';
+          switching = false;
+        }, 550);
+      });
+    }, 420);
+  }
+
+  window.addEventListener('message', e => {
+    if (e.data && e.data.type === 'navigate' && frames[e.data.to]) {
+      switchTo(e.data.to);
+    }
+  });
+})();
+</script>
+</body>
+</html>

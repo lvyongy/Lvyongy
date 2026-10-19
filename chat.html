@@ -1,0 +1,3682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#e0e5ec">
+<title>神识传音</title>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js" } }
+</script>
+<script src="https://unpkg.com/tone@15/build/Tone.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fabric@6.6.0/dist/index.min.js"></script>
+<script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/animejs@4.0.2/dist/bundles/anime.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/lib/common.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<style>
+:root{
+  --bg:#e0e5ec; --dark:#a3b1c6; --light:#ffffff;
+  --text:#4a5568; --muted:#8a97a8; --accent:#6b7cff; --accent2:#8b7cff;
+  --danger:#e53e3e; --green:#38a169; --red:#e53e3e;
+  --neo-out:6px 6px 12px var(--dark),-6px -6px 12px var(--light);
+  --neo-in:inset 4px 4px 8px var(--dark),inset -4px -4px 8px var(--light);
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px);
+  --safe-r:env(safe-area-inset-right,0px);
+  --c-item-size:140px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{height:100%;-webkit-text-size-adjust:100%;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);
+  height:100vh;height:100dvh;overflow:hidden;
+  overscroll-behavior:none;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;
+}
+button,input{font-family:inherit;font-size:inherit;border:none;outline:none;background:var(--bg);color:var(--text);}
+button{cursor:pointer;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-thumb{background:#c3ccd9;border-radius:3px;}
+
+#three-bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;transition:opacity .6s;}
+#three-bg.hidden{opacity:.18;}
+
+/* ============ 加入房间 ============ */
+#joinPanel{position:fixed;inset:0;z-index:10;pointer-events:none;}
+#joinPanel.hidden{display:none;}
+.join-card{
+  position:fixed;z-index:12;pointer-events:auto;
+  display:flex;flex-direction:column;gap:10px;
+  padding:16px;border-radius:24px;
+  background:rgba(224,229,236,.95);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:20px 20px 44px var(--dark),-20px -20px 44px var(--light);
+  overflow:hidden;
+}
+.join-drag{display:flex;align-items:center;justify-content:center;gap:8px;padding:2px 0 6px;cursor:grab;touch-action:none;user-select:none;flex-shrink:0;}
+.join-drag:active{cursor:grabbing;}
+.join-drag h1{text-align:center;font-size:19px;letter-spacing:5px;font-weight:600;}
+.drag-grip{font-size:12px;color:var(--muted);letter-spacing:-1px;}
+.join-body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:2px;}
+.join-body>input{width:100%;padding:13px 15px;border-radius:14px;font-size:16px;box-shadow:var(--neo-in);flex-shrink:0;}
+.join-error{color:var(--danger);font-size:12px;text-align:center;min-height:16px;flex-shrink:0;}
+.enter-btn{padding:14px;border-radius:14px;font-weight:600;color:var(--accent);font-size:15px;box-shadow:var(--neo-out);flex-shrink:0;}
+.enter-btn:disabled{opacity:.55;}
+.avatar-picker{position:relative;height:190px;margin:4px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.avatar-display{
+  width:var(--c-item-size);height:var(--c-item-size);padding:3px;border-radius:20px;
+  box-shadow:12px 12px 24px var(--dark),-12px -12px 24px var(--light),inset 2px 2px 6px rgba(255,255,255,.9),inset -2px -2px 6px rgba(163,177,198,.3);
+}
+.avatar-display img{width:100%;height:100%;display:block;border-radius:17px;object-fit:cover;background:#2d3748;-webkit-user-drag:none;}
+.carousel-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:50;
+  width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:600;color:var(--accent);
+  box-shadow:4px 4px 8px var(--dark),-4px -4px 8px var(--light);line-height:1;padding-bottom:3px;
+}
+.carousel-arrow:active{box-shadow:var(--neo-in);}
+.carousel-arrow.left{left:4px;} .carousel-arrow.right{right:4px;}
+
+/* ============ 顶部栏 ============ */
+#topBar{
+  position:fixed;top:0;left:0;right:0;z-index:60;
+  display:flex;align-items:center;gap:8px;
+  padding:calc(8px + var(--safe-t)) calc(12px + var(--safe-r)) 8px calc(62px + var(--safe-l));
+  background:rgba(224,229,236,.92);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 4px 16px rgba(163,177,198,.4);
+  transform:translateY(-100%);
+  transition:transform .32s cubic-bezier(.2,.8,.3,1);
+}
+#topBar.show{transform:translateY(0);}
+.tb-info{display:flex;align-items:center;gap:7px;font-size:12px;flex-shrink:0;}
+.tb-info b{color:var(--accent);}
+.tb-count{color:var(--muted);font-size:11px;}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.status-dot.green{background:var(--green);}
+.status-dot.red{background:var(--red);}
+.tb-members{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;padding:2px 0;scrollbar-width:none;}
+.tb-members::-webkit-scrollbar{display:none;}
+.tb-member{
+  position:relative;display:flex;align-items:center;gap:6px;flex-shrink:0;
+  padding:3px 10px 3px 3px;border-radius:20px;font-size:11.5px;white-space:nowrap;cursor:pointer;
+  box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light);
+  transition:box-shadow .15s,color .15s;
+}
+.tb-member canvas{width:26px;height:26px;border-radius:50%;background:#2d3748;flex-shrink:0;}
+.tb-member.self{color:var(--accent);font-weight:600;}
+.tb-member.active{box-shadow:var(--neo-in);color:var(--accent);}
+.tb-member .tb-badge{
+  position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;
+  background:var(--danger);color:#fff;font-size:10px;line-height:16px;text-align:center;font-weight:600;
+}
+.pb-btn{
+  width:30px;height:30px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--muted);
+  box-shadow:2px 2px 4px var(--dark),-2px -2px 4px var(--light);
+}
+.pb-btn:active{box-shadow:var(--neo-in);}
+.pb-btn.sound-off{opacity:.4;}
+
+/* ============ 中心方块按钮 ============ */
+#hub{
+  position:fixed;inset:0;z-index:15;
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+  gap:22px;padding:80px 20px 40px;pointer-events:none;
+  opacity:1;transition:opacity .3s;
+}
+#hub.hidden{display:none;}
+.hub-btn{
+  pointer-events:auto;position:relative;
+  width:124px;height:124px;border-radius:30px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  background:var(--bg);
+  box-shadow:11px 11px 26px var(--dark),-11px -11px 26px var(--light);
+  transition:transform .18s,box-shadow .18s;
+}
+.hub-btn:active{transform:scale(.95);box-shadow:var(--neo-in);}
+.hb-ico{font-size:38px;line-height:1;}
+.hb-txt{font-size:13.5px;font-weight:700;color:var(--text);letter-spacing:3px;}
+.hb-badge{
+  position:absolute;top:8px;right:8px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;
+  background:var(--danger);color:#fff;font-size:11px;line-height:20px;text-align:center;font-weight:600;display:none;
+}
+.hb-badge.show{display:block;}
+
+/* ============ 浮动面板 ============ */
+.float-panel{
+  position:fixed;z-index:40;display:none;flex-direction:column;
+  border-radius:22px;overflow:hidden;
+  background:rgba(224,229,236,.97);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:18px 18px 44px var(--dark),-18px -18px 44px var(--light);
+}
+.float-panel.show{display:flex;}
+.float-panel.dragging{transition:none;}
+.panel-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 10px;flex-shrink:0;
+  cursor:grab;touch-action:none;user-select:none;
+  border-bottom:1px solid rgba(163,177,198,.28);
+}
+.panel-bar:active{cursor:grabbing;}
+.pb-grip{font-size:12px;color:var(--muted);letter-spacing:-1px;}
+.pb-title{flex:1;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.panel-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:8px;position:relative;}
+.resize-handle{
+  position:absolute;right:0;bottom:0;width:22px;height:22px;
+  cursor:nwse-resize;touch-action:none;z-index:30;
+  border-bottom-right-radius:22px;opacity:.5;
+  background:
+    linear-gradient(135deg,transparent 44%,rgba(138,151,168,.9) 44%,rgba(138,151,168,.9) 52%,transparent 52%),
+    linear-gradient(135deg,transparent 64%,rgba(138,151,168,.9) 64%,rgba(138,151,168,.9) 72%,transparent 72%);
+}
+.resize-handle:active{opacity:1;}
+
+.mini-ball{
+  position:fixed;z-index:45;width:52px;height:52px;border-radius:50%;
+  display:none;align-items:center;justify-content:center;font-size:22px;
+  background:var(--bg);color:var(--accent);
+  box-shadow:6px 6px 16px var(--dark),-6px -6px 16px var(--light);
+  touch-action:none;cursor:grab;
+  transition:transform .2s;
+}
+.mini-ball.show{display:flex;}
+.mini-ball:active{transform:scale(.94);}
+.mini-ball .mb-badge{
+  position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;
+  background:var(--danger);color:#fff;font-size:10px;line-height:16px;text-align:center;font-weight:600;
+}
+
+/* ============ 聊天 ============ */
+.chat-box{
+  flex:1;min-height:0;overflow-y:auto;padding:10px;border-radius:14px;
+  box-shadow:inset 6px 6px 12px var(--dark),inset -6px -6px 12px var(--light);
+  display:flex;flex-direction:column;gap:12px;
+}
+.system-msg{align-self:center;font-size:10px;color:var(--muted);padding:3px 12px;border-radius:8px;box-shadow:2px 2px 4px var(--dark),-2px -2px 4px var(--light);}
+.msg{display:flex;gap:8px;max-width:88%;}
+.msg.self{align-self:flex-end;flex-direction:row-reverse;}
+.msg-avatar{width:34px;height:34px;border-radius:20%;background:#2d3748;flex-shrink:0;}
+.msg-body{display:flex;flex-direction:column;max-width:calc(100% - 42px);min-width:0;}
+.msg.self .msg-body{align-items:flex-end;}
+.sender{font-size:10px;color:var(--muted);margin-bottom:3px;padding:0 4px;}
+.bubble{padding:9px 12px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word;box-shadow:4px 4px 8px var(--dark),-4px -4px 8px var(--light);}
+.msg.self .bubble{box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light);}
+.bubble img{display:block;max-width:min(200px,52vw);max-height:200px;border-radius:10px;cursor:zoom-in;}
+.bubble .emote-char{font-size:40px;line-height:1.1;display:block;}
+.bubble .pruned-notice{color:var(--muted);font-size:12px;font-style:italic;}
+.bubble pre{margin:4px 0;border-radius:8px;font-size:12px;overflow-x:auto;}
+.bubble pre code{font-family:'SF Mono',Monaco,Consolas,monospace;}
+.voice-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light);cursor:pointer;font-size:12px;user-select:none;}
+.input-bar{display:flex;align-items:center;gap:6px;padding:6px;border-radius:14px;box-shadow:6px 6px 12px var(--dark),-6px -6px 12px var(--light);flex-shrink:0;}
+.icon-btn{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light);color:var(--text);flex-shrink:0;}
+.icon-btn:active{box-shadow:var(--neo-in);}
+.icon-btn svg{width:19px;height:19px;display:block;}
+.icon-btn.recording{color:var(--danger);box-shadow:var(--neo-in);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+#msgInput{flex:1;min-width:0;height:38px;padding:0 11px;border-radius:11px;font-size:15px;box-shadow:var(--neo-in);}
+.send-btn{height:38px;padding:0 15px;border-radius:11px;font-weight:600;color:var(--accent);box-shadow:4px 4px 8px var(--dark),-4px -4px 8px var(--light);flex-shrink:0;font-size:13px;}
+.send-btn:active{box-shadow:var(--neo-in);}
+.emote-panel{
+  display:none;position:absolute;bottom:56px;left:8px;right:8px;max-height:180px;overflow-y:auto;
+  padding:8px;border-radius:14px;background:var(--bg);
+  box-shadow:8px 8px 20px var(--dark),-8px -8px 20px var(--light);
+  grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:4px;z-index:10;
+}
+.emote-panel.show{display:grid;}
+.emote-item{font-size:24px;text-align:center;padding:5px 0;border-radius:8px;cursor:pointer;}
+.emote-item:active{background:rgba(163,177,198,.25);}
+
+/* ============ 通用按钮 ============ */
+.neo-btn{
+  padding:10px 15px;border-radius:12px;font-size:12.5px;font-weight:600;color:var(--text);
+  box-shadow:4px 4px 8px var(--dark),-4px -4px 8px var(--light);
+  transition:box-shadow .12s,color .15s;
+}
+.neo-btn:active{box-shadow:var(--neo-in);}
+.neo-btn.accent{color:var(--accent);}
+.neo-btn.danger{color:var(--danger);}
+.neo-btn.green{color:var(--green);}
+.neo-btn.small{padding:8px 13px;font-size:12px;}
+.neo-btn:disabled{opacity:.45;}
+
+/* ============ 游戏 ============ */
+.game-picker{display:flex;flex-direction:column;gap:10px;padding:8px;align-items:center;justify-content:center;flex:1;}
+.game-pick{
+  width:100%;max-width:270px;display:flex;align-items:center;gap:14px;
+  padding:15px 20px;border-radius:16px;font-size:15px;font-weight:600;color:var(--text);
+  box-shadow:6px 6px 12px var(--dark),-6px -6px 12px var(--light);
+}
+.game-pick:active{box-shadow:var(--neo-in);}
+.gp-ico{font-size:24px;}
+.gp-pane{display:none;flex:1;min-height:0;flex-direction:column;gap:8px;overflow-y:auto;}
+.gp-pane.active{display:flex;}
+.gp-menu{display:flex;gap:10px;justify-content:center;padding:14px 4px;flex-wrap:wrap;}
+.gp-status{
+  text-align:center;font-size:12px;padding:8px;border-radius:11px;
+  box-shadow:var(--neo-in);flex-shrink:0;color:var(--text);
+}
+.gp-status.win{color:var(--green);font-weight:700;}
+.gp-status.lose{color:var(--danger);font-weight:700;}
+.gp-actions{display:flex;gap:8px;justify-content:center;padding:2px 0 4px;flex-wrap:wrap;}
+
+.inv-select{display:flex;flex-direction:column;gap:8px;}
+.inv-title{font-size:12px;color:var(--muted);text-align:center;padding:4px 0;}
+.inv-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;}
+.inv-item{
+  display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:11px;
+  box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light);
+  cursor:pointer;font-size:12.5px;
+}
+.inv-item.sel{box-shadow:var(--neo-in);color:var(--accent);font-weight:600;}
+.inv-item img,.inv-item canvas{width:28px;height:28px;border-radius:9px;background:#2d3748;object-fit:cover;flex-shrink:0;}
+.inv-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.inv-tick{color:var(--accent);font-size:13px;}
+.inv-empty{text-align:center;font-size:12px;color:var(--muted);padding:20px 0;line-height:1.7;}
+.inv-wait{text-align:center;font-size:13px;padding:18px 0;color:var(--accent);line-height:1.8;}
+
+/* 五子棋 */
+.gomoku-wrap{display:flex;align-items:center;justify-content:center;padding:2px;}
+.gomoku-board{
+  display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(15,1fr);
+  width:min(100%,320px);aspect-ratio:1;
+  background:#d9b88f;border-radius:10px;padding:4px;
+  box-shadow:inset 3px 3px 8px rgba(120,90,50,.45),inset -3px -3px 8px rgba(255,255,255,.4),
+             5px 5px 12px var(--dark),-5px -5px 12px var(--light);
+  touch-action:manipulation;
+}
+.gomoku-cell{position:relative;display:flex;align-items:center;justify-content:center;}
+.gomoku-cell::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(80,50,20,.45);transform:translateX(-50%);}
+.gomoku-cell::after{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(80,50,20,.45);transform:translateY(-50%);}
+.gomoku-cell.edge-top::before{top:50%;}
+.gomoku-cell.edge-bottom::before{bottom:50%;}
+.gomoku-cell.edge-left::after{left:50%;}
+.gomoku-cell.edge-right::after{right:50%;}
+.gomoku-stone{position:relative;z-index:2;width:84%;height:84%;border-radius:50%;box-shadow:1px 1px 3px rgba(0,0,0,.45);animation:stoneIn .18s ease;}
+.gomoku-stone.black{background:radial-gradient(circle at 35% 35%,#6a6a6a,#000);}
+.gomoku-stone.white{background:radial-gradient(circle at 35% 35%,#fff,#b8b8b8);}
+.gomoku-stone.last{box-shadow:0 0 0 2px var(--accent),1px 1px 3px rgba(0,0,0,.45);}
+@keyframes stoneIn{from{transform:scale(0);}to{transform:scale(1);}}
+
+/* 斗地主 */
+.ddz-wrap{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;}
+.ddz-opps{display:flex;gap:8px;justify-content:space-between;}
+.ddz-opp{
+  flex:1;display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:11px;
+  box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light);font-size:11px;min-width:0;
+}
+.ddz-opp.turn{box-shadow:var(--neo-in);color:var(--accent);font-weight:700;}
+.ddz-opp canvas{width:24px;height:24px;border-radius:50%;background:#2d3748;flex-shrink:0;}
+.ddz-opp .o-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ddz-opp .o-cnt{color:var(--muted);font-size:10px;flex-shrink:0;}
+.ddz-center{
+  flex:1;min-height:70px;border-radius:12px;padding:8px;
+  box-shadow:inset 4px 4px 8px var(--dark),inset -4px -4px 8px var(--light);
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px;
+}
+.ddz-card{
+  width:32px;height:46px;border-radius:5px;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;background:#fff;color:#2d3748;
+  box-shadow:1px 1px 4px rgba(0,0,0,.28);user-select:none;
+  transition:transform .12s,margin .12s;
+}
+.ddz-card.red{color:#e53e3e;}
+.ddz-card.joker{font-size:10px;}
+.ddz-hand{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;min-height:52px;padding:4px 0;}
+.ddz-hand .ddz-card{cursor:pointer;}
+.ddz-hand .ddz-card.sel{transform:translateY(-10px);box-shadow:0 0 0 2px var(--accent),1px 1px 4px rgba(0,0,0,.28);}
+.ddz-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding-bottom:2px;}
+
+/* 麻将 */
+.mj-wrap{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;}
+.mj-others{display:flex;gap:6px;justify-content:space-between;}
+.mj-opp{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:10px;
+  box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light);font-size:10.5px;min-width:0;
+}
+.mj-opp.turn{box-shadow:var(--neo-in);color:var(--accent);font-weight:700;}
+.mj-opp .o-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mj-opp .o-cnt{color:var(--muted);font-size:10px;}
+.mj-center{
+  flex:1;min-height:60px;border-radius:12px;padding:8px;
+  box-shadow:inset 4px 4px 8px var(--dark),inset -4px -4px 8px var(--light);
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px;overflow-y:auto;
+}
+.mj-tile{
+  width:24px;height:34px;border-radius:4px;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:10.5px;font-weight:700;background:#fff;color:#2d3748;
+  box-shadow:1px 1px 3px rgba(0,0,0,.25);user-select:none;line-height:1.05;
+}
+.mj-hand{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;min-height:44px;padding:4px 0;}
+.mj-hand .mj-tile{cursor:pointer;width:26px;height:38px;font-size:11.5px;}
+.mj-hand .mj-tile.sel{transform:translateY(-8px);box-shadow:0 0 0 2px var(--accent),1px 1px 3px rgba(0,0,0,.25);}
+.mj-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding-bottom:2px;}
+
+/* ============ 音乐 ============ */
+.music-now{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.music-disc{
+  width:46px;height:46px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--accent);
+  background:var(--bg);
+  box-shadow:4px 4px 8px var(--dark),-4px -4px 8px var(--light),inset 0 0 0 4px rgba(107,124,255,.06);
+}
+.music-disc.playing{animation:spin 3.2s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.music-info{flex:1;min-width:0;}
+.music-name{font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.music-time{font-size:10.5px;color:var(--muted);margin-top:3px;}
+.music-progress-wrap{
+  height:7px;border-radius:4px;background:var(--bg);
+  box-shadow:inset 2px 2px 4px var(--dark),inset -2px -2px 4px var(--light);
+  cursor:pointer;overflow:hidden;flex-shrink:0;
+}
+.music-progress{height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .1s linear;}
+.music-controls{display:flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;flex-wrap:wrap;}
+.music-btn{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light);
+}
+.music-btn:active{box-shadow:var(--neo-in);}
+.music-btn.main{width:44px;height:44px;font-size:17px;color:var(--accent);}
+.music-btn.on{color:var(--accent);box-shadow:var(--neo-in);}
+.music-vol{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
+.music-vol input[type=range]{width:60px;accent-color:var(--accent);}
+.music-actions{display:flex;gap:8px;flex-shrink:0;}
+.music-actions .neo-btn{flex:1;}
+.music-add-row{display:flex;gap:6px;}
+.music-add-row input{flex:1;min-width:0;padding:8px 10px;border-radius:10px;font-size:12px;box-shadow:var(--neo-in);}
+.music-add-row button{padding:0 14px;border-radius:10px;font-size:12px;color:var(--accent);font-weight:600;box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light);}
+.music-add-row button:active{box-shadow:var(--neo-in);}
+.music-list{
+  flex:1;min-height:80px;overflow-y:auto;border-radius:10px;padding:4px;
+  box-shadow:inset 3px 3px 6px var(--dark),inset -3px -3px 6px var(--light);
+  display:flex;flex-direction:column;gap:2px;
+}
+.music-empty{text-align:center;color:var(--muted);font-size:11px;padding:20px 0;}
+.music-item{padding:7px 9px;border-radius:8px;font-size:11.5px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;}
+.music-item:hover{background:rgba(107,124,255,.09);}
+.music-item.active{color:var(--accent);font-weight:600;background:rgba(107,124,255,.1);}
+.music-item .mi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.music-item .mi-del{color:var(--muted);font-size:13px;padding:0 4px;flex-shrink:0;}
+.music-item .mi-del:hover{color:var(--danger);}
+
+/* ============ 弹窗 / 编辑器 / Toast ============ */
+.invite-dialog{
+  position:fixed;inset:0;z-index:350;background:rgba(0,0,0,.42);
+  display:none;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.invite-dialog.show{display:flex;}
+.invite-card{
+  background:var(--bg);padding:22px;border-radius:20px;
+  box-shadow:20px 20px 44px rgba(0,0,0,.4);
+  display:flex;flex-direction:column;gap:14px;max-width:330px;width:100%;text-align:center;
+}
+.invite-title{font-size:16px;font-weight:700;color:var(--accent);}
+.invite-msg{font-size:14px;line-height:1.7;}
+.invite-actions{display:flex;gap:10px;justify-content:center;}
+.invite-actions button{padding:10px 24px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:4px 4px 8px var(--dark),-4px -4px 8px var(--light);}
+.invite-actions button:active{box-shadow:var(--neo-in);}
+.invite-actions button.accept{color:var(--green);}
+.invite-actions button.decline{color:var(--danger);}
+
+#editorOverlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.55);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+#editorOverlay.show{display:flex;}
+.editor-panel{width:min(96vw,820px);max-height:92vh;background:var(--bg);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:20px 20px 40px rgba(0,0,0,.25);}
+.editor-canvas-wrap{flex:1;min-height:0;border-radius:14px;overflow:hidden;box-shadow:inset 5px 5px 10px var(--dark),inset -5px -5px 10px var(--light);display:flex;align-items:center;justify-content:center;}
+.editor-canvas-wrap canvas{max-width:100%;max-height:60vh;}
+.editor-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+.editor-actions button{padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:3px 3px 6px var(--dark),-3px -3px 6px var(--light);}
+
+#backBtn{
+  position:fixed;top:calc(10px + var(--safe-t));left:calc(10px + var(--safe-l));
+  z-index:500;width:40px;height:40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  background:var(--bg);color:var(--text);
+  box-shadow:4px 4px 8px var(--dark),-4px -4px 8px var(--light);
+}
+#backBtn:active{box-shadow:var(--neo-in);}
+
+#toast{
+  position:fixed;bottom:calc(24px + var(--safe-b));left:50%;transform:translateX(-50%) translateY(12px);
+  background:rgba(45,55,72,.92);color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;
+  opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:400;white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+#__errBox{
+  position:fixed;bottom:10px;left:10px;right:10px;
+  background:rgba(229,62,62,.95);color:#fff;
+  padding:10px;border-radius:8px;font-size:12px;z-index:99999;
+  font-family:ui-monospace,monospace;max-height:150px;overflow:auto;line-height:1.5;display:none;
+}
+#__errBox.show{display:block;}
+
+@media (max-width:780px){
+  .hub-btn{width:96px;height:96px;border-radius:24px;}
+  .hb-ico{font-size:30px;}
+  .hb-txt{font-size:12px;letter-spacing:2px;}
+  #hub{gap:16px;padding:76px 14px 30px;}
+  .tb-info .tb-room{display:none;}
+}
+@media (max-width:420px){
+  .avatar-picker{height:150px;}
+  :root{--c-item-size:112px;}
+  .ddz-card{width:26px;height:38px;font-size:11px;}
+}
+</style>
+</head>
+<body>
+
+<div id="three-bg"></div>
+
+<div id="joinPanel">
+  <div class="join-card" id="joinCard">
+    <div class="join-drag" data-drag>
+      <span class="drag-grip">⣿</span>
+      <h1>神 识 传 音</h1>
+      <span class="drag-grip">⣿</span>
+    </div>
+    <div class="join-body">
+      <input id="roomInput" placeholder="房间码" autocomplete="off" inputmode="numeric">
+      <div class="join-error" id="joinError"></div>
+      <input id="nameInput" placeholder="你的名字" autocomplete="off">
+      <div class="avatar-picker">
+        <button class="carousel-arrow left" id="carouselPrev" aria-label="上一个">‹</button>
+        <div class="avatar-display" id="avatarDisplay">
+          <img id="avatarImg" src="" alt="avatar" draggable="false">
+        </div>
+        <button class="carousel-arrow right" id="carouselNext" aria-label="下一个">›</button>
+      </div>
+      <button class="enter-btn" id="enterBtn" onclick="joinRoom()">进 入 房 间</button>
+    </div>
+    <div class="resize-handle" data-resize></div>
+  </div>
+</div>
+
+<header id="topBar">
+  <div class="tb-info">
+    <span class="status-dot green" id="statusDot"></span>
+    <span class="tb-room">房间 <b id="roomCodeDisplay">-</b></span>
+    <span class="tb-count" id="onlineCount">1/6</span>
+  </div>
+  <div class="tb-members" id="topMembers"></div>
+  <button class="pb-btn" id="soundToggle" title="音效">🔊</button>
+</header>
+
+<div id="hub" class="hidden">
+  <button class="hub-btn" data-open="chat">
+    <span class="hb-ico">💬</span>
+    <span class="hb-txt">聊天</span>
+    <span class="hb-badge" id="chatBadge">0</span>
+  </button>
+  <button class="hub-btn" data-open="game">
+    <span class="hb-ico">🎮</span>
+    <span class="hb-txt">游戏</span>
+  </button>
+  <button class="hub-btn" data-open="music">
+    <span class="hb-ico">🎵</span>
+    <span class="hb-txt">音乐</span>
+  </button>
+</div>
+
+<div class="float-panel" id="chatPanel">
+  <div class="panel-bar" data-drag>
+    <span class="pb-grip">⣿</span>
+    <span class="pb-title" id="chatTitle">群聊</span>
+    <button class="pb-btn" id="chatBackBtn" title="返回群聊" style="display:none">↩</button>
+    <button class="pb-btn" data-mini="chat" title="收起">—</button>
+  </div>
+  <div class="panel-body">
+    <div class="chat-box" id="chatBox"></div>
+    <div class="input-bar">
+      <button class="icon-btn" id="imgBtn" onclick="pickImage()" title="发送图片"></button>
+      <button class="icon-btn" id="recordBtn" onclick="toggleRecording()" title="语音"></button>
+      <button class="icon-btn" id="emoteBtn" onclick="toggleEmotePanel()" title="表情"></button>
+      <input id="msgInput" placeholder="输入消息..." autocomplete="off" enterkeyhint="send"
+             onkeydown="if(event.key==='Enter'&&!event.isComposing)sendMessage()">
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+    </div>
+    <div class="emote-panel" id="emotePanel"></div>
+  </div>
+  <div class="resize-handle" data-resize></div>
+</div>
+
+<div class="float-panel" id="gamePanel">
+  <div class="panel-bar" data-drag>
+    <span class="pb-grip">⣿</span>
+    <span class="pb-title" id="gameTitle">游戏</span>
+    <button class="pb-btn" id="gameHomeBtn" title="选择游戏" style="display:none">⌂</button>
+    <button class="pb-btn" data-mini="game" title="收起">—</button>
+  </div>
+  <div class="panel-body">
+    <div class="game-picker" id="gamePicker">
+      <button class="game-pick" data-game="gomoku"><span class="gp-ico">⚫</span><span>五子棋</span></button>
+      <button class="game-pick" data-game="doudizhu"><span class="gp-ico">🃏</span><span>斗地主</span></button>
+      <button class="game-pick" data-game="mahjong"><span class="gp-ico">🀄</span><span>麻将</span></button>
+    </div>
+
+    <div class="gp-pane" id="paneGomoku">
+      <div class="gp-menu" id="gomokuMenu">
+        <button class="neo-btn accent" data-gomoku="ai">🤖 人机对战</button>
+        <button class="neo-btn" data-gomoku="online">🌐 邀请好友</button>
+      </div>
+      <div id="gomokuPlay" style="display:none;flex-direction:column;gap:8px;">
+        <div class="gp-status" id="gomokuStatus">准备开始</div>
+        <div class="gomoku-wrap"><div class="gomoku-board" id="gomokuBoard"></div></div>
+        <div class="gp-actions" id="gomokuActions"></div>
+      </div>
+      <div id="gomokuPick" style="display:none"></div>
+    </div>
+
+    <div class="gp-pane" id="paneDdz">
+      <div class="gp-menu" id="ddzMenu">
+        <button class="neo-btn accent" data-ddz="ai">🤖 人机对战</button>
+        <button class="neo-btn" data-ddz="online">🌐 邀请好友</button>
+      </div>
+      <div class="ddz-wrap" id="ddzPlay" style="display:none">
+        <div class="ddz-opps">
+          <div class="ddz-opp" id="ddzOpp0"></div>
+          <div class="ddz-opp" id="ddzOpp1"></div>
+        </div>
+        <div class="ddz-center" id="ddzCenter"></div>
+        <div class="ddz-hand" id="ddzHand"></div>
+        <div class="ddz-actions" id="ddzActions"></div>
+      </div>
+      <div id="ddzPick" style="display:none"></div>
+    </div>
+
+    <div class="gp-pane" id="paneMj">
+      <div class="gp-menu" id="mjMenu">
+        <button class="neo-btn accent" data-mj="ai">🤖 人机对战</button>
+        <button class="neo-btn" data-mj="online">🌐 邀请好友</button>
+      </div>
+      <div class="mj-wrap" id="mjPlay" style="display:none">
+        <div class="mj-others" id="mjOthers"></div>
+        <div class="mj-center" id="mjCenter"></div>
+        <div class="mj-hand" id="mjHand"></div>
+        <div class="mj-actions" id="mjActions"></div>
+      </div>
+      <div id="mjPick" style="display:none"></div>
+    </div>
+  </div>
+  <div class="resize-handle" data-resize></div>
+</div>
+
+<div class="float-panel" id="musicPanel">
+  <div class="panel-bar" data-drag>
+    <span class="pb-grip">⣿</span>
+    <span class="pb-title">音乐播放器</span>
+    <button class="pb-btn" data-mini="music" title="收起">—</button>
+  </div>
+  <div class="panel-body">
+    <div class="music-now">
+      <div class="music-disc" id="musicDisc">♪</div>
+      <div class="music-info">
+        <div class="music-name" id="musicName">未选择歌曲</div>
+        <div class="music-time"><span id="musicCur">0:00</span> / <span id="musicDur">0:00</span></div>
+      </div>
+    </div>
+    <div class="music-progress-wrap" id="musicProgressWrap">
+      <div class="music-progress" id="musicProgress"></div>
+    </div>
+    <div class="music-controls">
+      <button class="music-btn" id="musicPrev" title="上一首">⏮</button>
+      <button class="music-btn main" id="musicPlayPause" title="播放/暂停">▶</button>
+      <button class="music-btn" id="musicNext" title="下一首">⏭</button>
+      <button class="music-btn" id="musicLoop" title="循环">🔁</button>
+      <div class="music-vol">
+        <span>🔊</span>
+        <input type="range" id="musicVolume" min="0" max="100" value="70">
+      </div>
+    </div>
+    <div class="music-actions">
+      <button class="neo-btn small" id="musicAddFile">📁 本地音乐</button>
+      <button class="neo-btn small" id="musicAddUrlBtn">🔗 网络链接</button>
+    </div>
+    <div class="music-add-row" id="musicUrlRow" style="display:none">
+      <input id="musicUrlInput" placeholder="https://example.com/song.mp3" autocomplete="off">
+      <button id="musicUrlOk">添加</button>
+    </div>
+    <div class="music-list" id="musicList"></div>
+    <input type="file" id="musicFileInput" accept="audio/*" multiple hidden>
+  </div>
+  <div class="resize-handle" data-resize></div>
+</div>
+
+<div class="invite-dialog" id="inviteDialog">
+  <div class="invite-card">
+    <div class="invite-title" id="inviteTitle">📨 游戏邀请</div>
+    <div class="invite-msg" id="inviteMsg">邀请你一起游戏</div>
+    <div class="invite-actions">
+      <button class="decline" id="inviteDecline">拒绝</button>
+      <button class="accept" id="inviteAccept">接受</button>
+    </div>
+  </div>
+</div>
+
+<div id="editorOverlay">
+  <div class="editor-panel">
+    <div class="editor-canvas-wrap"><canvas id="fabricCanvas"></canvas></div>
+    <div class="editor-actions">
+      <button onclick="editorAddRect()">➕ 矩形</button>
+      <button onclick="editorAddText()">📝 文字</button>
+      <button onclick="closeEditor()">取消</button>
+      <button onclick="editorExportAndSend()" style="color:var(--accent);font-weight:600;">发送</button>
+    </div>
+  </div>
+</div>
+
+<button id="backBtn">←</button>
+
+<div id="toast"></div>
+<div id="__errBox"></div>
+<input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImage(event)">
+
+<script>
+window.addEventListener('error', function (e) {
+  var msg = e.message || 'Unknown error';
+  var file = (e.filename || '').split('/').pop();
+  console.error('[Shenshi Error]', msg, '@', file, ':', e.lineno);
+  var box = document.getElementById('__errBox');
+  if (box) { box.classList.add('show'); box.textContent += '⚠ ' + msg + ' @ ' + file + ':' + e.lineno + '\n'; }
+});
+window.addEventListener('unhandledrejection', function (e) {
+  var msg = (e.reason && (e.reason.message || e.reason)) || 'Promise rejection';
+  console.error('[Shenshi Promise Error]', msg);
+  var box = document.getElementById('__errBox');
+  if (box) { box.classList.add('show'); box.textContent += '⚠ [Promise] ' + msg + '\n'; }
+});
+</script>
+
+<script>
+(function () {
+'use strict';
+
+Object.assign(window, {
+  joinRoom, sendMessage, pickImage, toggleRecording, toggleEmotePanel,
+  handleImage, editorAddRect, editorAddText, closeEditor, editorExportAndSend
+});
+
+/* ============================================================
+   1. 常量 / 状态
+   ============================================================ */
+var HOST_CODE = '666665', MEMBER_CODE = '666666';
+var DISCOVERY_TOPIC = 'fanren_squad/host_discovery';
+var CHAT_FALLBACK_TOPIC = 'fanren_squad/chat_fallback';
+var MQTT_URL = 'wss://broker-cn.emqx.io:8084/mqtt';
+var RETRY_INTERVAL = 5000, CONNECT_ATTEMPT_TIMEOUT = 5000;
+
+var PEER_CONFIG = {
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: ['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],
+        username: 'openrelayproject', credential: 'openrelayproject' }
+    ]
+  }, debug: 0
+};
+
+var isHost = false, peer = null, mqttClient = null, myPeerId = null;
+var myName = '', myAvatar = { id:'', name:'', dataUrl:'' }, roomCode = '';
+var hostAnnounceTimer = null;
+var connections = {}, members = {};
+var memberJoined = false, retryTimer = null, connectingToHost = false;
+var currentPendingConn = null, currentAttemptStart = 0, hostPeerId = null;
+var hostConnection = null, webrtcOk = false, pendingUnread = {};
+var currentTarget = null;
+var chatHistory = { group: [], private: {} };
+var soundEnabled = true;
+var online = navigator.onLine;
+var totalUnread = 0;
+var inRoom = false;
+var openPanels = { chat: false, game: false, music: false };
+
+var ICON_IMAGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
+var ICON_MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>';
+var ICON_STOP = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>';
+var ICON_EMOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.02" y2="9"/><line x1="15" y1="9" x2="15.02" y2="9"/></svg>';
+
+/* ============================================================
+   2. 依赖防御
+   ============================================================ */
+var __anime = (typeof anime !== 'undefined' && anime) ? anime : null;
+var animate = __anime ? __anime.animate : function () { return { cancel: function () {} }; };
+
+/* ============================================================
+   3. 工具
+   ============================================================ */
+var __uid = 0;
+function uid() { return 'u' + (++__uid) + Date.now().toString(36); }
+function genMsgId() { return Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+function showToast(text) {
+  var el = document.getElementById('toast'); if (!el) return;
+  el.textContent = text; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(function () { el.classList.remove('show'); }, 1800);
+}
+function blobToDataURL(blob) {
+  return new Promise(function (res, rej) {
+    var r = new FileReader();
+    r.onload = function (e) { res(e.target.result); };
+    r.onerror = rej; r.readAsDataURL(blob);
+  });
+}
+function shuffle(a) {
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* 跨通道消息去重（WebRTC + MQTT fallback） */
+var receivedMsgIds = new Set();
+var receivedMsgOrder = [];
+function markReceived(id) {
+  if (!id) return false;
+  if (receivedMsgIds.has(id)) return true;
+  receivedMsgIds.add(id);
+  receivedMsgOrder.push(id);
+  if (receivedMsgOrder.length > 600) {
+    var old = receivedMsgOrder.shift();
+    receivedMsgIds.delete(old);
+  }
+  return false;
+}
+
+/* ============================================================
+   4. 浮动窗口引擎
+   ============================================================ */
+var FLOAT_KEY = 'shenshi_float_v6';
+var floatStore = (function () { try { return JSON.parse(localStorage.getItem(FLOAT_KEY) || '{}'); } catch (e) { return {}; } })();
+function persistFloat(k, v) {
+  floatStore[k] = v;
+  try { localStorage.setItem(FLOAT_KEY, JSON.stringify(floatStore)); } catch (e) {}
+}
+
+function makeFloat(el, opt) {
+  var o = Object.assign({ key:'', handle:null, resize:true, minW:300, minH:260, defW:400, defH:600, defRect:null }, opt);
+  var st = { x:0, y:0, w:o.defW, h:o.defH };
+  var vp = function () { return { w: window.innerWidth, h: window.innerHeight }; };
+
+  function clampAll() {
+    var v = vp();
+    st.w = Math.max(o.minW, Math.min(st.w, v.w - 12));
+    st.h = Math.max(o.minH, Math.min(st.h, v.h - 12));
+    st.x = Math.max(6, Math.min(st.x, v.w - st.w - 6));
+    st.y = Math.max(6, Math.min(st.y, v.h - st.h - 6));
+  }
+  function apply() {
+    el.style.left = st.x + 'px'; el.style.top = st.y + 'px';
+    el.style.width = st.w + 'px'; el.style.height = st.h + 'px';
+  }
+  var saved = o.key ? floatStore[o.key] : null;
+  var v0 = vp();
+  if (saved && saved.w && saved.h) {
+    st.x = saved.x; st.y = saved.y; st.w = saved.w; st.h = saved.h; clampAll();
+  } else if (o.defRect) {
+    var r = o.defRect(v0.w, v0.h);
+    st.x = r.x; st.y = r.y; st.w = r.w; st.h = r.h; clampAll();
+  } else {
+    st.w = Math.min(o.defW, v0.w - 16); st.h = Math.min(o.defH, v0.h - 16);
+    st.x = (v0.w - st.w) / 2; st.y = (v0.h - st.h) / 2; clampAll();
+  }
+  apply();
+
+  var dragEl = o.handle || el.querySelector('[data-drag]');
+  if (dragEl) {
+    var d = null;
+    dragEl.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('[data-nodrag]') || e.target.closest('button')) return;
+      d = { px: e.clientX, py: e.clientY, x: st.x, y: st.y };
+      el.classList.add('dragging');
+      try { dragEl.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+    dragEl.addEventListener('pointermove', function (e) {
+      if (!d) return;
+      st.x = d.x + (e.clientX - d.px); st.y = d.y + (e.clientY - d.py);
+      clampAll(); apply();
+    });
+    var end = function () {
+      if (!d) return;
+      d = null; el.classList.remove('dragging');
+      if (o.key) persistFloat(o.key, { x:st.x, y:st.y, w:st.w, h:st.h });
+    };
+    dragEl.addEventListener('pointerup', end);
+    dragEl.addEventListener('pointercancel', end);
+  }
+  if (o.resize) {
+    var rzEl = el.querySelector('[data-resize]');
+    if (rzEl) {
+      var r2 = null;
+      rzEl.addEventListener('pointerdown', function (e) {
+        r2 = { px: e.clientX, py: e.clientY, w: st.w, h: st.h };
+        el.classList.add('dragging');
+        try { rzEl.setPointerCapture(e.pointerId); } catch (err) {}
+        e.preventDefault(); e.stopPropagation();
+      });
+      rzEl.addEventListener('pointermove', function (e) {
+        if (!r2) return;
+        st.w = r2.w + (e.clientX - r2.px); st.h = r2.h + (e.clientY - r2.py);
+        clampAll(); apply();
+      });
+      var endR = function () {
+        if (!r2) return;
+        r2 = null; el.classList.remove('dragging');
+        if (o.key) persistFloat(o.key, { x:st.x, y:st.y, w:st.w, h:st.h });
+      };
+      rzEl.addEventListener('pointerup', endR);
+      rzEl.addEventListener('pointercancel', endR);
+    }
+  }
+  var reflow = function () { clampAll(); apply(); };
+  window.addEventListener('resize', reflow);
+  window.addEventListener('orientationchange', function () { setTimeout(reflow, 250); });
+  return { rect: function () { return Object.assign({}, st); } };
+}
+
+/* ============================================================
+   5. 动画辅助
+   ============================================================ */
+var activeAnimations = new WeakMap();
+function safeAnimate(target, params) {
+  if (!target || !__anime) return null;
+  var prev = activeAnimations.get(target);
+  if (prev) { try { prev.cancel(); } catch (e) {} }
+  var anim = animate(target, params);
+  activeAnimations.set(target, anim);
+  return anim;
+}
+function animMessageIn(el) { safeAnimate(el, { opacity:[0,1], translateY:[10,0], scale:[.96,1], duration:300, ease:'outCubic' }); }
+function animSendBtn() { var b = document.getElementById('sendBtn'); if (b) safeAnimate(b, { scale:[1,.92,1], duration:240, ease:'outQuad' }); }
+function animStatusPulse() { var d = document.getElementById('statusDot'); if (d) safeAnimate(d, { scale:[1,1.5,1], duration:600, ease:'inOutSine' }); }
+function animJoinCard() { safeAnimate('#joinCard', { opacity:[0,1], scale:[.94,1], duration:520, ease:'outCubic' }); }
+
+/* ============================================================
+   6. Dexie（v2：msgId 作为主键，天然去重）
+   ============================================================ */
+var db = null;
+try { db = new Dexie('ShenshiSquadUltimateV4'); } catch (e) {}
+if (db) {
+  db.version(1).stores({
+    messages: 'msgId, scope, senderId, targetId, timestamp',
+    settings: 'key',
+    offlineQueue: '++id, timestamp'
+  });
+}
+
+function normalizeMsg(m) {
+  if (m && !m.id && m.msgId) m.id = m.msgId;
+  return m;
+}
+
+async function dbAddMessage(msg, pk) {
+  if (!db || !msg || !msg.id) return;
+  try {
+    await db.messages.put(Object.assign({}, msg, {
+      msgId: msg.id,
+      id: msg.id,
+      scope: msg.scope || 'group',
+      privateKey: pk || null
+    }));
+    dbTrimMessages();
+  } catch (e) {}
+}
+async function dbTrimMessages() {
+  if (!db) return;
+  try {
+    var gc = await db.messages.where('scope').equals('group').count();
+    if (gc > 120) {
+      var all = await db.messages.where('scope').equals('group').toArray();
+      all.sort(function (a,b) { return (a.timestamp||0) - (b.timestamp||0); });
+      var ids = all.slice(0, gc - 120).map(function (m) { return m.msgId; });
+      await db.messages.bulkDelete(ids);
+    }
+    var privates = await db.messages.where('scope').equals('private').toArray();
+    var byKey = {};
+    privates.forEach(function (m) { (byKey[m.privateKey] = byKey[m.privateKey] || []).push(m); });
+    for (var k in byKey) {
+      if (byKey[k].length > 60) {
+        byKey[k].sort(function (a,b) { return (a.timestamp||0) - (b.timestamp||0); });
+        var toDel = byKey[k].slice(0, byKey[k].length - 60).map(function (m) { return m.msgId; });
+        await db.messages.bulkDelete(toDel);
+      }
+    }
+  } catch (e) {}
+}
+async function dbGetSetting(k, fb) {
+  if (!db) return fb;
+  try { var r = await db.settings.get(k); return r ? r.value : fb; } catch (e) { return fb; }
+}
+async function dbSetSetting(k, v) {
+  if (!db) return;
+  try { await db.settings.put({ key:k, value:v }); } catch (e) {}
+}
+async function dbQueueOffline(msg) {
+  if (!db) return;
+  try { await db.offlineQueue.add({ msg: msg, timestamp: Date.now() }); } catch (e) {}
+}
+async function dbFlushOfflineQueue(sendFn) {
+  if (!db) return;
+  try {
+    var items = await db.offlineQueue.toArray();
+    for (var i = 0; i < items.length; i++) {
+      try { await sendFn(items[i].msg); await db.offlineQueue.delete(items[i].id); } catch (e) { break; }
+    }
+  } catch (e) {}
+}
+async function dbLoadHistory() {
+  if (!db) return { group: [], private: {} };
+  try {
+    var all = await db.messages.toArray();
+    all.forEach(normalizeMsg);
+    var group = all.filter(function (m) { return m.scope === 'group'; })
+      .sort(function (a,b) { return (a.timestamp||0) - (b.timestamp||0); });
+    var priv = {};
+    all.filter(function (m) { return m.scope === 'private'; }).forEach(function (m) {
+      if (m.privateKey) (priv[m.privateKey] = priv[m.privateKey] || []).push(m);
+    });
+    Object.keys(priv).forEach(function (k) { priv[k].sort(function (a,b) { return (a.timestamp||0) - (b.timestamp||0); }); });
+    return { group: group, private: priv };
+  } catch (e) { return { group: [], private: {} }; }
+}
+
+/* ============================================================
+   7. 音效
+   ============================================================ */
+var audioReady = false, sfxSynth = null, sfxNoise = null;
+var clickCounter = 0;
+var pentatonicScale = ['C5','D5','E5','G5','A5','C6','D6','E6'];
+
+async function initAudio() {
+  if (audioReady) return;
+  if (typeof Tone === 'undefined') return;
+  try {
+    await Tone.start();
+    var g = new Tone.Gain(0.65).toDestination();
+    sfxSynth = new Tone.PolySynth(Tone.Synth, {
+      maxPolyphony: 8, oscillator: { type: 'triangle' },
+      envelope: { attack: .001, decay: .1, sustain: 0, release: .1 }
+    }).connect(g);
+    sfxNoise = new Tone.NoiseSynth({
+      noise: { type: 'white' },
+      envelope: { attack: .001, decay: .06, sustain: 0, release: .02 }
+    }).connect(g);
+    audioReady = true;
+  } catch (e) {}
+}
+function sfx(type) {
+  if (!soundEnabled || !audioReady) return;
+  var now = Tone.now();
+  try {
+    switch (type) {
+      case 'click': sfxSynth.triggerAttackRelease(pentatonicScale[clickCounter++ % pentatonicScale.length], '16n', now); break;
+      case 'send': sfxSynth.triggerAttackRelease(['E5','G5','C6'], '16n', now); break;
+      case 'receive': sfxSynth.triggerAttackRelease(['A4','F4'], '16n', now); break;
+      case 'join': sfxSynth.triggerAttackRelease(['C5','E5','G5','C6'], '16n', now); break;
+      case 'leave': sfxSynth.triggerAttackRelease(['G4','E4','C4'], '16n', now); break;
+      case 'error': sfxSynth.triggerAttackRelease(['C3','B2'], '8n', now); break;
+      case 'toggle': sfxNoise.triggerAttackRelease('32n', now); break;
+      case 'place': sfxSynth.triggerAttackRelease(['G4'], '32n', now); break;
+      case 'win': sfxSynth.triggerAttackRelease(['C5','E5','G5','C6','E6'], '8n', now); break;
+      case 'lose': sfxSynth.triggerAttackRelease(['G4','E4','C4'], '8n', now); break;
+      case 'card': sfxSynth.triggerAttackRelease(['A5'], '64n', now); break;
+    }
+  } catch (e) {}
+}
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  var btn = document.getElementById('soundToggle');
+  if (btn) { btn.textContent = soundEnabled ? '🔊' : '🔇'; btn.classList.toggle('sound-off', !soundEnabled); }
+  dbSetSetting('sound', soundEnabled);
+  if (soundEnabled) initAudio().then(function () { sfx('toggle'); });
+}
+document.addEventListener('click', function () { initAudio(); }, { once: true });
+
+/* ============================================================
+   8. Three.js 背景
+   ============================================================ */
+var threeScene, threeCamera, threeRenderer, threePoints;
+async function initThreeBackground() {
+  var container = document.getElementById('three-bg');
+  if (!container) return;
+  var THREE;
+  try { THREE = await import('three'); } catch (e) { return; }
+  var w = window.innerWidth, h = window.innerHeight;
+  threeScene = new THREE.Scene();
+  threeCamera = new THREE.PerspectiveCamera(70, w / h, .1, 1000);
+  threeCamera.position.z = 8;
+  threeRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  threeRenderer.setSize(w, h);
+  threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(threeRenderer.domElement);
+
+  var count = 1100;
+  var pos = new Float32Array(count * 3), col = new Float32Array(count * 3);
+  var color = new THREE.Color();
+  for (var i = 0; i < count; i++) {
+    pos[i*3] = (Math.random() - .5) * 24;
+    pos[i*3+1] = (Math.random() - .5) * 16;
+    pos[i*3+2] = (Math.random() - .5) * 20;
+    color.setHSL(.62 + Math.random() * .12, .5, .45 + Math.random() * .2);
+    col[i*3] = color.r; col[i*3+1] = color.g; col[i*3+2] = color.b;
+  }
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  var mat = new THREE.PointsMaterial({ size: .07, vertexColors: true, transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false });
+  threePoints = new THREE.Points(geo, mat);
+  threeScene.add(threePoints);
+
+  var mx = 0, my = 0;
+  window.addEventListener('mousemove', function (e) {
+    mx = (e.clientX / w - .5) * 2; my = (e.clientY / h - .5) * 2;
+  }, { passive: true });
+
+  (function loop() {
+    requestAnimationFrame(loop);
+    threePoints.rotation.y += .0006 + mx * .0006;
+    threePoints.rotation.x += .0002 + my * .0004;
+    threeRenderer.render(threeScene, threeCamera);
+  })();
+
+  window.addEventListener('resize', function () {
+    var nw = window.innerWidth, nh = window.innerHeight;
+    threeCamera.aspect = nw / nh; threeCamera.updateProjectionMatrix();
+    threeRenderer.setSize(nw, nh);
+  });
+}
+
+/* ============================================================
+   9. highlight.js
+   ============================================================ */
+function highlightCodeBlocks(container) {
+  if (typeof hljs === 'undefined') return;
+  container.querySelectorAll('pre code').forEach(function (block) {
+    if (!block.dataset.highlighted) {
+      try {
+        var result = hljs.highlightAuto(block.textContent);
+        block.innerHTML = result.value;
+        block.className = 'hljs';
+        block.dataset.highlighted = 'true';
+      } catch (e) {}
+    }
+  });
+}
+function renderCodeAware(text, bubble) {
+  var regex = /```(\w*)\n?([\s\S]*?)```/g;
+  var last = 0, match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) {
+      var d = document.createElement('div');
+      d.textContent = text.slice(last, match.index);
+      bubble.appendChild(d);
+    }
+    var pre = document.createElement('pre');
+    var code = document.createElement('code');
+    code.textContent = match[2].trim();
+    pre.appendChild(code);
+    bubble.appendChild(pre);
+    last = regex.lastIndex;
+  }
+  if (last < text.length) {
+    var d2 = document.createElement('div');
+    d2.textContent = text.slice(last);
+    bubble.appendChild(d2);
+  }
+  highlightCodeBlocks(bubble);
+}
+
+/* ============================================================
+   10. Fabric 图片编辑器
+   ============================================================ */
+var fabricCanvas = null;
+function openEditor(dataUrl) {
+  if (typeof fabric === 'undefined') { showToast('图片编辑不可用'); return; }
+  document.getElementById('editorOverlay').classList.add('show');
+  if (fabricCanvas) { fabricCanvas.dispose(); fabricCanvas = null; }
+  var el = document.getElementById('fabricCanvas');
+  var maxW = Math.min(window.innerWidth * .9, 760);
+  var maxH = Math.min(window.innerHeight * .55, 480);
+  fabricCanvas = new fabric.Canvas(el, { backgroundColor: '#1a1a2e', selection: true });
+  fabric.Image.fromURL(dataUrl, function (img) {
+    var scale = Math.min(maxW / img.width, maxH / img.height, 1);
+    fabricCanvas.setWidth(img.width * scale);
+    fabricCanvas.setHeight(img.height * scale);
+    img.scale(scale);
+    fabricCanvas.add(img);
+    img.set({ selectable: false, evented: false });
+    fabricCanvas.sendToBack(img);
+    fabricCanvas.renderAll();
+  }, { crossOrigin: 'anonymous' });
+  sfx('click');
+}
+function editorAddRect() {
+  if (!fabricCanvas) return;
+  var rect = new fabric.Rect({ left: 40, top: 40, width: 100, height: 70, fill: 'rgba(107,124,255,0.35)', stroke: '#6b7cff', strokeWidth: 3 });
+  fabricCanvas.add(rect).setActiveObject(rect); sfx('click');
+}
+function editorAddText() {
+  if (!fabricCanvas) return;
+  var text = new fabric.IText('标注文字', { left: 60, top: 60, fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif', fontSize: 24, fill: '#fff', backgroundColor: 'rgba(0,0,0,0.25)' });
+  fabricCanvas.add(text).setActiveObject(text); sfx('click');
+}
+function closeEditor() {
+  document.getElementById('editorOverlay').classList.remove('show');
+  if (fabricCanvas) { fabricCanvas.dispose(); fabricCanvas = null; }
+}
+function editorExportAndSend() {
+  if (!fabricCanvas) return;
+  var dataUrl = fabricCanvas.toDataURL({ format: 'jpeg', quality: .7, multiplier: 1 });
+  broadcast(buildOutgoingMsg({ type: 'image', dataUrl: dataUrl }));
+  closeEditor(); showToast('已发送标注图片');
+}
+
+/* ============================================================
+   11. 头像轮播
+   ============================================================ */
+var AVATAR_BASE = 'https://lvyy.cc.cd/images/';
+var AVATAR_COUNT = 36;
+var FANREN_CHARACTERS = [];
+for (var __i = 0; __i < AVATAR_COUNT; __i++) {
+  var __num = String(__i + 1).padStart(2, '0');
+  FANREN_CHARACTERS.push({ name: '角色' + __num, label: __num, iconUrl: AVATAR_BASE + 'cover_' + __num + '.png' });
+}
+var carouselIndex = 0;
+var avatarImgEl = document.getElementById('avatarImg');
+
+function updateAvatarDisplay() {
+  if (!avatarImgEl) return;
+  var champ = FANREN_CHARACTERS[carouselIndex];
+  avatarImgEl.style.opacity = '0.5';
+  avatarImgEl.src = champ.iconUrl;
+  avatarImgEl.onload = function () { avatarImgEl.style.opacity = '1'; };
+  avatarImgEl.onerror = function () { avatarImgEl.style.opacity = '0'; avatarImgEl.style.background = '#4a5568'; };
+  myAvatar = { id: champ.label, name: champ.name, dataUrl: champ.iconUrl };
+}
+document.getElementById('carouselPrev').onclick = function () {
+  if (carouselIndex <= 0) return;
+  carouselIndex--; updateAvatarDisplay(); sfx('click');
+};
+document.getElementById('carouselNext').onclick = function () {
+  if (carouselIndex >= FANREN_CHARACTERS.length - 1) return;
+  carouselIndex++; updateAvatarDisplay(); sfx('click');
+};
+
+/* ============================================================
+   12. 面板管理
+   ============================================================ */
+var MINI_ICONS = { chat: '💬', game: '🎮', music: '🎵' };
+var miniBalls = {};
+
+function createMiniBall(key) {
+  var el = document.createElement('button');
+  el.className = 'mini-ball';
+  el.dataset.key = key;
+  el.innerHTML = MINI_ICONS[key] + '<span class="mb-badge" style="display:none"></span>';
+  document.body.appendChild(el);
+  miniBalls[key] = el;
+
+  var drag = null;
+  el.addEventListener('pointerdown', function (e) {
+    drag = { px: e.clientX, py: e.clientY, x: el.offsetLeft, y: el.offsetTop, moved: false };
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+    e.preventDefault();
+  });
+  el.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    var dx = e.clientX - drag.px, dy = e.clientY - drag.py;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.moved = true;
+    el.style.left = (drag.x + dx) + 'px';
+    el.style.top = (drag.y + dy) + 'px';
+  });
+  var up = function () {
+    if (!drag) return;
+    var moved = drag.moved;
+    drag = null;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var w = el.offsetWidth, h = el.offsetHeight;
+    var x = parseFloat(el.style.left) || 0;
+    var y = parseFloat(el.style.top) || 0;
+    y = Math.max(8, Math.min(y, vh - h - 8));
+    var side = (x + w / 2) < vw / 2 ? 'left' : 'right';
+    x = side === 'left' ? 10 : vw - w - 10;
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    persistFloat('mini_' + key, { x: x, y: y });
+    if (!moved) openPanel(key);
+  };
+  el.addEventListener('pointerup', up);
+  el.addEventListener('pointercancel', up);
+  return el;
+}
+
+function openPanel(key) {
+  var el = document.getElementById(key + 'Panel');
+  if (!el) return;
+  if (!el.classList.contains('show')) {
+    el.classList.add('show');
+  }
+  el.style.zIndex = 41 + Object.keys(openPanels).filter(function(k){return openPanels[k];}).length;
+  openPanels[key] = true;
+  if (miniBalls[key]) miniBalls[key].classList.remove('show');
+  if (key === 'chat') {
+    totalUnread = 0; refreshChatBadge();
+    setTimeout(function () {
+      var b = document.getElementById('chatBox'); if (b) b.scrollTop = b.scrollHeight;
+    }, 60);
+  }
+  sfx('click');
+}
+
+function closePanel(key) {
+  var el = document.getElementById(key + 'Panel');
+  if (!el) return;
+  var r = el.getBoundingClientRect();
+  el.classList.remove('show');
+  openPanels[key] = false;
+  var mini = miniBalls[key];
+  if (mini) {
+    var saved = floatStore['mini_' + key];
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var w = 52, h = 52;
+    var side = (r.left + r.width / 2) < vw / 2 ? 'left' : 'right';
+    var x = saved ? saved.x : (side === 'left' ? 10 : vw - w - 10);
+    var y = saved ? saved.y : Math.max(80, Math.min(r.top, vh - h - 80));
+    x = Math.max(8, Math.min(x, vw - w - 8));
+    y = Math.max(70, Math.min(y, vh - h - 8));
+    mini.style.left = x + 'px'; mini.style.top = y + 'px';
+    mini.classList.add('show');
+    persistFloat('mini_' + key, { x: x, y: y });
+  }
+  sfx('toggle');
+}
+
+function refreshChatBadge() {
+  var b = document.getElementById('chatBadge');
+  if (b) {
+    b.textContent = totalUnread > 99 ? '99+' : String(totalUnread);
+    b.classList.toggle('show', totalUnread > 0);
+  }
+  var mb = miniBalls.chat;
+  if (mb) {
+    var badge = mb.querySelector('.mb-badge');
+    if (badge) {
+      badge.textContent = totalUnread > 99 ? '99+' : String(totalUnread);
+      badge.style.display = totalUnread > 0 ? 'block' : 'none';
+    }
+  }
+}
+
+document.querySelectorAll('[data-mini]').forEach(function (btn) {
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    closePanel(btn.dataset.mini);
+  });
+});
+
+document.querySelectorAll('.hub-btn').forEach(function (btn) {
+  btn.addEventListener('click', function () { openPanel(btn.dataset.open); });
+});
+
+/* ============================================================
+   13. 加入房间
+   ============================================================ */
+async function joinRoom() {
+  var code = document.getElementById('roomInput').value.trim();
+  myName = document.getElementById('nameInput').value.trim();
+  var errEl = document.getElementById('joinError'); errEl.textContent = '';
+  if (code !== HOST_CODE && code !== MEMBER_CODE) { errEl.textContent = '密码错误'; sfx('error'); return; }
+  if (!myName) { errEl.textContent = '请填写名字'; sfx('error'); return; }
+  if (!myAvatar.dataUrl) { errEl.textContent = '请选择头像'; sfx('error'); return; }
+
+  isHost = (code === HOST_CODE); roomCode = code;
+  chatHistory = await dbLoadHistory();
+
+  if (isHost) {
+    var btn = document.getElementById('enterBtn');
+    btn.disabled = true; btn.textContent = '创建房间…';
+    try { await startAsHost(); enterRoomUI(); }
+    catch (e) {
+      cleanupConnection();
+      btn.disabled = false; btn.textContent = '进 入 房 间';
+      errEl.textContent = '失败：' + e.message; sfx('error');
+    }
+  } else {
+    await startAsMemberFlow();
+  }
+}
+
+function enterRoomUI() {
+  inRoom = true;
+  document.getElementById('joinPanel').classList.add('hidden');
+  document.getElementById('topBar').classList.add('show');
+  document.getElementById('hub').classList.remove('hidden');
+  document.getElementById('three-bg').classList.add('hidden');
+  document.getElementById('roomCodeDisplay').textContent = isHost ? HOST_CODE : MEMBER_CODE;
+  renderTopMembers();
+  buildEmotePanel();
+  updateChatHeader();
+  renderChatMessages();   /* 关键：进入房间立即加载历史 */
+  setStatus(true);
+  sfx('join'); showToast('已进入房间');
+  if (typeof confetti === 'function') {
+    confetti({ particleCount: 70, spread: 70, origin: { y: .7 }, colors: ['#6b7cff','#38a169','#e53e3e'] });
+  }
+}
+
+function setStatus(ok) {
+  var d = document.getElementById('statusDot');
+  if (d) d.className = 'status-dot ' + (ok ? 'green' : 'red');
+  if (ok) animStatusPulse();
+}
+window.addEventListener('online', function () { online = true; showToast('网络已恢复'); dbFlushOfflineQueue(sendRaw); });
+window.addEventListener('offline', function () { online = false; showToast('网络已断开，消息将排队'); });
+
+/* ============================================================
+   14. 房主端
+   ============================================================ */
+function startAsHost() {
+  return new Promise(function (resolve, reject) {
+    var pr = false, mr = false, settled = false;
+    var timeout = setTimeout(function () { if (!settled) { settled = true; reject(new Error('超时')); } }, 15000);
+    var done = function () { if (pr && mr && !settled) { settled = true; clearTimeout(timeout); resolve(); } };
+
+    if (typeof Peer === 'undefined') { settled = true; reject(new Error('PeerJS 未加载')); return; }
+    if (typeof mqtt === 'undefined') { settled = true; reject(new Error('MQTT 未加载')); return; }
+
+    peer = new Peer(PEER_CONFIG);
+    peer.on('open', function (id) { myPeerId = id; pr = true; done(); });
+    peer.on('error', function (err) { if (!settled) { settled = true; clearTimeout(timeout); reject(new Error(err.type || 'PeerJS 失败')); } });
+    peer.on('disconnected', function () { try { peer.reconnect(); } catch (e) {} });
+    peer.on('connection', handleMemberConnection);
+
+    mqttClient = mqtt.connect(MQTT_URL, { connectTimeout: 10000, reconnectPeriod: 3000, clientId: 'ss_host_' + Math.random().toString(16).slice(2, 10) });
+    mqttClient.on('connect', function () {
+      mr = true; announceHost();
+      if (hostAnnounceTimer) clearInterval(hostAnnounceTimer);
+      hostAnnounceTimer = setInterval(announceHost, 3000);
+      mqttClient.subscribe(CHAT_FALLBACK_TOPIC);
+      done();
+    });
+    mqttClient.on('error', function () {});
+    mqttClient.on('message', handleFallbackAsHost);
+  });
+}
+function announceHost() {
+  if (!mqttClient || !mqttClient.connected || !myPeerId) return;
+  mqttClient.publish(DISCOVERY_TOPIC, JSON.stringify({ type: 'host_announce', peerId: myPeerId, name: myName, avatar: myAvatar.dataUrl }));
+}
+function handleMemberConnection(conn) {
+  conn.on('open', function () {
+    var meta = conn.metadata || {};
+    connections[conn.peer] = conn;
+    members[conn.peer] = { name: meta.name || '成员', avatar: meta.avatar || '' };
+    renderTopMembers(); broadcastMemberList();
+    try { conn.send({ type: 'history_sync', group: chatHistory.group.slice(-50) }); } catch (e) {}
+    var text = members[conn.peer].name + ' 加入了聊天';
+    broadcastSystem(text, conn.peer);
+    appendSystemToView(text);
+    sfx('join');
+  });
+  conn.on('data', function (data) {
+    if (!data || !data.type) return;
+    if (data.type === 'system') { broadcastToOthers(data, conn.peer); appendSystemToView(data.text); return; }
+    data.senderId = data.senderId || conn.peer;
+    if (data.scope === 'private') {
+      if (data.targetId === myPeerId) receiveMessage(data);
+      else {
+        var tc = connections[data.targetId];
+        if (tc && tc.open) { try { tc.send(data); } catch (e) {} }
+      }
+    } else {
+      broadcastToOthers(data, conn.peer);
+      receiveMessage(data);
+    }
+  });
+  conn.on('close', function () {
+    var m = members[conn.peer];
+    if (m) {
+      delete connections[conn.peer]; delete members[conn.peer];
+      if (currentTarget === conn.peer) switchToGroup();
+      renderTopMembers(); broadcastMemberList();
+      var text = m.name + ' 离开了聊天';
+      broadcastSystem(text, null);
+      appendSystemToView(text);
+      sfx('leave');
+      GameHub.onPeerLeave(conn.peer);
+    }
+  });
+  conn.on('error', function () {
+    var m = members[conn.peer];
+    if (m) {
+      delete connections[conn.peer]; delete members[conn.peer];
+      if (currentTarget === conn.peer) switchToGroup();
+      renderTopMembers(); broadcastMemberList();
+    }
+  });
+}
+function broadcastToOthers(msg, ex) {
+  Object.keys(connections).forEach(function (pid) {
+    var c = connections[pid];
+    if (pid !== ex && c.open) { try { c.send(msg); } catch (e) {} }
+  });
+}
+function broadcastMemberList() {
+  var list = {
+    type: 'member_list',
+    members: [{ peerId: myPeerId, name: myName, avatar: myAvatar.dataUrl, isHost: true }]
+      .concat(Object.keys(members).map(function (pid) {
+        return { peerId: pid, name: members[pid].name, avatar: members[pid].avatar, isHost: false };
+      }))
+  };
+  Object.keys(connections).forEach(function (pid) {
+    var c = connections[pid];
+    if (c.open) { try { c.send(list); } catch (e) {} }
+  });
+}
+function broadcastSystem(text, ex) {
+  var msg = { type: 'system', text: text };
+  Object.keys(connections).forEach(function (pid) {
+    var c = connections[pid];
+    if (pid !== ex && c.open) { try { c.send(msg); } catch (e) {} }
+  });
+}
+function handleFallbackAsHost(topic, payload) {
+  if (topic !== CHAT_FALLBACK_TOPIC) return;
+  var msg; try { msg = JSON.parse(payload.toString()); } catch (e) { return; }
+  if (!msg || msg.senderPeerId === myPeerId) return;
+  msg.senderId = msg.senderPeerId;
+  if (msg.scope === 'private') {
+    if (msg.targetId === myPeerId) receiveMessage(msg);
+    else {
+      var tc = connections[msg.targetId];
+      if (tc && tc.open) { try { tc.send(msg); } catch (e) {} }
+    }
+  } else {
+    Object.keys(connections).forEach(function (pid) {
+      var c = connections[pid];
+      if (c.open) { try { c.send(msg); } catch (e) {} }
+    });
+    receiveMessage(msg);
+  }
+}
+
+/* ============================================================
+   15. 成员端
+   ============================================================ */
+async function startAsMemberFlow() {
+  var btn = document.getElementById('enterBtn');
+  btn.disabled = true; btn.textContent = '初始化…';
+  try { await initMemberConnections(); }
+  catch (e) {
+    cleanupConnection();
+    btn.disabled = false; btn.textContent = '进 入 房 间';
+    document.getElementById('joinError').textContent = '失败：' + e.message;
+    return;
+  }
+  if (retryTimer) clearInterval(retryTimer);
+  retryTimer = setInterval(checkAndRetry, RETRY_INTERVAL);
+  checkAndRetry();
+}
+function initMemberConnections() {
+  return new Promise(function (resolve, reject) {
+    var pr = false, mr = false, settled = false;
+    var timeout = setTimeout(function () { if (!settled) { settled = true; reject(new Error('超时')); } }, 20000);
+    var check = function () { if (pr && mr && !settled) { settled = true; clearTimeout(timeout); resolve(); } };
+
+    if (typeof Peer === 'undefined') { settled = true; reject(new Error('PeerJS 未加载')); return; }
+    if (typeof mqtt === 'undefined') { settled = true; reject(new Error('MQTT 未加载')); return; }
+
+    peer = new Peer(PEER_CONFIG);
+    peer.on('open', function (id) { myPeerId = id; pr = true; check(); });
+    peer.on('error', function (err) { if (!settled) { settled = true; clearTimeout(timeout); reject(new Error(err.type || 'PeerJS 失败')); } });
+
+    mqttClient = mqtt.connect(MQTT_URL, { connectTimeout: 10000, reconnectPeriod: 3000, clientId: 'ss_mem_' + Math.random().toString(16).slice(2, 10) });
+    mqttClient.on('connect', function () {
+      mqttClient.subscribe(DISCOVERY_TOPIC, function (err) {
+        if (err) { if (!settled) { settled = true; reject(new Error('订阅失败')); } return; }
+        mqttClient.subscribe(CHAT_FALLBACK_TOPIC);
+        mr = true; check();
+      });
+    });
+    mqttClient.on('error', function () {});
+    mqttClient.on('message', handleMqttAsMember);
+  });
+}
+function handleMqttAsMember(topic, payload) {
+  var msg; try { msg = JSON.parse(payload.toString()); } catch (e) { return; }
+  if (topic === DISCOVERY_TOPIC) {
+    if (msg.type === 'host_announce') {
+      hostPeerId = msg.peerId;
+      if (!memberJoined && !connectingToHost && (!hostConnection || !hostConnection.open)) checkAndRetry();
+    }
+  } else if (topic === CHAT_FALLBACK_TOPIC) {
+    if (!msg || msg.senderPeerId === myPeerId || webrtcOk) return;
+    if (msg.scope === 'private' && msg.targetId !== myPeerId) return;
+    msg.senderId = msg.senderPeerId;
+    receiveMessage(msg);
+  }
+}
+function checkAndRetry() {
+  if (memberJoined) return;
+  if (!hostPeerId) return;
+  if (connectingToHost) {
+    if (Date.now() - currentAttemptStart > CONNECT_ATTEMPT_TIMEOUT) forceRestart();
+    return;
+  }
+  if (hostConnection && hostConnection.open) return;
+  tryConnectToHost(hostPeerId);
+}
+function forceRestart() {
+  connectingToHost = false;
+  if (currentPendingConn) { try { currentPendingConn.close(); } catch (e) {} currentPendingConn = null; }
+  if (hostPeerId) tryConnectToHost(hostPeerId);
+}
+function tryConnectToHost(hostId) {
+  connectingToHost = true; currentAttemptStart = Date.now();
+  var conn;
+  try { conn = peer.connect(hostId, { metadata: { name: myName, avatar: myAvatar.dataUrl } }); }
+  catch (e) { connectingToHost = false; return; }
+  currentPendingConn = conn;
+  var t = setTimeout(function () {
+    if (!conn.open) { try { conn.close(); } catch (e) {} connectingToHost = false; currentPendingConn = null; }
+  }, CONNECT_ATTEMPT_TIMEOUT);
+
+  conn.on('open', function () {
+    clearTimeout(t); connectingToHost = false; currentPendingConn = null;
+    hostConnection = conn; webrtcOk = true; setStatus(true);
+    conn.on('data', function (data) {
+      if (!data || !data.type) return;
+      if (data.type === 'member_list') {
+        updateMembersFromList(data);
+        if (!memberJoined) {
+          memberJoined = true;
+          if (retryTimer) { clearInterval(retryTimer); retryTimer = null; }
+          enterRoomUI();
+        }
+        return;
+      }
+      if (data.type === 'history_sync') { mergeGroupHistory(data.group); return; }
+      if (data.type === 'system') { appendSystemToView(data.text); return; }
+      receiveMessage(data);
+    });
+    conn.on('close', function () {
+      hostConnection = null; webrtcOk = false;
+      if (memberJoined) {
+        setStatus(false); appendSystemToView('连接断开，重试中…');
+        memberJoined = false;
+        if (retryTimer) clearInterval(retryTimer);
+        retryTimer = setInterval(checkAndRetry, RETRY_INTERVAL);
+        checkAndRetry();
+      }
+    });
+    conn.on('error', function () { hostConnection = null; webrtcOk = false; });
+  });
+  conn.on('error', function () {
+    clearTimeout(t); connectingToHost = false; currentPendingConn = null; webrtcOk = false;
+  });
+}
+function updateMembersFromList(data) {
+  Object.keys(members).forEach(function (k) { delete members[k]; });
+  (data.members || []).forEach(function (m) {
+    if (m.peerId !== myPeerId) members[m.peerId] = { name: m.name, avatar: m.avatar };
+  });
+  if (currentTarget && !members[currentTarget]) { currentTarget = null; updateChatHeader(); renderChatMessages(); }
+  renderTopMembers();
+}
+
+/* ============================================================
+   16. 消息收发（带去重）
+   ============================================================ */
+async function receiveMessage(msg) {
+  if (!msg || !msg.type) return;
+  if (msg.type === 'game') { GameHub.handleMessage(msg); return; }
+  if (!msg.id) msg.id = genMsgId();
+  if (!msg.timestamp) msg.timestamp = Date.now();
+
+  /* 跨通道去重：相同 msgId 只处理一次 */
+  if (markReceived(msg.id)) return;
+
+  var pk = null;
+  if (msg.scope === 'private') {
+    pk = (msg.senderId === myPeerId) ? msg.targetId : msg.senderId;
+    if (msg.senderId !== myPeerId && msg.targetId !== myPeerId) return;
+  }
+
+  await dbAddMessage(msg, pk);
+
+  if (pk === currentTarget || (msg.scope !== 'private' && currentTarget === null)) {
+    appendMessageToDom(msg, msg.senderId === myPeerId);
+    if (msg.senderId !== myPeerId) sfx('receive');
+  } else if (pk !== null) {
+    pendingUnread[pk] = (pendingUnread[pk] || 0) + 1;
+    renderTopMembers();
+    if (msg.senderId !== myPeerId) sfx('receive');
+  }
+  if (!openPanels.chat && msg.senderId !== myPeerId) {
+    totalUnread++;
+    refreshChatBadge();
+  }
+}
+function sendRaw(msg) {
+  if (isHost) {
+    if (msg.scope === 'private') {
+      var tc = connections[msg.targetId];
+      if (tc && tc.open) { try { tc.send(msg); } catch (e) {} }
+    } else {
+      Object.keys(connections).forEach(function (pid) {
+        var c = connections[pid];
+        if (c.open) { try { c.send(msg); } catch (e) {} }
+      });
+    }
+  } else {
+    if (hostConnection && hostConnection.open) { try { hostConnection.send(msg); } catch (e) {} }
+    else if (mqttClient && mqttClient.connected) {
+      mqttClient.publish(CHAT_FALLBACK_TOPIC, JSON.stringify(Object.assign({}, msg, { senderPeerId: myPeerId })));
+    }
+  }
+}
+async function broadcast(msg) {
+  if (!msg.id) msg.id = genMsgId();
+  if (!msg.timestamp) msg.timestamp = Date.now();
+  msg.senderId = myPeerId;
+  markReceived(msg.id); /* 自己发送的消息也标记，防止 fallback 回环 */
+  if (!online && !isHost) { dbQueueOffline(msg); showToast('离线，消息已排队'); }
+  else sendRaw(msg);
+  var pk = msg.scope === 'private' ? msg.targetId : null;
+  await dbAddMessage(msg, pk);
+  appendMessageToDom(msg, true);
+  sfx('send'); animSendBtn();
+}
+function buildOutgoingMsg(extra) {
+  var msg = Object.assign({ name: myName, avatar: myAvatar.dataUrl, senderId: myPeerId, id: genMsgId(), timestamp: Date.now() }, extra);
+  if (currentTarget !== null) { msg.scope = 'private'; msg.targetId = currentTarget; }
+  else msg.scope = 'group';
+  return msg;
+}
+function sendMessage() {
+  var input = document.getElementById('msgInput');
+  var text = input.value.trim(); if (!text) return;
+  broadcast(buildOutgoingMsg({ type: 'text', text: text }));
+  input.value = '';
+}
+async function mergeGroupHistory(incoming) {
+  if (!Array.isArray(incoming) || !db) return;
+  for (var i = 0; i < incoming.length; i++) {
+    var m = incoming[i];
+    var mid = m && (m.id || m.msgId);
+    if (!mid) continue;
+    try {
+      await db.messages.put(Object.assign({}, m, { msgId: mid, id: mid, scope: 'group', privateKey: null }));
+    } catch (e) {}
+  }
+  if (currentTarget === null) renderChatMessages();
+}
+
+/* ============================================================
+   17. 群聊 / 私聊切换
+   ============================================================ */
+function switchToGroup() {
+  if (currentTarget === null) return;
+  currentTarget = null; sfx('click');
+  updateChatHeader(); renderChatMessages(); renderTopMembers();
+}
+function switchToPrivate(peerId, name) {
+  if (currentTarget === peerId) return;
+  currentTarget = peerId;
+  if (pendingUnread[peerId]) delete pendingUnread[peerId];
+  sfx('click');
+  updateChatHeader(); renderChatMessages(); renderTopMembers();
+  openPanel('chat');
+}
+function updateChatHeader() {
+  var t = document.getElementById('chatTitle');
+  var b = document.getElementById('chatBackBtn');
+  if (!t) return;
+  if (currentTarget === null) {
+    t.textContent = '群聊';
+    if (b) b.style.display = 'none';
+  } else {
+    var m = members[currentTarget];
+    t.textContent = '与 ' + (m ? m.name : '成员') + ' 私聊';
+    if (b) b.style.display = 'flex';
+  }
+}
+document.getElementById('chatBackBtn').addEventListener('click', switchToGroup);
+
+/* ============================================================
+   18. 顶部成员栏
+   ============================================================ */
+function makeAvatarCanvas(dataUrl, size) {
+  var c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  if (dataUrl) {
+    var img = new Image();
+    img.onload = function () { c.getContext('2d').drawImage(img, 0, 0, size, size); };
+    img.src = dataUrl;
+  } else {
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#4a5568'; ctx.fillRect(0, 0, size, size);
+  }
+  return c;
+}
+
+function renderTopMembers() {
+  var box = document.getElementById('topMembers');
+  if (!box) return;
+  box.innerHTML = '';
+
+  var selfEl = document.createElement('div');
+  selfEl.className = 'tb-member self' + (currentTarget === null ? ' active' : '');
+  selfEl.appendChild(makeAvatarCanvas(myAvatar.dataUrl, 52));
+  var nm = document.createElement('span'); nm.textContent = myName + ' (我)';
+  selfEl.appendChild(nm);
+  selfEl.onclick = function () { switchToGroup(); };
+  box.appendChild(selfEl);
+
+  Object.keys(members).forEach(function (pid) {
+    var el = document.createElement('div');
+    el.className = 'tb-member' + (currentTarget === pid ? ' active' : '');
+    el.appendChild(makeAvatarCanvas(members[pid].avatar, 52));
+    var n = document.createElement('span'); n.textContent = members[pid].name;
+    el.appendChild(n);
+    if (pendingUnread[pid]) {
+      var b = document.createElement('span');
+      b.className = 'tb-badge';
+      b.textContent = pendingUnread[pid] > 9 ? '9+' : pendingUnread[pid];
+      el.appendChild(b);
+    }
+    el.onclick = function () { switchToPrivate(pid, members[pid].name); };
+    box.appendChild(el);
+  });
+
+  var oc = document.getElementById('onlineCount');
+  if (oc) oc.textContent = (1 + Object.keys(members).length) + '/6';
+}
+
+/* ============================================================
+   19. 聊天消息渲染（generation 防竞态 + msgId 去重）
+   ============================================================ */
+var chatRenderGen = 0;
+async function renderChatMessages() {
+  var box = document.getElementById('chatBox');
+  if (!box) return;
+  var gen = ++chatRenderGen;
+  var target = currentTarget;
+
+  var msgs = [];
+  if (db) {
+    try {
+      if (target === null) {
+        msgs = await db.messages.where('scope').equals('group').toArray();
+      } else {
+        msgs = await db.messages.where('scope').equals('private').toArray();
+        msgs = msgs.filter(function (m) { return m.privateKey === target; });
+      }
+    } catch (e) {}
+  }
+  if (gen !== chatRenderGen) return;
+  if (target !== currentTarget) return;
+
+  msgs.forEach(normalizeMsg);
+  msgs.sort(function (a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
+  box.innerHTML = '';
+  msgs.forEach(function (m) { appendMessageToDom(m, m.senderId === myPeerId); });
+  box.scrollTop = box.scrollHeight;
+}
+
+function appendMessageToDom(msg, isSelf) {
+  var box = document.getElementById('chatBox'); if (!box) return;
+  var mid = msg.id || msg.msgId;
+  if (mid && box.querySelector('[data-msg-id="' + mid + '"]')) return;
+
+  var wrap = document.createElement('div');
+  wrap.className = 'msg ' + (isSelf ? 'self' : 'other');
+  if (mid) wrap.dataset.msgId = mid;
+
+  wrap.appendChild(makeMsgAvatarCanvas(msg.avatar || (isSelf ? myAvatar.dataUrl : '')));
+  var body = document.createElement('div'); body.className = 'msg-body';
+  var sender = document.createElement('div'); sender.className = 'sender';
+  sender.textContent = isSelf ? '我' : (msg.name || '某人');
+  body.appendChild(sender);
+  var bubble = document.createElement('div'); bubble.className = 'bubble';
+
+  if (msg.type === 'text') renderCodeAware(msg.text || '', bubble);
+  else if (msg.type === 'image') {
+    if (msg._pruned || !msg.dataUrl) {
+      var p = document.createElement('div'); p.className = 'pruned-notice'; p.textContent = '[图片已清理]';
+      bubble.appendChild(p);
+    } else {
+      var img = document.createElement('img'); img.src = msg.dataUrl;
+      img.onclick = function () { window.open(msg.dataUrl, '_blank'); };
+      bubble.appendChild(img);
+    }
+  } else if (msg.type === 'audio') {
+    if (msg._pruned || !msg.dataUrl) {
+      var p2 = document.createElement('div'); p2.className = 'pruned-notice'; p2.textContent = '[语音已清理]';
+      bubble.appendChild(p2);
+    } else {
+      var btn = document.createElement('div'); btn.className = 'voice-btn';
+      var label = function () { return '▶ 语音 ' + (msg.duration || ''); };
+      btn.textContent = label();
+      var audio = null, playing = false;
+      btn.onclick = function () {
+        if (playing && audio) { audio.pause(); audio.currentTime = 0; playing = false; btn.textContent = label(); return; }
+        audio = new Audio(msg.dataUrl);
+        audio.onended = function () { playing = false; btn.textContent = label(); };
+        audio.onerror = function () { playing = false; btn.textContent = '⚠ 无法播放'; };
+        audio.play().catch(function () { btn.textContent = '⚠ 无法播放'; });
+        playing = true; btn.textContent = '⏸ 播放中...';
+      };
+      bubble.appendChild(btn);
+    }
+  } else if (msg.type === 'emote') {
+    var s = document.createElement('span'); s.className = 'emote-char'; s.textContent = msg.emoji;
+    bubble.appendChild(s);
+  }
+
+  body.appendChild(bubble); wrap.appendChild(body); box.appendChild(wrap);
+  box.scrollTop = box.scrollHeight;
+  animMessageIn(wrap);
+}
+function makeMsgAvatarCanvas(dataUrl) {
+  var c = makeAvatarCanvas(dataUrl, 64);
+  c.className = 'msg-avatar';
+  return c;
+}
+function appendSystemToView(text) {
+  var box = document.getElementById('chatBox');
+  if (!box || currentTarget !== null) return;
+  var d = document.createElement('div');
+  d.className = 'system-msg'; d.textContent = text;
+  box.appendChild(d); box.scrollTop = box.scrollHeight;
+  animMessageIn(d);
+}
+
+/* ============================================================
+   20. 表情
+   ============================================================ */
+var PRESET_EMOTES = ['😀','😁','😂','🤣','😃','😄','😅','😆','😉','😊','😋','😎','😍','😘','🥰','😗','😙','😚','🙂','🤗','🤩','🤔','🤨','😐','😑','😶','🙄','😏','😣','😥','😮','🤐','😯','😪','😫','🥱','😴','😌','😛','😜','😝','🤤','😒','😓','😔','😕','🙃','🤑','😲','🙁','😖','😞','😟','😤','😢','😭','😦','😧','😨','😩','🤯','😬','😰','😱','🥵','🥶','😳','🤪','😵','🥴','😠','😡','🤬','😷','🤒','🤕','🤢','🤮','🤧','😇','🥳','🥺','🤠','🤡','🤥','🤫','🤭','🧐','🤓','😈','👿','👹','👺','💀','👻','👽','🤖','💩','😺','😸','😹','😻','😼','😽','🙀','😿','😾','👍','👎','👏','🙏','💪','👌','✌️','🤝','❤️','💔','💯','🔥','⭐','🎉','🎊','🎁','🌈','☀️','🌙','⚡','❄️','🍀','🌹'];
+function buildEmotePanel() {
+  var panel = document.getElementById('emotePanel'); if (!panel) return;
+  panel.innerHTML = '';
+  PRESET_EMOTES.forEach(function (em) {
+    var s = document.createElement('span');
+    s.className = 'emote-item'; s.textContent = em;
+    s.onclick = function () {
+      broadcast(buildOutgoingMsg({ type: 'emote', emoji: em }));
+      toggleEmotePanel();
+    };
+    panel.appendChild(s);
+  });
+}
+function toggleEmotePanel() {
+  var p = document.getElementById('emotePanel');
+  if (p) p.classList.toggle('show');
+  sfx('click');
+}
+
+/* ============================================================
+   21. 图片 & 语音
+   ============================================================ */
+function pickImage() { document.getElementById('imageInput').click(); }
+function handleImage(e) {
+  var file = e.target.files[0]; if (!file) return;
+  e.target.value = '';
+  var reader = new FileReader();
+  reader.onload = function (ev) { openEditor(ev.target.result); };
+  reader.readAsDataURL(file);
+}
+var mediaRecorder = null, audioChunks = [], recording = false, recordStartTime = 0, recordTimer = null;
+async function toggleRecording() {
+  sfx('click');
+  if (!recording) {
+    try {
+      var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      var mimeType = '';
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mimeType = 'audio/webm;codecs=opus';
+      else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+      mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType: mimeType } : undefined);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = function (ev) { if (ev.data && ev.data.size > 0) audioChunks.push(ev.data); };
+      mediaRecorder.onstop = async function () {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        clearInterval(recordTimer);
+        var sec = (Date.now() - recordStartTime) / 1000;
+        if (sec < 0.6) { showToast('录音太短'); return; }
+        var blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+        var dataUrl = await blobToDataURL(blob);
+        broadcast(buildOutgoingMsg({ type: 'audio', dataUrl: dataUrl, duration: sec.toFixed(1) + 's' }));
+      };
+      mediaRecorder.start();
+      recording = true; recordStartTime = Date.now(); updateRecordUI();
+      recordTimer = setInterval(updateRecordUI, 200);
+    } catch (err) { showToast('无法访问麦克风'); sfx('error'); }
+  } else stopRecording();
+}
+function stopRecording() {
+  recording = false; clearInterval(recordTimer);
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  updateRecordUI();
+}
+function updateRecordUI() {
+  var btn = document.getElementById('recordBtn'); if (!btn) return;
+  btn.classList.toggle('recording', recording);
+  btn.innerHTML = recording ? ICON_STOP : ICON_MIC;
+}
+
+/* ============================================================
+   22. 音乐播放器
+   ============================================================ */
+var MUSIC = { audio: null, playlist: [], currentIndex: -1, isPlaying: false, loop: false };
+
+function musicFmt(s) {
+  if (!s || !isFinite(s)) return '0:00';
+  var m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return m + ':' + String(sec).padStart(2, '0');
+}
+function musicAddFiles(files) {
+  if (!files || !files.length) return;
+  var added = 0;
+  for (var i = 0; i < files.length; i++) {
+    var f = files[i];
+    if (!/^audio\//.test(f.type) && !/\.(mp3|m4a|wav|ogg|flac|aac|opus|weba)$/i.test(f.name)) continue;
+    var url;
+    try { url = URL.createObjectURL(f); } catch (e) { continue; }
+    MUSIC.playlist.push({ id: uid(), name: f.name.replace(/\.[^.]+$/, ''), src: url, isLocal: true });
+    added++;
+  }
+  renderMusicList();
+  if (added) showToast('已添加 ' + added + ' 首歌曲');
+  if (MUSIC.currentIndex < 0 && MUSIC.playlist.length) musicPlayAt(0);
+}
+function musicAddUrl(url) {
+  if (!url) return;
+  var name = decodeURIComponent(url.split('/').pop().split('?')[0] || '网络音乐');
+  MUSIC.playlist.push({ id: uid(), name: name, src: url, isLocal: false });
+  renderMusicList();
+  showToast('已添加：' + name);
+  if (MUSIC.currentIndex < 0) musicPlayAt(MUSIC.playlist.length - 1);
+}
+function renderMusicList() {
+  var list = document.getElementById('musicList');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!MUSIC.playlist.length) {
+    list.innerHTML = '<div class="music-empty">播放列表为空 · 点击上方添加本地音乐</div>';
+    return;
+  }
+  MUSIC.playlist.forEach(function (item, i) {
+    var el = document.createElement('div');
+    el.className = 'music-item' + (i === MUSIC.currentIndex ? ' active' : '');
+    el.innerHTML =
+      '<span class="mi-name">' + (i === MUSIC.currentIndex && MUSIC.isPlaying ? '♪ ' : (i + 1) + '. ') + esc(item.name) + '</span>' +
+      '<span class="mi-del" data-idx="' + i + '">✕</span>';
+    el.onclick = function (e) {
+      if (e.target.classList.contains('mi-del')) musicRemove(parseInt(e.target.dataset.idx, 10));
+      else musicPlayAt(i);
+    };
+    list.appendChild(el);
+  });
+}
+function musicRemove(idx) {
+  var item = MUSIC.playlist[idx];
+  if (!item) return;
+  if (idx === MUSIC.currentIndex) {
+    if (MUSIC.audio) { MUSIC.audio.pause(); MUSIC.audio = null; }
+    MUSIC.isPlaying = false; MUSIC.currentIndex = -1;
+    updateMusicUI();
+  } else if (idx < MUSIC.currentIndex) MUSIC.currentIndex--;
+  if (item.isLocal) { try { URL.revokeObjectURL(item.src); } catch (e) {} }
+  MUSIC.playlist.splice(idx, 1);
+  renderMusicList();
+}
+function musicPlayAt(index) {
+  if (index < 0 || index >= MUSIC.playlist.length) {
+    if (MUSIC.playlist.length && MUSIC.loop) index = 0;
+    else return;
+  }
+  var item = MUSIC.playlist[index];
+  if (MUSIC.audio) { try { MUSIC.audio.pause(); } catch (e) {} }
+  var audio = new Audio();
+  var vol = document.getElementById('musicVolume');
+  audio.volume = (vol ? vol.value : 70) / 100;
+  audio.src = item.src;
+  audio.onloadedmetadata = updateMusicUI;
+  audio.ontimeupdate = updateMusicUI;
+  audio.onended = function () {
+    if (MUSIC.loop) {
+      if (MUSIC.currentIndex + 1 < MUSIC.playlist.length) musicPlayAt(MUSIC.currentIndex + 1);
+      else { MUSIC.audio.currentTime = 0; MUSIC.audio.play().catch(function () {}); }
+    } else if (MUSIC.currentIndex + 1 < MUSIC.playlist.length) {
+      musicPlayAt(MUSIC.currentIndex + 1);
+    } else {
+      MUSIC.isPlaying = false; updateMusicUI(); renderMusicList();
+    }
+  };
+  audio.onerror = function () { showToast('播放失败：' + item.name); };
+  MUSIC.audio = audio;
+  MUSIC.currentIndex = index;
+  audio.play().then(function () {
+    MUSIC.isPlaying = true; updateMusicUI(); renderMusicList();
+  }).catch(function () {
+    MUSIC.isPlaying = false; updateMusicUI();
+    showToast('无法自动播放，请点击播放按钮');
+  });
+}
+function musicTogglePlay() {
+  if (!MUSIC.audio) {
+    if (MUSIC.playlist.length) musicPlayAt(MUSIC.currentIndex >= 0 ? MUSIC.currentIndex : 0);
+    else showToast('播放列表为空');
+    return;
+  }
+  if (MUSIC.isPlaying) { MUSIC.audio.pause(); MUSIC.isPlaying = false; }
+  else {
+    MUSIC.audio.play().then(function () { MUSIC.isPlaying = true; updateMusicUI(); renderMusicList(); })
+      .catch(function () { showToast('播放失败'); });
+  }
+  updateMusicUI(); renderMusicList();
+}
+function updateMusicUI() {
+  var name = document.getElementById('musicName');
+  var prog = document.getElementById('musicProgress');
+  var cur = document.getElementById('musicCur');
+  var dur = document.getElementById('musicDur');
+  var playBtn = document.getElementById('musicPlayPause');
+  var disc = document.getElementById('musicDisc');
+
+  var curName = MUSIC.currentIndex >= 0 ? MUSIC.playlist[MUSIC.currentIndex].name : '未选择歌曲';
+  if (name) name.textContent = curName;
+
+  if (MUSIC.audio) {
+    var a = MUSIC.audio, d = a.duration || 0, c = a.currentTime || 0;
+    if (prog) prog.style.width = d ? ((c / d) * 100) + '%' : '0%';
+    if (cur) cur.textContent = musicFmt(c);
+    if (dur) dur.textContent = musicFmt(d);
+  } else {
+    if (prog) prog.style.width = '0%';
+    if (cur) cur.textContent = '0:00';
+    if (dur) dur.textContent = '0:00';
+  }
+  if (playBtn) playBtn.textContent = MUSIC.isPlaying ? '⏸' : '▶';
+  if (disc) disc.classList.toggle('playing', MUSIC.isPlaying);
+}
+
+document.getElementById('musicPlayPause').addEventListener('click', musicTogglePlay);
+document.getElementById('musicPrev').addEventListener('click', function () {
+  if (MUSIC.currentIndex > 0) musicPlayAt(MUSIC.currentIndex - 1);
+  else if (MUSIC.audio) MUSIC.audio.currentTime = 0;
+});
+document.getElementById('musicNext').addEventListener('click', function () { musicPlayAt(MUSIC.currentIndex + 1); });
+document.getElementById('musicLoop').addEventListener('click', function () {
+  MUSIC.loop = !MUSIC.loop;
+  this.classList.toggle('on', MUSIC.loop);
+  showToast(MUSIC.loop ? '循环播放已开启' : '循环播放已关闭');
+  sfx('click');
+});
+document.getElementById('musicVolume').addEventListener('input', function (e) {
+  if (MUSIC.audio) MUSIC.audio.volume = e.target.value / 100;
+});
+document.getElementById('musicAddFile').addEventListener('click', function () {
+  document.getElementById('musicFileInput').click();
+});
+document.getElementById('musicFileInput').addEventListener('change', function (e) {
+  musicAddFiles(e.target.files);
+  e.target.value = '';
+});
+document.getElementById('musicAddUrlBtn').addEventListener('click', function () {
+  var row = document.getElementById('musicUrlRow');
+  var show = row.style.display === 'none';
+  row.style.display = show ? 'flex' : 'none';
+  if (show) document.getElementById('musicUrlInput').focus();
+});
+document.getElementById('musicUrlOk').addEventListener('click', function () {
+  var input = document.getElementById('musicUrlInput');
+  var url = input.value.trim();
+  if (!url) return;
+  musicAddUrl(url);
+  input.value = '';
+  document.getElementById('musicUrlRow').style.display = 'none';
+});
+document.getElementById('musicUrlInput').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') document.getElementById('musicUrlOk').click();
+});
+
+(function bindSeek() {
+  var wrap = document.getElementById('musicProgressWrap');
+  if (!wrap) return;
+  var seeking = false;
+  var seek = function (e) {
+    if (!MUSIC.audio || !MUSIC.audio.duration) return;
+    var rect = wrap.getBoundingClientRect();
+    var x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    MUSIC.audio.currentTime = (x / rect.width) * MUSIC.audio.duration;
+  };
+  wrap.addEventListener('pointerdown', function (e) {
+    seeking = true; seek(e);
+    try { wrap.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  wrap.addEventListener('pointermove', function (e) { if (seeking) seek(e); });
+  wrap.addEventListener('pointerup', function () { seeking = false; });
+  wrap.addEventListener('pointercancel', function () { seeking = false; });
+})();
+
+renderMusicList();
+updateMusicUI();
+
+/* ============================================================
+   23. 游戏中枢
+   ============================================================ */
+var GameHub = (function () {
+  var active = null;
+
+  function netBroadcast(msg) {
+    msg.type = 'game';
+    msg.senderId = myPeerId;
+    msg.name = myName;
+    if (isHost) {
+      Object.keys(connections).forEach(function (pid) {
+        var c = connections[pid];
+        if (c && c.open) { try { c.send(msg); } catch (e) {} }
+      });
+    } else {
+      if (hostConnection && hostConnection.open) { try { hostConnection.send(msg); } catch (e) {} }
+    }
+  }
+  function netSendTo(pid, msg) {
+    msg.type = 'game';
+    msg.senderId = myPeerId;
+    msg.name = myName;
+    msg.scope = 'private';
+    msg.targetId = pid;
+    if (isHost) {
+      var c = connections[pid];
+      if (c && c.open) { try { c.send(msg); } catch (e) {} }
+    } else {
+      if (hostConnection && hostConnection.open) { try { hostConnection.send(msg); } catch (e) {} }
+    }
+  }
+
+  var GAME_NAMES = { gomoku: '五子棋', doudizhu: '斗地主', mahjong: '麻将' };
+
+  function showPicker(show) {
+    document.getElementById('gamePicker').style.display = show ? 'flex' : 'none';
+    document.getElementById('gameHomeBtn').style.display = show ? 'none' : 'flex';
+    document.getElementById('gameTitle').textContent = show ? '游戏' : (GAME_NAMES[active] || '游戏');
+  }
+  function showPane(name) {
+    document.querySelectorAll('.gp-pane').forEach(function (p) {
+      p.classList.toggle('active', p.id === 'pane' + name);
+    });
+  }
+
+  document.querySelectorAll('.game-pick').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      active = btn.dataset.game;
+      showPane(active === 'gomoku' ? 'Gomoku' : (active === 'doudizhu' ? 'Ddz' : 'Mj'));
+      showPicker(false);
+      openPanel('game');
+      sfx('click');
+    });
+  });
+  document.getElementById('gameHomeBtn').addEventListener('click', function () {
+    Gomoku.abort(); Ddz.abort(); Mj.abort();
+    active = null;
+    showPicker(true);
+    sfx('click');
+  });
+
+  function handleMessage(msg) {
+    if (!msg || msg.type !== 'game') return;
+    if (msg.game === 'gomoku') Gomoku.handle(msg);
+    else if (msg.game === 'doudizhu') Ddz.handle(msg);
+    else if (msg.game === 'mahjong') Mj.handle(msg);
+  }
+
+  function onPeerLeave(pid) {
+    Gomoku.onPeerLeave(pid);
+    Ddz.onPeerLeave(pid);
+    Mj.onPeerLeave(pid);
+  }
+
+  return {
+    handleMessage: handleMessage,
+    onPeerLeave: onPeerLeave,
+    netBroadcast: netBroadcast,
+    netSendTo: netSendTo,
+    getActive: function () { return active; },
+    newSession: function () { return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  };
+})();
+
+/* ============================================================
+   24. 邀请选择器（通用）
+   ============================================================ */
+function showInvitePicker(containerId, need, onConfirm) {
+  var box = document.getElementById(containerId);
+  if (!box) return;
+  var ids = Object.keys(members);
+  var selected = {};
+
+  var html = '<div class="inv-select"><div class="inv-title">选择 ' + need + ' 位好友</div>';
+  if (!ids.length) {
+    html += '<div class="inv-empty">房间里还没有其他玩家<br><span style="font-size:11px;">先邀请好友加入房间吧</span></div>';
+  } else {
+    html += '<div class="inv-list">';
+    ids.forEach(function (pid) {
+      var m = members[pid];
+      html += '<div class="inv-item" data-pid="' + esc(pid) + '">' +
+        '<img src="' + esc(m.avatar || '') + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+        '<span>' + esc(m.name) + '</span><span class="inv-tick"></span></div>';
+    });
+    html += '</div>';
+  }
+  html += '<div style="display:flex;gap:8px;justify-content:center;padding-top:8px;">' +
+    '<button class="neo-btn small" data-inv-cancel>取消</button>' +
+    '<button class="neo-btn small accent" data-inv-ok>开始</button></div></div>';
+  box.innerHTML = html;
+  box.style.display = 'block';
+
+  box.querySelectorAll('.inv-item').forEach(function (el) {
+    el.onclick = function () {
+      var pid = el.dataset.pid;
+      if (selected[pid]) { delete selected[pid]; el.classList.remove('sel'); el.querySelector('.inv-tick').textContent = ''; }
+      else {
+        if (Object.keys(selected).length >= need) { showToast('最多选 ' + need + ' 位'); return; }
+        selected[pid] = true; el.classList.add('sel'); el.querySelector('.inv-tick').textContent = '✓';
+      }
+      sfx('click');
+    };
+  });
+  var cancelBtn = box.querySelector('[data-inv-cancel]');
+  if (cancelBtn) cancelBtn.onclick = function () { box.style.display = 'none'; box.innerHTML = ''; };
+  var okBtn = box.querySelector('[data-inv-ok]');
+  if (okBtn) okBtn.onclick = function () {
+    var list = Object.keys(selected);
+    if (list.length < need) { showToast('请选择 ' + need + ' 位好友'); return; }
+    box.style.display = 'none'; box.innerHTML = '';
+    onConfirm(list);
+  };
+}
+
+/* ============================================================
+   25. 五子棋
+   ============================================================ */
+var Gomoku = (function () {
+  var SIZE = 15;
+  var st = {
+    active: false,
+    session: null,
+    vsAI: false,
+    online: false,
+    opponentId: null,
+    opponentName: '',
+    myColor: 'black',
+    isMyTurn: false,
+    board: [],
+    lastMove: null,
+    moves: 0,
+    aiThinking: false,
+    ended: false
+  };
+
+  function initBoard() {
+    var b = [];
+    for (var i = 0; i < SIZE; i++) {
+      var row = [];
+      for (var j = 0; j < SIZE; j++) row.push(0);
+      b.push(row);
+    }
+    return b;
+  }
+  function resetState() {
+    st.board = initBoard();
+    st.lastMove = null; st.moves = 0; st.aiThinking = false; st.ended = false;
+  }
+  function renderMenu() {
+    document.getElementById('gomokuMenu').style.display = 'flex';
+    document.getElementById('gomokuPlay').style.display = 'none';
+    document.getElementById('gomokuPick').style.display = 'none';
+  }
+  function showPlay() {
+    document.getElementById('gomokuMenu').style.display = 'none';
+    document.getElementById('gomokuPlay').style.display = 'flex';
+  }
+  function startAI() {
+    st.active = true; st.vsAI = true; st.online = false;
+    st.opponentId = null; st.opponentName = 'AI';
+    st.session = GameHub.newSession();
+    st.myColor = 'black';
+    st.isMyTurn = true;
+    resetState();
+    showPlay(); renderBoard(); updateStatus(); renderActions();
+    sfx('click');
+  }
+  function startOnline(opponentId, opponentName, myColor) {
+    st.active = true; st.vsAI = false; st.online = true;
+    st.opponentId = opponentId; st.opponentName = opponentName;
+    st.session = GameHub.newSession();
+    st.myColor = myColor;
+    st.isMyTurn = (myColor === 'black');
+    resetState();
+    showPlay(); renderBoard(); updateStatus(); renderActions();
+  }
+  function inviteOnline() {
+    showInvitePicker('gomokuPick', 1, function (ids) {
+      var pid = ids[0];
+      st.session = GameHub.newSession();
+      st.opponentId = pid;
+      st.opponentName = members[pid] ? members[pid].name : '对手';
+      st.active = false;
+      GameHub.netBroadcast({ game: 'gomoku', action: 'invite', session: st.session, target: pid });
+      showToast('已邀请 ' + st.opponentName);
+    });
+  }
+  function renderBoard() {
+    var board = document.getElementById('gomokuBoard');
+    if (!board) return;
+    board.innerHTML = '';
+    for (var y = 0; y < SIZE; y++) {
+      for (var x = 0; x < SIZE; x++) {
+        var cell = document.createElement('div');
+        cell.className = 'gomoku-cell';
+        if (y === 0) cell.classList.add('edge-top');
+        if (y === SIZE - 1) cell.classList.add('edge-bottom');
+        if (x === 0) cell.classList.add('edge-left');
+        if (x === SIZE - 1) cell.classList.add('edge-right');
+        var v = st.board[y] ? st.board[y][x] : 0;
+        if (v === 1 || v === 2) {
+          var stone = document.createElement('div');
+          stone.className = 'gomoku-stone ' + (v === 1 ? 'black' : 'white');
+          if (st.lastMove && st.lastMove.x === x && st.lastMove.y === y) stone.classList.add('last');
+          cell.appendChild(stone);
+        }
+        if (st.active && !st.ended && st.isMyTurn && !st.aiThinking && v === 0) {
+          cell.style.cursor = 'pointer';
+          (function (cx, cy) { cell.onclick = function () { place(cx, cy); }; })(x, y);
+        }
+        board.appendChild(cell);
+      }
+    }
+  }
+  function updateStatus() {
+    var s = document.getElementById('gomokuStatus');
+    if (!s || !st.active) return;
+    if (st.ended) return;
+    var colorTxt = st.myColor === 'black' ? '⚫ 你执黑' : '⚪ 你执白';
+    var turn;
+    if (st.aiThinking) turn = '🤖 AI 思考中…';
+    else turn = st.isMyTurn ? '⚡ 你的回合' : '⏳ 等待对方';
+    var who = st.vsAI ? '人机对战' : ('对手：' + (st.opponentName || '—'));
+    s.textContent = colorTxt + ' · ' + who + ' · ' + turn;
+    s.className = 'gp-status';
+  }
+  function renderActions() {
+    var a = document.getElementById('gomokuActions');
+    if (!a) return;
+    if (st.active && !st.ended) {
+      a.innerHTML = '<button class="neo-btn small danger" id="gResign">认输</button>' +
+                    '<button class="neo-btn small" id="gQuit">退出</button>';
+      document.getElementById('gResign').onclick = function () {
+        if (st.ended) return;
+        if (st.online && st.opponentId) {
+          GameHub.netBroadcast({ game: 'gomoku', action: 'resign', session: st.session, target: st.opponentId });
+        }
+        end('lose', '认输');
+      };
+      document.getElementById('gQuit').onclick = function () { abort(); };
+    } else if (st.ended) {
+      a.innerHTML = '<button class="neo-btn small accent" id="gRestart">再来一局</button>' +
+                    '<button class="neo-btn small" id="gExit">退出</button>';
+      document.getElementById('gRestart').onclick = function () { restart(); };
+      document.getElementById('gExit').onclick = function () { abort(); };
+    }
+  }
+  function place(x, y) {
+    if (!st.active || st.ended || !st.isMyTurn || st.aiThinking) return;
+    if (!st.board[y] || st.board[y][x] !== 0) return;
+    var val = st.myColor === 'black' ? 1 : 2;
+    st.board[y][x] = val; st.lastMove = { x: x, y: y }; st.moves++; st.isMyTurn = false;
+    renderBoard(); updateStatus(); sfx('place');
+    if (checkWin(x, y, val)) {
+      end('win', '五连成功');
+      if (st.online && st.opponentId) GameHub.netBroadcast({ game: 'gomoku', action: 'over', session: st.session, target: st.opponentId, winner: 'me' });
+      return;
+    }
+    if (st.moves >= SIZE * SIZE) {
+      end('draw', '棋盘已满');
+      if (st.online && st.opponentId) GameHub.netBroadcast({ game: 'gomoku', action: 'over', session: st.session, target: st.opponentId, winner: 'draw' });
+      return;
+    }
+    if (st.vsAI) {
+      st.aiThinking = true; updateStatus(); renderBoard();
+      setTimeout(aiTurn, 360);
+    } else if (st.online && st.opponentId) {
+      GameHub.netBroadcast({ game: 'gomoku', action: 'move', session: st.session, target: st.opponentId, x: x, y: y, color: st.myColor });
+    }
+  }
+  function aiTurn() {
+    if (!st.active || !st.vsAI || st.ended) return;
+    var mv = aiChoose();
+    st.aiThinking = false;
+    if (!mv) return;
+    var aiVal = st.myColor === 'black' ? 2 : 1;
+    st.board[mv.y][mv.x] = aiVal;
+    st.lastMove = { x: mv.x, y: mv.y }; st.moves++;
+    renderBoard(); sfx('place');
+    if (checkWin(mv.x, mv.y, aiVal)) { end('lose', 'AI 五连'); return; }
+    if (st.moves >= SIZE * SIZE) { end('draw', '棋盘已满'); return; }
+    st.isMyTurn = true;
+    updateStatus(); renderBoard();
+  }
+  function applyOpponentMove(x, y, color) {
+    if (!st.active || st.ended) return;
+    var val = color === 'black' ? 1 : 2;
+    if (!st.board[y] || st.board[y][x] !== 0) return;
+    st.board[y][x] = val; st.lastMove = { x: x, y: y }; st.moves++;
+    st.isMyTurn = true;
+    renderBoard(); updateStatus(); sfx('place');
+    if (checkWin(x, y, val)) { end('lose', '对手五连'); return; }
+    if (st.moves >= SIZE * SIZE) { end('draw', '棋盘已满'); return; }
+  }
+  function checkWin(x, y, val) {
+    var dirs = [[1,0],[0,1],[1,1],[1,-1]];
+    for (var d = 0; d < dirs.length; d++) {
+      var dx = dirs[d][0], dy = dirs[d][1];
+      var count = 1;
+      for (var k = 1; k < 5; k++) {
+        var nx = x + dx * k, ny = y + dy * k;
+        if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) break;
+        if (st.board[ny][nx] !== val) break;
+        count++;
+      }
+      for (var k2 = 1; k2 < 5; k2++) {
+        var nx2 = x - dx * k2, ny2 = y - dy * k2;
+        if (nx2 < 0 || nx2 >= SIZE || ny2 < 0 || ny2 >= SIZE) break;
+        if (st.board[ny2][nx2] !== val) break;
+        count++;
+      }
+      if (count >= 5) return true;
+    }
+    return false;
+  }
+  function end(result, reason) {
+    st.ended = true; st.isMyTurn = false;
+    var s = document.getElementById('gomokuStatus');
+    if (s) {
+      if (result === 'draw') { s.textContent = '🤝 平局' + (reason ? ' · ' + reason : ''); s.className = 'gp-status'; }
+      else if (result === 'win') {
+        s.textContent = '🎉 你赢了！' + (reason ? ' · ' + reason : '');
+        s.className = 'gp-status win'; sfx('win');
+        if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 80, origin: { y: .6 } });
+      } else {
+        s.textContent = '😢 你输了' + (reason ? ' · ' + reason : '');
+        s.className = 'gp-status lose'; sfx('lose');
+      }
+    }
+    renderActions(); renderBoard();
+  }
+  function restart() {
+    if (st.online && st.opponentId) {
+      GameHub.netBroadcast({ game: 'gomoku', action: 'restart_req', session: st.session, target: st.opponentId });
+      showToast('已发送重开请求');
+      return;
+    }
+    doRestart();
+  }
+  function doRestart() {
+    resetState();
+    if (st.vsAI) {
+      st.myColor = st.myColor === 'black' ? 'white' : 'black';
+      st.isMyTurn = (st.myColor === 'black');
+      showPlay(); renderBoard(); updateStatus(); renderActions();
+      if (!st.isMyTurn) { st.aiThinking = true; updateStatus(); setTimeout(aiTurn, 420); }
+    } else {
+      st.myColor = st.myColor === 'black' ? 'white' : 'black';
+      st.isMyTurn = (st.myColor === 'black');
+      showPlay(); renderBoard(); updateStatus(); renderActions();
+    }
+  }
+  function abort() {
+    st.active = false; st.ended = false; st.vsAI = false; st.online = false; st.opponentId = null;
+    renderMenu();
+  }
+  function hasNeighbor(x, y, dist) {
+    for (var dy = -dist; dy <= dist; dy++) {
+      for (var dx = -dist; dx <= dist; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        var nx = x + dx, ny = y + dy;
+        if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) continue;
+        if (st.board[ny][nx] !== 0) return true;
+      }
+    }
+    return false;
+  }
+  function evalLine(x, y, dx, dy, val) {
+    var count = 1, blocks = 0;
+    for (var k = 1; k <= 4; k++) {
+      var nx = x + dx * k, ny = y + dy * k;
+      if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) { blocks++; break; }
+      var v = st.board[ny][nx];
+      if (v === val) count++;
+      else { if (v !== 0) blocks++; break; }
+    }
+    for (var k2 = 1; k2 <= 4; k2++) {
+      var nx2 = x - dx * k2, ny2 = y - dy * k2;
+      if (nx2 < 0 || nx2 >= SIZE || ny2 < 0 || ny2 >= SIZE) { blocks++; break; }
+      var v2 = st.board[ny2][nx2];
+      if (v2 === val) count++;
+      else { if (v2 !== 0) blocks++; break; }
+    }
+    if (count >= 5) return 1000000;
+    if (count === 4) return blocks === 0 ? 80000 : (blocks === 1 ? 10000 : 0);
+    if (count === 3) return blocks === 0 ? 9000 : (blocks === 1 ? 900 : 0);
+    if (count === 2) return blocks === 0 ? 400 : (blocks === 1 ? 70 : 0);
+    return blocks === 0 ? 18 : (blocks === 1 ? 5 : 0);
+  }
+  function aiChoose() {
+    var aiVal = st.myColor === 'black' ? 2 : 1;
+    var humanVal = st.myColor === 'black' ? 1 : 2;
+    var dirs = [[1,0],[0,1],[1,1],[1,-1]];
+    if (st.moves === 0) return { x: 7, y: 7 };
+    var best = null, bestScore = -1;
+    for (var y = 0; y < SIZE; y++) {
+      for (var x = 0; x < SIZE; x++) {
+        if (st.board[y][x] !== 0) continue;
+        if (!hasNeighbor(x, y, 2)) continue;
+        var atk = 0, def = 0;
+        for (var d = 0; d < 4; d++) {
+          atk += evalLine(x, y, dirs[d][0], dirs[d][1], aiVal);
+          def += evalLine(x, y, dirs[d][0], dirs[d][1], humanVal);
+        }
+        var score = atk * 1.18 + def * 1.0 + (7 - Math.abs(x - 7)) * 2 + (7 - Math.abs(y - 7)) * 2;
+        if (score > bestScore) { bestScore = score; best = { x: x, y: y }; }
+      }
+    }
+    if (best) return best;
+    for (var yy = 0; yy < SIZE; yy++)
+      for (var xx = 0; xx < SIZE; xx++)
+        if (st.board[yy][xx] === 0) return { x: xx, y: yy };
+    return null;
+  }
+
+  function handle(msg) {
+    if (msg.game !== 'gomoku') return;
+    switch (msg.action) {
+      case 'invite':
+        if (msg.target !== myPeerId) return;
+        showInviteDialog('五子棋', msg.name, function () {
+          GameHub.netBroadcast({ game: 'gomoku', action: 'accept', session: msg.session, target: msg.senderId });
+          openPanel('game');
+          document.querySelector('.game-pick[data-game="gomoku"]').click();
+          startOnline(msg.senderId, msg.name, 'white');
+        }, function () {
+          GameHub.netBroadcast({ game: 'gomoku', action: 'decline', session: msg.session, target: msg.senderId });
+        });
+        break;
+      case 'accept':
+        if (msg.target !== myPeerId) return;
+        if (st.session && st.session === msg.session && !st.active) {
+          startOnline(msg.senderId, msg.name, 'black');
+          openPanel('game');
+        }
+        break;
+      case 'decline':
+        if (msg.target !== myPeerId) return;
+        showToast('对方拒绝了邀请');
+        break;
+      case 'move':
+        if (msg.target !== myPeerId) return;
+        if (st.active && !st.vsAI && msg.senderId === st.opponentId) {
+          applyOpponentMove(msg.x, msg.y, msg.color);
+        }
+        break;
+      case 'resign':
+        if (msg.target !== myPeerId) return;
+        if (st.active && msg.senderId === st.opponentId) end('win', '对手认输');
+        break;
+      case 'over':
+        if (msg.target !== myPeerId) return;
+        if (st.active && msg.senderId === st.opponentId && !st.ended) {
+          if (msg.winner === 'me') end('lose', '对手五连');
+          else if (msg.winner === 'draw') end('draw', '棋盘已满');
+        }
+        break;
+      case 'restart_req':
+        if (msg.target !== myPeerId) return;
+        if (window.confirm('对方请求再来一局，是否同意？')) {
+          GameHub.netBroadcast({ game: 'gomoku', action: 'restart_ok', session: st.session, target: msg.senderId });
+          doRestart();
+        } else {
+          GameHub.netBroadcast({ game: 'gomoku', action: 'restart_no', session: st.session, target: msg.senderId });
+        }
+        break;
+      case 'restart_ok':
+        if (msg.target !== myPeerId) return;
+        showToast('对方同意重开');
+        doRestart();
+        break;
+      case 'restart_no':
+        if (msg.target !== myPeerId) return;
+        showToast('对方拒绝了重开请求');
+        break;
+    }
+  }
+  function onPeerLeave(pid) {
+    if (st.active && st.opponentId === pid && !st.ended) end('win', '对手已离线');
+  }
+
+  document.getElementById('gomokuMenu').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-gomoku]');
+    if (!btn) return;
+    if (btn.dataset.gomoku === 'ai') startAI();
+    else inviteOnline();
+  });
+
+  return { handle: handle, onPeerLeave: onPeerLeave, abort: abort };
+})();
+
+/* ============================================================
+   26. 斗地主
+   ============================================================ */
+var Ddz = (function () {
+  var RANKS = ['3','4','5','6','7','8','9','10','J','Q','K','A','2','小王','大王'];
+  var st = {
+    active: false, online: false, session: null,
+    players: [],
+    myIndex: 0,
+    hands: [[], [], []],
+    counts: [0,0,0],
+    bottom: [],
+    landlord: -1,
+    turn: 0,
+    lastPlay: null,
+    passCount: 0,
+    phase: 'idle',
+    bidIndex: 0,
+    bidCount: 0,
+    selected: {}
+  };
+
+  var pendingSession = null, pendingAccepts = [], pendingNeed = 0, pendingIds = [];
+
+  function makeDeck() {
+    var deck = [];
+    for (var r = 3; r <= 15; r++)
+      for (var s = 0; s < 4; s++) deck.push(r);
+    deck.push(16); deck.push(17);
+    return deck;
+  }
+  function cardLabel(v) {
+    if (v === 16) return '小王';
+    if (v === 17) return '大王';
+    return RANKS[v - 3];
+  }
+  function isRed(v) { return v === 17; }
+  function cardEl(v, sel) {
+    var d = document.createElement('div');
+    d.className = 'ddz-card' + (isRed(v) ? ' red' : '') + (v >= 16 ? ' joker' : '') + (sel ? ' sel' : '');
+    d.textContent = cardLabel(v);
+    d.dataset.v = v;
+    return d;
+  }
+  function parseType(cards) {
+    var n = cards.length;
+    if (!n) return null;
+    var c = cards.slice().sort(function (a, b) { return a - b; });
+    var cnt = {};
+    c.forEach(function (v) { cnt[v] = (cnt[v] || 0) + 1; });
+    var vals = Object.keys(cnt).map(Number).sort(function (a, b) { return a - b; });
+    var counts = vals.map(function (v) { return cnt[v]; });
+
+    if (n === 2 && c[0] === 16 && c[1] === 17) return { t: 'rocket', v: 100, len: 2 };
+    if (n === 4 && vals.length === 1) return { t: 'bomb', v: vals[0], len: 4 };
+    if (n === 1) return { t: 'single', v: vals[0], len: 1 };
+    if (n === 2 && vals.length === 1) return { t: 'pair', v: vals[0], len: 2 };
+    if (n === 3 && vals.length === 1) return { t: 'triple', v: vals[0], len: 3 };
+    if (n === 4 && vals.length === 2 && counts.indexOf(3) >= 0) return { t: 'triple1', v: vals[counts.indexOf(3)], len: 4 };
+    if (n === 5 && vals.length === 2 && counts.indexOf(3) >= 0 && counts.indexOf(2) >= 0) return { t: 'triple2', v: vals[counts.indexOf(3)], len: 5 };
+    if (n >= 5 && vals.length === n && vals[n - 1] <= 14 && vals[n - 1] - vals[0] === n - 1) return { t: 'straight', v: vals[0], len: n };
+    if (n >= 6 && n % 2 === 0 && vals.length === n / 2 && counts.every(function (x) { return x === 2; })
+        && vals[vals.length - 1] <= 14 && vals[vals.length - 1] - vals[0] === vals.length - 1)
+      return { t: 'pairs', v: vals[0], len: n };
+    return null;
+  }
+  function beats(a, b) {
+    if (!b) return true;
+    if (a.t === 'rocket') return true;
+    if (b.t === 'rocket') return false;
+    if (a.t === 'bomb' && b.t !== 'bomb') return true;
+    if (b.t === 'bomb' && a.t !== 'bomb') return false;
+    if (a.t !== b.t) return false;
+    if (a.len !== b.len) return false;
+    return a.v > b.v;
+  }
+  function dealLocal(seats) {
+    st.players = seats;
+    var deck = shuffle(makeDeck());
+    st.hands = [[], [], []];
+    for (var i = 0; i < 51; i++) st.hands[i % 3].push(deck[i]);
+    st.hands.forEach(function (h) { h.sort(function (a, b) { return a - b; }); });
+    st.bottom = deck.slice(51, 54);
+    st.counts = [17, 17, 17];
+    st.myIndex = 0;
+    st.landlord = -1; st.turn = 0; st.lastPlay = null; st.passCount = 0;
+    st.phase = 'bidding'; st.bidIndex = 0; st.bidCount = 0;
+    st.selected = {};
+    st.active = true;
+  }
+  function render() {
+    if (!st.active) return;
+    document.getElementById('ddzMenu').style.display = 'none';
+    document.getElementById('ddzPlay').style.display = 'flex';
+    document.getElementById('ddzPick').style.display = 'none';
+
+    for (var i = 0; i < 2; i++) {
+      var seat = (st.myIndex + 1 + i) % 3;
+      var el = document.getElementById('ddzOpp' + i);
+      var p = st.players[seat];
+      el.className = 'ddz-opp' + (st.turn === seat && st.phase === 'playing' ? ' turn' : '');
+      el.innerHTML = '';
+      el.appendChild(makeAvatarCanvas(p ? p.avatar : '', 48));
+      var nm = document.createElement('span'); nm.className = 'o-name';
+      nm.textContent = (p ? p.name : '?') + (seat === st.landlord ? ' 👑' : '');
+      el.appendChild(nm);
+      var ct = document.createElement('span'); ct.className = 'o-cnt';
+      ct.textContent = st.counts[seat] + '张';
+      el.appendChild(ct);
+    }
+
+    var center = document.getElementById('ddzCenter');
+    center.innerHTML = '';
+    if (st.phase === 'bidding') {
+      center.innerHTML = '<span style="font-size:12px;color:var(--muted);">叫地主阶段 · ' +
+        (st.players[st.bidIndex] ? esc(st.players[st.bidIndex].name) : '') + ' 选择中…</span>';
+    } else if (st.lastPlay) {
+      st.lastPlay.cards.forEach(function (v) { center.appendChild(cardEl(v, false)); });
+    } else if (st.phase === 'playing') {
+      center.innerHTML = '<span style="font-size:12px;color:var(--muted);">等待出牌…</span>';
+    }
+
+    var hand = document.getElementById('ddzHand');
+    hand.innerHTML = '';
+    var myHand = st.hands[st.myIndex] || [];
+    myHand.forEach(function (v, i) {
+      var el = cardEl(v, st.selected[i]);
+      el.onclick = function () {
+        if (st.phase !== 'playing' || st.turn !== st.myIndex) return;
+        st.selected[i] = !st.selected[i];
+        el.classList.toggle('sel', st.selected[i]);
+        sfx('click');
+      };
+      hand.appendChild(el);
+    });
+
+    renderActions();
+  }
+  function renderActions() {
+    var a = document.getElementById('ddzActions');
+    if (!a) return;
+    a.innerHTML = '';
+    if (st.phase === 'bidding') {
+      if (st.bidIndex === st.myIndex) {
+        var b1 = document.createElement('button');
+        b1.className = 'neo-btn small accent'; b1.textContent = '叫地主';
+        b1.onclick = function () { bid(true); };
+        var b2 = document.createElement('button');
+        b2.className = 'neo-btn small'; b2.textContent = '不叫';
+        b2.onclick = function () { bid(false); };
+        a.appendChild(b1); a.appendChild(b2);
+      } else {
+        a.innerHTML = '<span style="font-size:12px;color:var(--muted);">等待其他玩家叫地主…</span>';
+      }
+      return;
+    }
+    if (st.phase === 'ended') {
+      var r = document.createElement('button');
+      r.className = 'neo-btn small accent'; r.textContent = '再来一局';
+      r.onclick = function () { startNew(); };
+      var q = document.createElement('button');
+      q.className = 'neo-btn small'; q.textContent = '退出';
+      q.onclick = function () { abort(); };
+      a.appendChild(r); a.appendChild(q);
+      return;
+    }
+    if (st.phase === 'playing' && st.turn === st.myIndex) {
+      var sel = Object.keys(st.selected).filter(function (k) { return st.selected[k]; }).map(Number);
+      var cards = sel.map(function (i) { return st.hands[st.myIndex][i]; });
+      var pt = parseType(cards);
+
+      var pb = document.createElement('button');
+      pb.className = 'neo-btn small accent'; pb.textContent = '出牌';
+      pb.disabled = !pt || (st.lastPlay && !beats(pt, st.lastPlay.type));
+      pb.onclick = function () { playSelected(); };
+      a.appendChild(pb);
+
+      if (st.lastPlay) {
+        var pz = document.createElement('button');
+        pz.className = 'neo-btn small'; pz.textContent = '不出';
+        pz.onclick = function () { passTurn(); };
+        a.appendChild(pz);
+      }
+
+      var pg = document.createElement('button');
+      pg.className = 'neo-btn small'; pg.textContent = '提示';
+      pg.onclick = function () {
+        var hint = aiFindBeat(st.hands[st.myIndex], st.lastPlay ? st.lastPlay.type : null);
+        if (!hint) { showToast('没有可出的牌'); return; }
+        st.selected = {};
+        var used = {};
+        hint.forEach(function (v) {
+          for (var i = 0; i < st.hands[st.myIndex].length; i++) {
+            if (st.hands[st.myIndex][i] === v && !used[i]) { st.selected[i] = true; used[i] = 1; break; }
+          }
+        });
+        render();
+      };
+      a.appendChild(pg);
+    } else if (st.phase === 'playing') {
+      a.innerHTML = '<span style="font-size:12px;color:var(--muted);">等待 ' +
+        esc(st.players[st.turn] ? st.players[st.turn].name : '对手') + ' 出牌…</span>';
+    }
+  }
+  function bid(yes) {
+    if (st.phase !== 'bidding') return;
+    if (yes) {
+      st.landlord = st.myIndex;
+      st.hands[st.myIndex] = st.hands[st.myIndex].concat(st.bottom);
+      st.hands[st.myIndex].sort(function (a, b) { return a - b; });
+      st.counts[st.myIndex] = 20;
+      st.phase = 'playing';
+      st.turn = st.landlord;
+      st.lastPlay = null;
+      if (st.online) {
+        GameHub.netBroadcast({ game: 'doudizhu', action: 'landlord', session: st.session, idx: st.myIndex, bottom: st.bottom });
+      }
+      render(); sfx('card');
+    } else {
+      st.bidIndex = (st.bidIndex + 1) % 3;
+      st.bidCount++;
+      if (st.bidCount >= 3) {
+        showToast('无人叫地主，重新发牌');
+        var seats = st.players;
+        var onlineFlag = st.online, sess = st.session;
+        dealLocal(seats);
+        st.online = onlineFlag; st.session = sess;
+        if (st.online) GameHub.netBroadcast({ game: 'doudizhu', action: 'redeal', session: st.session });
+        render();
+      } else {
+        render();
+        if (st.online) GameHub.netBroadcast({ game: 'doudizhu', action: 'bid_pass', session: st.session, idx: st.myIndex });
+        scheduleAI();
+      }
+    }
+  }
+  function scheduleAI() {
+    if (st.online) return;
+    if (st.phase === 'bidding' && st.players[st.bidIndex] && st.players[st.bidIndex].isAI) {
+      setTimeout(function () {
+        if (st.phase !== 'bidding') return;
+        var hand = (st.hands[st.bidIndex] || []);
+        var score = 0;
+        hand.forEach(function (v) { if (v >= 15) score += 2; else if (v >= 13) score += 1; });
+        bid(score >= 3);
+      }, 600);
+    } else if (st.phase === 'playing' && st.players[st.turn] && st.players[st.turn].isAI) {
+      setTimeout(aiPlay, 700);
+    }
+  }
+  function playSelected() {
+    if (st.phase !== 'playing' || st.turn !== st.myIndex) return;
+    var idxs = Object.keys(st.selected).filter(function (k) { return st.selected[k]; }).map(Number);
+    if (!idxs.length) return;
+    var cards = idxs.map(function (i) { return st.hands[st.myIndex][i]; });
+    var pt = parseType(cards);
+    if (!pt) { showToast('牌型不合法'); return; }
+    if (st.lastPlay && !beats(pt, st.lastPlay.type)) { showToast('管不上'); return; }
+    doPlay(st.myIndex, cards, pt, true);
+  }
+  function doPlay(idx, cards, pt, isLocal) {
+    var rest = st.hands[idx].slice();
+    cards.forEach(function (v) {
+      var i = rest.indexOf(v);
+      if (i >= 0) rest.splice(i, 1);
+    });
+    st.hands[idx] = rest;
+    st.counts[idx] = rest.length;
+    st.lastPlay = { pid: st.players[idx].id, cards: cards, type: pt };
+    st.passCount = 0;
+    st.selected = {};
+    sfx('card');
+
+    if (isLocal && st.online) {
+      GameHub.netBroadcast({ game: 'doudizhu', action: 'play', session: st.session, idx: idx, cards: cards });
+    }
+
+    if (rest.length === 0) {
+      var iAmLandlord = (idx === st.landlord);
+      var iWon = (idx === st.myIndex) ? iAmLandlord : !iAmLandlord;
+      st.phase = 'ended';
+      render();
+      var s = document.getElementById('ddzCenter');
+      if (s) s.innerHTML = '<span style="font-size:14px;font-weight:700;color:' + (iWon ? 'var(--green)' : 'var(--danger)') + ';">' +
+        (iWon ? '🎉 你赢了！' : '😢 你输了') + '</span>';
+      if (iWon) { sfx('win'); if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 80, origin: { y: .6 } }); }
+      else sfx('lose');
+      if (st.online) GameHub.netBroadcast({ game: 'doudizhu', action: 'over', session: st.session, winnerIdx: idx });
+      return;
+    }
+
+    st.turn = (idx + 1) % 3;
+    if (st.lastPlay && st.passCount >= 2) {
+      st.lastPlay = null; st.passCount = 0;
+    }
+    render();
+    scheduleAI();
+  }
+  function passTurn() {
+    if (st.phase !== 'playing' || st.turn !== st.myIndex) return;
+    if (!st.lastPlay) return;
+    st.passCount++;
+    st.selected = {};
+    if (st.online) GameHub.netBroadcast({ game: 'doudizhu', action: 'pass', session: st.session, idx: st.myIndex });
+    st.turn = (st.myIndex + 1) % 3;
+    if (st.passCount >= 2) { st.lastPlay = null; st.passCount = 0; }
+    render(); scheduleAI();
+  }
+  function aiFindBeat(hand, lastType) {
+    var cnt = {};
+    hand.forEach(function (v) { cnt[v] = (cnt[v] || 0) + 1; });
+    var vals = Object.keys(cnt).map(Number).sort(function (a, b) { return a - b; });
+
+    if (!lastType) return [vals[0]];
+    if (lastType.t === 'single') {
+      for (var i = 0; i < vals.length; i++) if (vals[i] > lastType.v) return [vals[i]];
+    }
+    if (lastType.t === 'pair') {
+      for (var i = 0; i < vals.length; i++) if (vals[i] > lastType.v && cnt[vals[i]] >= 2) return [vals[i], vals[i]];
+    }
+    if (lastType.t === 'triple') {
+      for (var i = 0; i < vals.length; i++) if (vals[i] > lastType.v && cnt[vals[i]] >= 3) return [vals[i], vals[i], vals[i]];
+    }
+    if (lastType.t === 'triple1') {
+      for (var i = 0; i < vals.length; i++) {
+        if (vals[i] > lastType.v && cnt[vals[i]] >= 3) {
+          var k = vals.find(function (x) { return x !== vals[i] && cnt[x] >= 1; });
+          if (k !== undefined) return [vals[i], vals[i], vals[i], k];
+        }
+      }
+    }
+    if (lastType.t === 'triple2') {
+      for (var i = 0; i < vals.length; i++) {
+        if (vals[i] > lastType.v && cnt[vals[i]] >= 3) {
+          var k2 = vals.find(function (x) { return x !== vals[i] && cnt[x] >= 2; });
+          if (k2 !== undefined) return [vals[i], vals[i], vals[i], k2, k2];
+        }
+      }
+    }
+    if (lastType.t === 'straight') {
+      for (var s = 0; s < vals.length; s++) {
+        var start = vals[s];
+        if (start <= lastType.v || start > 14) continue;
+        var seq = [start];
+        for (var k3 = 1; k3 < lastType.len; k3++) {
+          if (cnt[start + k3]) seq.push(start + k3); else break;
+        }
+        if (seq.length === lastType.len) return seq;
+      }
+    }
+    if (lastType.t === 'pairs') {
+      var need = lastType.len / 2;
+      for (var s2 = 0; s2 < vals.length; s2++) {
+        var st2 = vals[s2];
+        if (st2 <= lastType.v || st2 > 14) continue;
+        var seq2 = [];
+        for (var k4 = 0; k4 < need; k4++) {
+          if (cnt[st2 + k4] >= 2) seq2.push(st2 + k4, st2 + k4); else break;
+        }
+        if (seq2.length === lastType.len) return seq2;
+      }
+    }
+    for (var i2 = 0; i2 < vals.length; i2++) if (cnt[vals[i2]] === 4) return [vals[i2], vals[i2], vals[i2], vals[i2]];
+    if (cnt[16] && cnt[17]) return [16, 17];
+    return null;
+  }
+  function aiPlay() {
+    if (st.phase !== 'playing') return;
+    if (!st.players[st.turn] || !st.players[st.turn].isAI) return;
+    var idx = st.turn;
+    var hand = st.hands[idx] || [];
+    if (!hand.length) return;
+    var hint = aiFindBeat(hand, st.lastPlay ? st.lastPlay.type : null);
+    if (!hint) {
+      if (st.lastPlay) {
+        st.passCount++;
+        st.turn = (idx + 1) % 3;
+        if (st.passCount >= 2) { st.lastPlay = null; st.passCount = 0; }
+        render();
+        scheduleAI();
+        return;
+      }
+      hint = [hand[0]];
+    }
+    var pt = parseType(hint);
+    if (!pt) { hint = [hand[0]]; pt = parseType(hint); }
+    doPlay(idx, hint, pt, false);
+  }
+  function startAI() {
+    var seats = [
+      { id: myPeerId, name: myName, avatar: myAvatar.dataUrl, isAI: false },
+      { id: 'ai1', name: 'AI·甲', avatar: '', isAI: true },
+      { id: 'ai2', name: 'AI·乙', avatar: '', isAI: true }
+    ];
+    dealLocal(seats);
+    st.online = false; st.session = GameHub.newSession();
+    render();
+    if (st.players[st.bidIndex].isAI) scheduleAI();
+    sfx('click');
+  }
+  function startOnline(ids) {
+    var seats = [{ id: myPeerId, name: myName, avatar: myAvatar.dataUrl, isAI: false }];
+    ids.forEach(function (pid) {
+      seats.push({ id: pid, name: members[pid] ? members[pid].name : '玩家', avatar: members[pid] ? members[pid].avatar : '', isAI: false });
+    });
+    st.online = true;
+    st.session = GameHub.newSession();
+    dealLocal(seats);
+
+    for (var i = 1; i < 3; i++) {
+      GameHub.netSendTo(seats[i].id, {
+        game: 'doudizhu', action: 'deal', session: st.session, idx: i,
+        hand: st.hands[i], seats: seats.map(function (s) { return { id: s.id, name: s.name, avatar: s.avatar }; })
+      });
+    }
+    GameHub.netBroadcast({ game: 'doudizhu', action: 'start', session: st.session, seats: seats.map(function (s) { return { id: s.id, name: s.name, avatar: s.avatar }; }), counts: [17, 17, 17], bidIdx: 0 });
+    render();
+  }
+  function inviteOnline() {
+    showInvitePicker('ddzPick', 2, function (ids) {
+      st.session = GameHub.newSession();
+      pendingSession = st.session;
+      pendingNeed = ids.length;
+      pendingIds = ids.slice();
+      pendingAccepts = [];
+      ids.forEach(function (pid) {
+        GameHub.netBroadcast({ game: 'doudizhu', action: 'invite', session: st.session, target: pid });
+      });
+      showToast('已邀请 ' + ids.length + ' 位好友');
+    });
+  }
+  function startNew() {
+    if (st.online) { showToast('请重新邀请好友开始'); return; }
+    startAI();
+  }
+  function abort() {
+    st.active = false; st.phase = 'idle'; st.online = false;
+    pendingSession = null; pendingAccepts = [];
+    document.getElementById('ddzMenu').style.display = 'flex';
+    document.getElementById('ddzPlay').style.display = 'none';
+    document.getElementById('ddzPick').style.display = 'none';
+  }
+  function handle(msg) {
+    if (msg.game !== 'doudizhu') return;
+    switch (msg.action) {
+      case 'invite':
+        if (msg.target !== myPeerId) return;
+        showInviteDialog('斗地主', msg.name, function () {
+          GameHub.netBroadcast({ game: 'doudizhu', action: 'accept', session: msg.session, target: msg.senderId });
+          openPanel('game');
+          document.querySelector('.game-pick[data-game="doudizhu"]').click();
+          showToast('已接受邀请，等待开局…');
+        }, function () {
+          GameHub.netBroadcast({ game: 'doudizhu', action: 'decline', session: msg.session, target: msg.senderId });
+        });
+        break;
+      case 'accept':
+        if (msg.target !== myPeerId) return;
+        if (pendingSession && msg.session === pendingSession) {
+          pendingAccepts.push(msg.senderId);
+          if (pendingAccepts.length >= pendingNeed) {
+            startOnline(pendingIds);
+            pendingSession = null;
+            pendingAccepts = [];
+          }
+        }
+        break;
+      case 'decline':
+        if (msg.target !== myPeerId) return;
+        showToast('有玩家拒绝了邀请');
+        pendingSession = null; pendingAccepts = [];
+        break;
+      case 'deal':
+        if (msg.target && msg.target !== myPeerId) return;
+        if (!msg.seats) return;
+        st.online = true; st.session = msg.session; st.active = true;
+        st.players = msg.seats.map(function (s) { return { id: s.id, name: s.name, avatar: s.avatar, isAI: false }; });
+        st.myIndex = st.players.findIndex(function (p) { return p.id === myPeerId; });
+        if (st.myIndex < 0) st.myIndex = 0;
+        st.hands = [[], [], []];
+        st.hands[msg.idx] = (msg.hand || []).slice().sort(function (a, b) { return a - b; });
+        st.counts = [17, 17, 17];
+        st.landlord = -1; st.turn = 0; st.lastPlay = null; st.passCount = 0;
+        st.phase = 'bidding'; st.bidIndex = 0; st.bidCount = 0; st.selected = {};
+        document.getElementById('ddzMenu').style.display = 'none';
+        document.getElementById('ddzPlay').style.display = 'flex';
+        document.getElementById('ddzPick').style.display = 'none';
+        render();
+        break;
+      case 'start':
+        if (!st.active) return;
+        st.counts = msg.counts || [17,17,17];
+        st.bidIndex = msg.bidIdx || 0;
+        render();
+        break;
+      case 'bid_pass':
+        if (!st.active) return;
+        st.bidIndex = (st.bidIndex + 1) % 3;
+        st.bidCount++;
+        render();
+        break;
+      case 'landlord':
+        if (!st.active) return;
+        st.landlord = msg.idx;
+        st.bottom = msg.bottom || [];
+        st.hands[st.landlord] = (st.hands[st.landlord] || []).concat(st.bottom);
+        st.hands[st.landlord].sort(function (a, b) { return a - b; });
+        st.counts[st.landlord] = 20;
+        st.phase = 'playing'; st.turn = st.landlord; st.lastPlay = null; st.passCount = 0;
+        render();
+        break;
+      case 'redeal':
+        showToast('重新发牌');
+        break;
+      case 'play':
+        if (!st.active) return;
+        var idx = msg.idx;
+        var rest = (st.hands[idx] || []).slice();
+        if (idx !== st.myIndex) {
+          st.counts[idx] = st.counts[idx] - msg.cards.length;
+        } else {
+          msg.cards.forEach(function (v) {
+            var i = rest.indexOf(v);
+            if (i >= 0) rest.splice(i, 1);
+          });
+          st.hands[idx] = rest;
+          st.counts[idx] = rest.length;
+        }
+        st.lastPlay = { pid: st.players[idx].id, cards: msg.cards, type: parseType(msg.cards) };
+        st.passCount = 0;
+        st.turn = (idx + 1) % 3;
+        render();
+        break;
+      case 'pass':
+        if (!st.active) return;
+        st.passCount++;
+        st.turn = (msg.idx + 1) % 3;
+        if (st.passCount >= 2) { st.lastPlay = null; st.passCount = 0; }
+        render();
+        break;
+      case 'over':
+        st.phase = 'ended';
+        var iWon = (msg.winnerIdx === st.myIndex) === (st.myIndex === st.landlord);
+        var c = document.getElementById('ddzCenter');
+        if (c) c.innerHTML = '<span style="font-size:14px;font-weight:700;color:' + (iWon ? 'var(--green)' : 'var(--danger)') + ';">' +
+          (iWon ? '🎉 你赢了！' : '😢 你输了') + '</span>';
+        render();
+        break;
+    }
+  }
+  function onPeerLeave(pid) {
+    if (!st.active || !st.online) return;
+    var idx = st.players.findIndex(function (p) { return p.id === pid; });
+    if (idx >= 0) {
+      st.phase = 'ended';
+      showToast('有玩家离开，对局结束');
+      render();
+    }
+  }
+  document.getElementById('ddzMenu').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-ddz]');
+    if (!btn) return;
+    if (btn.dataset.ddz === 'ai') startAI();
+    else inviteOnline();
+  });
+  return { handle: handle, onPeerLeave: onPeerLeave, abort: abort };
+})();
+
+/* ============================================================
+   27. 麻将（简化版）
+   ============================================================ */
+var Mj = (function () {
+  var SUITS = ['万', '条', '筒'];
+  var st = {
+    active: false, online: false, session: null,
+    players: [], myIndex: 0, myHand: [],
+    counts: [13, 13, 13, 13],
+    discards: [], turn: 0, phase: 'playing', ended: false,
+    selected: -1, wall: []
+  };
+  function tileLabel(t) {
+    var s = Math.floor(t / 9), n = (t % 9) + 1;
+    return n + SUITS[s];
+  }
+  function tileEl(t, sel, small) {
+    var d = document.createElement('div');
+    d.className = 'mj-tile' + (sel ? ' sel' : '');
+    d.textContent = tileLabel(t);
+    d.dataset.t = t;
+    if (small) d.style.transform = 'scale(.85)';
+    return d;
+  }
+  function makeWall() {
+    var w = [];
+    for (var t = 0; t < 27; t++) for (var k = 0; k < 4; k++) w.push(t);
+    return shuffle(w);
+  }
+  function canHu(counts) {
+    for (var i = 0; i < 27; i++) {
+      if (counts[i] >= 2) {
+        counts[i] -= 2;
+        var ok = allSets(counts);
+        counts[i] += 2;
+        if (ok) return true;
+      }
+    }
+    return false;
+  }
+  function allSets(counts) {
+    var i = 0;
+    while (i < 27 && counts[i] === 0) i++;
+    if (i === 27) return true;
+    if (counts[i] >= 3) {
+      counts[i] -= 3;
+      var ok = allSets(counts);
+      counts[i] += 3;
+      if (ok) return true;
+    }
+    var pos = i % 9;
+    if (pos <= 6 && counts[i + 1] > 0 && counts[i + 2] > 0) {
+      counts[i]--; counts[i + 1]--; counts[i + 2]--;
+      var ok2 = allSets(counts);
+      counts[i]++; counts[i + 1]++; counts[i + 2]++;
+      if (ok2) return true;
+    }
+    return false;
+  }
+  function handCounts(hand) {
+    var c = new Array(27).fill(0);
+    hand.forEach(function (t) { c[t] = (c[t] || 0) + 1; });
+    return c;
+  }
+  function render() {
+    if (!st.active) return;
+    document.getElementById('mjMenu').style.display = 'none';
+    document.getElementById('mjPlay').style.display = 'flex';
+    document.getElementById('mjPick').style.display = 'none';
+
+    var others = document.getElementById('mjOthers');
+    others.innerHTML = '';
+    for (var i = 0; i < 3; i++) {
+      var seat = (st.myIndex + 1 + i) % 4;
+      var p = st.players[seat];
+      var el = document.createElement('div');
+      el.className = 'mj-opp' + (st.turn === seat && st.phase === 'playing' ? ' turn' : '');
+      var nm = document.createElement('span'); nm.className = 'o-name';
+      nm.textContent = p ? p.name : '?';
+      var ct = document.createElement('span'); ct.className = 'o-cnt';
+      ct.textContent = st.counts[seat] + '张';
+      el.appendChild(nm); el.appendChild(ct);
+      others.appendChild(el);
+    }
+
+    var center = document.getElementById('mjCenter');
+    center.innerHTML = '';
+    st.discards.slice(-40).forEach(function (d) {
+      center.appendChild(tileEl(d.t, false, true));
+    });
+    if (!st.discards.length) {
+      center.innerHTML = '<span style="font-size:12px;color:var(--muted);">牌局进行中…</span>';
+    }
+
+    var hand = document.getElementById('mjHand');
+    hand.innerHTML = '';
+    var sorted = st.myHand.slice().sort(function (a, b) { return a - b; });
+    sorted.forEach(function (t, i) {
+      var el = tileEl(t, st.selected === i, false);
+      el.onclick = function () {
+        if (st.phase !== 'playing' || st.turn !== st.myIndex) return;
+        st.selected = (st.selected === i) ? -1 : i;
+        render();
+        sfx('click');
+      };
+      hand.appendChild(el);
+    });
+
+    renderActions();
+  }
+  function renderActions() {
+    var a = document.getElementById('mjActions');
+    if (!a) return;
+    a.innerHTML = '';
+    if (st.phase === 'ended') {
+      var r = document.createElement('button');
+      r.className = 'neo-btn small accent'; r.textContent = '再来一局';
+      r.onclick = function () { startNew(); };
+      var q = document.createElement('button');
+      q.className = 'neo-btn small'; q.textContent = '退出';
+      q.onclick = function () { abort(); };
+      a.appendChild(r); a.appendChild(q);
+      return;
+    }
+    if (st.turn !== st.myIndex) {
+      a.innerHTML = '<span style="font-size:12px;color:var(--muted);">等待 ' +
+        esc(st.players[st.turn] ? st.players[st.turn].name : '对手') + ' 出牌…</span>';
+      return;
+    }
+    var hc = handCounts(st.myHand);
+    var hu = canHu(hc.slice());
+    if (hu) {
+      var hb = document.createElement('button');
+      hb.className = 'neo-btn small green'; hb.textContent = '🀄 胡牌';
+      hb.onclick = function () { huWin(); };
+      a.appendChild(hb);
+    }
+    var db = document.createElement('button');
+    db.className = 'neo-btn small accent'; db.textContent = '打出';
+    db.disabled = st.selected < 0;
+    db.onclick = function () { discard(); };
+    a.appendChild(db);
+  }
+  function discard() {
+    if (st.turn !== st.myIndex || st.selected < 0) return;
+    var sortedHand = st.myHand.slice().sort(function (a, b) { return a - b; });
+    var tile = sortedHand[st.selected];
+    var i = st.myHand.indexOf(tile);
+    if (i >= 0) st.myHand.splice(i, 1);
+    st.selected = -1;
+    st.discards.push({ pid: myPeerId, t: tile });
+    st.counts[st.myIndex] = st.myHand.length;
+    sfx('card');
+    if (st.online) {
+      GameHub.netBroadcast({ game: 'mahjong', action: 'discard', session: st.session, idx: st.myIndex, tile: tile });
+    }
+    nextTurn();
+  }
+  function nextTurn() {
+    st.turn = (st.turn + 1) % 4;
+    render();
+    if (st.online) return;
+    setTimeout(autoTurn, 600);
+  }
+  function autoTurn() {
+    if (!st.active || st.phase !== 'playing') return;
+    var idx = st.turn;
+    if (idx === st.myIndex) {
+      drawForMe();
+    } else if (st.players[idx] && st.players[idx].isAI) {
+      drawForAI(idx);
+    }
+  }
+  function drawForMe() {
+    if (!st.wall.length) { endDraw(); return; }
+    var t = st.wall.pop();
+    st.myHand.push(t);
+    st.wallLeft = st.wall.length;
+    render();
+  }
+  function drawForAI(idx) {
+    if (!st.wall.length) { endDraw(); return; }
+    var t = st.wall.pop();
+    st.counts[idx]++;
+    var tile = st.players[idx].hand[Math.floor(Math.random() * st.players[idx].hand.length)];
+    var i = st.players[idx].hand.indexOf(tile);
+    st.players[idx].hand.splice(i, 1);
+    st.discards.push({ pid: st.players[idx].id, t: tile });
+    st.counts[idx] = st.players[idx].hand.length;
+    sfx('card');
+    render();
+    setTimeout(function () {
+      st.turn = (st.turn + 1) % 4;
+      render();
+      autoTurn();
+    }, 500);
+  }
+  function huWin() {
+    st.phase = 'ended'; st.ended = true;
+    var c = document.getElementById('mjCenter');
+    if (c) c.innerHTML = '<span style="font-size:15px;font-weight:700;color:var(--green);">🀄 恭喜胡牌！</span>';
+    sfx('win');
+    if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 80, origin: { y: .6 } });
+    if (st.online) GameHub.netBroadcast({ game: 'mahjong', action: 'hu', session: st.session, idx: st.myIndex });
+    renderActions();
+  }
+  function endDraw() {
+    st.phase = 'ended';
+    var c = document.getElementById('mjCenter');
+    if (c) c.innerHTML = '<span style="font-size:14px;font-weight:700;color:var(--muted);">🤝 流局</span>';
+    renderActions();
+  }
+  function startAI() {
+    st.active = true; st.online = false; st.session = GameHub.newSession();
+    st.players = [
+      { id: myPeerId, name: myName, avatar: myAvatar.dataUrl, isAI: false, hand: [] },
+      { id: 'ai1', name: 'AI·东', avatar: '', isAI: true, hand: [] },
+      { id: 'ai2', name: 'AI·南', avatar: '', isAI: true, hand: [] },
+      { id: 'ai3', name: 'AI·西', avatar: '', isAI: true, hand: [] }
+    ];
+    st.wall = makeWall();
+    st.myHand = [];
+    for (var i = 0; i < 4; i++) {
+      if (i === 0) { for (var k = 0; k < 13; k++) st.myHand.push(st.wall.pop()); }
+      else { for (var k2 = 0; k2 < 13; k2++) st.players[i].hand.push(st.wall.pop()); }
+    }
+    st.myHand.sort(function (a, b) { return a - b; });
+    st.counts = [13, 13, 13, 13];
+    st.discards = [];
+    st.turn = 0; st.phase = 'playing'; st.ended = false; st.selected = -1;
+    st.myIndex = 0;
+    document.getElementById('mjMenu').style.display = 'none';
+    document.getElementById('mjPlay').style.display = 'flex';
+    document.getElementById('mjPick').style.display = 'none';
+    render();
+    drawForMe();
+    sfx('click');
+  }
+  function startOnline(ids) {
+    showToast('联机麻将简化处理中，稍后完善');
+    startAI();
+  }
+  function inviteOnline() {
+    showInvitePicker('mjPick', 3, function (ids) {
+      startOnline(ids);
+    });
+  }
+  function startNew() { startAI(); }
+  function abort() {
+    st.active = false; st.phase = 'idle'; st.online = false; st.ended = false;
+    document.getElementById('mjMenu').style.display = 'flex';
+    document.getElementById('mjPlay').style.display = 'none';
+    document.getElementById('mjPick').style.display = 'none';
+  }
+  function handle(msg) {
+    if (msg.game !== 'mahjong') return;
+    if (msg.action === 'hu') {
+      if (msg.idx !== st.myIndex) {
+        st.phase = 'ended';
+        var c = document.getElementById('mjCenter');
+        if (c) c.innerHTML = '<span style="font-size:14px;font-weight:700;color:var(--danger);">对方胡牌，本局结束</span>';
+        renderActions();
+      }
+    }
+  }
+  function onPeerLeave(pid) {}
+  document.getElementById('mjMenu').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-mj]');
+    if (!btn) return;
+    if (btn.dataset.mj === 'ai') startAI();
+    else inviteOnline();
+  });
+  return { handle: handle, onPeerLeave: onPeerLeave, abort: abort };
+})();
+
+/* ============================================================
+   28. 邀请弹窗
+   ============================================================ */
+var pendingAcceptCb = null, pendingDeclineCb = null;
+function showInviteDialog(gameName, fromName, onAccept, onDecline) {
+  var dlg = document.getElementById('inviteDialog');
+  document.getElementById('inviteTitle').textContent = '📨 ' + gameName + '邀请';
+  document.getElementById('inviteMsg').innerHTML =
+    '<b>' + esc(fromName || '对方') + '</b> 邀请你玩 <b>' + esc(gameName) + '</b><br><span style="font-size:12px;color:var(--muted);">是否接受？</span>';
+  dlg.classList.add('show');
+  pendingAcceptCb = onAccept; pendingDeclineCb = onDecline;
+  sfx('receive');
+}
+document.getElementById('inviteAccept').addEventListener('click', function () {
+  document.getElementById('inviteDialog').classList.remove('show');
+  if (pendingAcceptCb) pendingAcceptCb();
+  pendingAcceptCb = null; pendingDeclineCb = null;
+});
+document.getElementById('inviteDecline').addEventListener('click', function () {
+  document.getElementById('inviteDialog').classList.remove('show');
+  if (pendingDeclineCb) pendingDeclineCb();
+  pendingAcceptCb = null; pendingDeclineCb = null;
+});
+
+/* ============================================================
+   29. 返回按钮
+   ============================================================ */
+document.getElementById('backBtn').addEventListener('click', function () {
+  sfx('click');
+  if (window.parent !== window) {
+    try { window.parent.postMessage({ type: 'navigate', to: 'home' }, '*'); } catch (e) {}
+    setTimeout(function () {
+      if (document.referrer && document.referrer.indexOf('shell.html') >= 0) history.back();
+      else location.href = 'shell.html';
+    }, 400);
+  } else {
+    if (document.referrer && document.referrer.indexOf('shell.html') >= 0) history.back();
+    else location.href = 'shell.html';
+  }
+});
+
+/* ============================================================
+   30. 浮动窗口实例
+   ============================================================ */
+makeFloat(document.getElementById('joinCard'), {
+  key: 'join',
+  minW: 290, minH: 380, defW: 360, defH: 580,
+  defRect: function (vw, vh) {
+    var w = Math.min(360, vw - 24);
+    var h = Math.min(580, vh - 40);
+    return { x: (vw - w) / 2, y: Math.max(16, (vh - h) / 2 - 20), w: w, h: h };
+  }
+});
+
+makeFloat(document.getElementById('chatPanel'), {
+  key: 'chat',
+  minW: 300, minH: 320, defW: 400, defH: 560,
+  defRect: function (vw, vh) {
+    var w = Math.min(400, vw - 24);
+    var h = Math.min(540, Math.max(320, vh - 140));
+    return { x: (vw - w) / 2, y: 76, w: w, h: h };
+  }
+});
+
+makeFloat(document.getElementById('gamePanel'), {
+  key: 'game',
+  minW: 320, minH: 360, defW: 420, defH: 600,
+  defRect: function (vw, vh) {
+    var w = Math.min(420, vw - 24);
+    var h = Math.min(600, Math.max(360, vh - 120));
+    return { x: Math.max(12, (vw - w) / 2), y: 76, w: w, h: h };
+  }
+});
+
+makeFloat(document.getElementById('musicPanel'), {
+  key: 'music',
+  minW: 280, minH: 300, defW: 360, defH: 520,
+  defRect: function (vw, vh) {
+    var w = Math.min(360, vw - 24);
+    var h = Math.min(520, Math.max(300, vh - 140));
+    return { x: Math.max(12, (vw - w) / 2), y: 76, w: w, h: h };
+  }
+});
+
+['chat', 'game', 'music'].forEach(function (k) { createMiniBall(k); });
+
+/* ============================================================
+   31. 清理
+   ============================================================ */
+function cleanupConnection() {
+  if (hostAnnounceTimer) { clearInterval(hostAnnounceTimer); hostAnnounceTimer = null; }
+  if (retryTimer) { clearInterval(retryTimer); retryTimer = null; }
+  try { if (peer) peer.destroy(); } catch (e) {}
+  try { if (mqttClient) mqttClient.end(true); } catch (e) {}
+  peer = null; mqttClient = null; myPeerId = null;
+  hostConnection = null; hostPeerId = null;
+  connectingToHost = false; currentPendingConn = null; webrtcOk = false; memberJoined = false;
+  Object.keys(connections).forEach(function (k) { delete connections[k]; });
+  Object.keys(members).forEach(function (k) { delete members[k]; });
+}
+
+/* ============================================================
+   32. 启动
+   ============================================================ */
+document.getElementById('imgBtn').innerHTML = ICON_IMAGE;
+document.getElementById('emoteBtn').innerHTML = ICON_EMOTE;
+document.getElementById('recordBtn').innerHTML = ICON_MIC;
+
+updateAvatarDisplay();
+animJoinCard();
+
+(async function () {
+  try {
+    soundEnabled = await dbGetSetting('sound', true);
+    var btn = document.getElementById('soundToggle');
+    if (btn) {
+      btn.textContent = soundEnabled ? '🔊' : '🔇';
+      btn.classList.toggle('sound-off', !soundEnabled);
+    }
+  } catch (e) {}
+
+  initThreeBackground();
+
+  var stickBottom = function () {
+    var b = document.getElementById('chatBox');
+    if (b) b.scrollTop = b.scrollHeight;
+  };
+  window.addEventListener('resize', stickBottom);
+  window.addEventListener('orientationchange', function () { setTimeout(stickBottom, 250); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', stickBottom);
+})();
+
+document.getElementById('soundToggle').addEventListener('click', toggleSound);
+
+console.log('[Shenshi] 神识传音 v4 loaded');
+
+})();
+</script>
+</body>
+</html>
